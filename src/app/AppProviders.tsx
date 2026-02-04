@@ -41,7 +41,18 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [teams] = useState<Team[]>(MOCK_TEAMS);
   const [feedItems, setFeedItems] = useState<FeedItem[]>(() => {
     const saved = localStorage.getItem('scoreheroes_feed');
-    return saved ? JSON.parse(saved) : MOCK_FEED;
+    const items = saved ? JSON.parse(saved) : MOCK_FEED;
+    // Deduplicate IDs to prevent React keys warning
+    const seenIds = new Set();
+    return items.map((item: FeedItem) => {
+      if (seenIds.has(item.id)) {
+        // Regenerate ID for duplicates
+        const newId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        return { ...item, id: newId };
+      }
+      seenIds.add(item.id);
+      return item;
+    });
   });
   const [achievements, setAchievements] = useState<Achievement[]>(() => {
     const saved = localStorage.getItem('scoreheroes_achievements');
@@ -148,7 +159,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         if (runs === 6) desc = `Over ${over}.${ballInOver} - SIX!`;
 
         const newEvent: ScoreEvent = {
-          id: Date.now().toString(),
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           timestamp: new Date().toISOString(),
           points: runs,
           description: desc,
@@ -160,7 +171,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         
         // Also update global feed
         const newFeedItem: FeedItem = {
-          id: Date.now().toString(),
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           type: 'match_update',
           title: `${participant.name}: ${desc}`,
           publishedAt: new Date().toISOString(),
