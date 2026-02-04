@@ -68,10 +68,7 @@ export const TeamScreen: React.FC = () => {
 
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px', fontFamily: 'Segoe UI, sans-serif', color: '#333' }}>
-      <Link to="/" style={{ textDecoration: 'none', color: '#666', display: 'inline-block', marginBottom: '20px' }}>
-        ← Back to Home
-      </Link>
-
+      
       {/* HEADER SECTION */}
       <div style={{ 
         display: 'flex', 

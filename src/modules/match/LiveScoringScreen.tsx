@@ -89,12 +89,6 @@ export const LiveScoringScreen: React.FC = () => {
         message="Login required to score."
       />
 
-      <div style={{ marginBottom: '20px' }}>
-        <Link to="/" style={{ textDecoration: 'none', color: '#666', display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <span>←</span> Back to Home
-        </Link>
-      </div>
-
       {/* 1. Match Header */}
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <div style={{ fontSize: '18px', color: '#555' }}>

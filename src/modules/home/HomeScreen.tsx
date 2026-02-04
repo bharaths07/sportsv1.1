@@ -28,55 +28,6 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <div style={{ padding: '20px 16px', maxWidth: '800px', margin: '0 auto', paddingBottom: '80px' }}>
-      <header style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: '30px',
-        flexWrap: 'wrap',
-        gap: '15px'
-      }}>
-        <h1 style={{ margin: 0, fontSize: '28px', color: 'var(--color-neon-cyan)' }}>SportSync</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          {currentUser && (
-            <div style={{ fontSize: '14px', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                👤 {currentUser.name.split(' ')[0]}
-              </span>
-              <button 
-                onClick={logout}
-                style={{ 
-                  background: 'none', 
-                  border: 'none', 
-                  color: 'var(--color-neon-orange)', 
-                  cursor: 'pointer', 
-                  textDecoration: 'underline',
-                  fontSize: '12px'
-                }}
-              >
-                Logout
-              </button>
-            </div>
-          )}
-          <a 
-            href="/create-match"
-            onClick={handleCreateMatch}
-            style={{ 
-              backgroundColor: 'var(--color-neon-cyan)', 
-              color: '#000', 
-              padding: '8px 16px', 
-              borderRadius: '6px', 
-              textDecoration: 'none',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              fontSize: '14px',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            + Create Match
-          </a>
-        </div>
-      </header>
       
       <LoginModal 
         isOpen={showLoginModal} 

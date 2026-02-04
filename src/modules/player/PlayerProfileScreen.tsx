@@ -197,10 +197,6 @@ export const PlayerProfileScreen: React.FC = () => {
         </div>
       )}
 
-      <Link to="/" style={{ textDecoration: 'none', color: '#666', display: 'inline-block', marginBottom: '20px' }}>
-        ← Back to Home
-      </Link>
-
       {/* HEADER SECTION */}
       <div style={{ 
         display: 'flex', 

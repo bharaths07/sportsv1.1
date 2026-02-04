@@ -71,9 +71,6 @@ export const MyCertificatesScreen: React.FC = () => {
             Official records of your participation and achievements.
           </p>
         </div>
-        <Link to="/" style={{ textDecoration: 'none', color: '#666', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span>←</span> Back to Home
-        </Link>
       </div>
 
       {/* List */}
