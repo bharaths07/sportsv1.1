@@ -1,0 +1,231 @@
+/* --- Layout & Shell Styling --- */
+
+.layout-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+  /* Background is handled in index.css body, but we ensure this container covers it */
+}
+
+/* --- Top Navigation (Floating Glass) --- */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background: rgba(10, 14, 20, 0.7); /* Semi-transparent dark */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.brand-logo {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, var(--color-text-primary), var(--color-neon-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  display: flex;
+  gap: 30px;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: color 0.3s ease;
+  position: relative;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--color-neon-cyan);
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--color-neon-cyan);
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.top-actions {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.action-icon {
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.action-icon:hover {
+  color: #fff;
+}
+
+/* --- Main Body Area --- */
+.body-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden; /* Prevent full page scroll if inner content scrolls */
+  position: relative;
+}
+
+/* --- Floating Sidebar (Glassmorphism) --- */
+.sidebar {
+  width: 280px;
+  height: calc(100vh - 70px); /* Subtract top bar height roughly */
+  position: sticky;
+  top: 70px;
+  background: rgba(20, 0, 0, 0.3);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-right: 1px solid rgba(255, 50, 0, 0.15);
+  padding: 30px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* Sidebar Profile Card */
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  background: rgba(255, 50, 0, 0.05);
+  border: 1px solid rgba(255, 50, 0, 0.1);
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.profile-card:hover {
+  background: rgba(255, 50, 0, 0.15);
+  border-color: rgba(255, 50, 0, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(255, 50, 0, 0.15);
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-neon-cyan), var(--color-neon-orange));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(255, 49, 49, 0.4);
+}
+
+.profile-info h3 {
+  font-size: 1rem;
+  color: #fff;
+  margin: 0;
+  font-family: var(--font-body);
+}
+
+.profile-info p {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin: 2px 0 0;
+}
+
+/* Sidebar Groups */
+.sidebar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.group-title {
+  font-family: var(--font-display);
+  color: var(--color-neon-orange);
+  font-size: 0.9rem;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+  padding-left: 10px;
+  opacity: 0.9;
+  text-shadow: 0 0 5px rgba(255, 170, 0, 0.3);
+}
+
+.sidebar-link {
+  padding: 12px 15px;
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-link:hover {
+  background: rgba(255, 50, 0, 0.1);
+  color: var(--color-text-primary);
+  padding-left: 20px; /* Slight slide effect */
+  box-shadow: inset 3px 0 0 var(--color-neon-cyan);
+}
+
+.sidebar-link.active {
+  background: linear-gradient(90deg, rgba(255, 49, 49, 0.15), transparent);
+  color: var(--color-neon-cyan);
+  border-left: 3px solid var(--color-neon-cyan);
+  box-shadow: 0 0 15px rgba(255, 49, 49, 0.1);
+}
+
+/* --- Main Content Area --- */
+.main-content {
+  flex: 1;
+  padding: 30px 40px;
+  overflow-y: auto;
+  height: calc(100vh - 70px);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 50, 0, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 50, 0, 0.4);
+}

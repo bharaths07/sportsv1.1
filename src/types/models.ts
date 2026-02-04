@@ -1,5 +1,5 @@
 export type UserType = 'player' | 'organizer' | 'viewer';
-export type MatchStatus = 'live' | 'upcoming' | 'completed';
+export type MatchStatus = 'draft' | 'live' | 'completed' | 'locked' | 'cancelled';
 export type FeedItemType = 'match' | 'certificate' | 'news';
 
 export interface User {
@@ -9,6 +9,7 @@ export interface User {
   type: UserType;
   district: string;
   institution: string;
+  profilePhoto?: string | null;
 }
 
 export interface Sport {
@@ -31,6 +32,8 @@ export interface Match {
   location: string;
   status: MatchStatus;
   score?: string; // e.g., "2 - 1" or "120/4 - 115/8"
+  createdByUserId: string;
+  scorerIds: string[];
 }
 
 export interface Certificate {

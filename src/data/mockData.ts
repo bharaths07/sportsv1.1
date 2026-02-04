@@ -1,4 +1,4 @@
-import { User, Sport, Team, Match, Certificate, FeedItem, Tournament } from '../types/models';
+import { User, Sport, Team, Match, Certificate, FeedItem } from '../types/models';
 
 // 1. Users
 export const users: User[] = [
@@ -8,7 +8,8 @@ export const users: User[] = [
     email: 'rahul.k@sportsync.com',
     type: 'player',
     district: 'Bangalore Urban',
-    institution: 'National College'
+    institution: 'National College',
+    profilePhoto: null
   },
   {
     id: 'u2',
@@ -16,7 +17,8 @@ export const users: User[] = [
     email: 'priya.s@sportsync.com',
     type: 'organizer',
     district: 'Bangalore Urban',
-    institution: 'National College'
+    institution: 'National College',
+    profilePhoto: null
   }
 ];
 
@@ -50,7 +52,9 @@ export const matches: Match[] = [
     date: '2023-11-15T10:00:00',
     location: 'Central Ground, Bangalore',
     status: 'live',
-    score: '85/2 (10 ov) vs 0/0'
+    score: '85/2 (10 ov) vs 0/0',
+    createdByUserId: 'u1',
+    scorerIds: ['u1']
   },
   {
     id: 'm2',
@@ -59,7 +63,9 @@ export const matches: Match[] = [
     teamBId: 't6',
     date: '2023-11-20T16:00:00',
     location: 'City Arena',
-    status: 'upcoming'
+    status: 'draft',
+    createdByUserId: 'u2',
+    scorerIds: ['u2']
   },
   {
     id: 'm3',
@@ -69,7 +75,9 @@ export const matches: Match[] = [
     date: '2023-11-10T09:00:00',
     location: 'Indoor Stadium',
     status: 'completed',
-    score: '35 - 28'
+    score: '35 - 28',
+    createdByUserId: 'u1',
+    scorerIds: ['u2']
   }
 ];
 
@@ -88,9 +96,10 @@ const staticCertificates: Certificate[] = [
 // Helper to generate certificates for completed matches
 const derivedCertificates: Certificate[] = matches
   .filter(m => m.status === 'completed')
-  .map((m, index) => ({
+  .map((m) => ({
+
     id: `cert-auto-${m.id}`,
-    userId: 'u1', // Assign to Rahul Kumar (u1) for all completed matches
+    userId: 'p1', // Assign to Rahul Kumar (p1) for all completed matches
     matchId: m.id,
     title: 'Match Participation Certificate',
     achievement: 'Participation',

@@ -1,132 +1,107 @@
 import React from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
+import { useUser } from '../context/UserContext';
+import './Layout.css';
 
 const Layout: React.FC = () => {
-  const styles = {
-    container: {
-      display: 'flex',
-      flexDirection: 'column' as const,
-      height: '100vh',
-      fontFamily: 'sans-serif'
-    },
-    topBar: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '10px 20px',
-      borderBottom: '1px solid #ccc'
-    },
-    navLinks: {
-      display: 'flex',
-      gap: '20px'
-    },
-    link: {
-      textDecoration: 'none',
-      color: 'inherit',
-      cursor: 'pointer'
-    },
-    bodyContainer: {
-      display: 'flex',
-      flex: 1,
-      overflow: 'hidden'
-    },
-    sidebar: {
-      width: '250px',
-      borderRight: '1px solid #ccc',
-      padding: '20px',
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '30px',
-      overflowY: 'auto' as const
-    },
-    mainContent: {
-      flex: 1,
-      padding: '20px',
-      overflowY: 'auto' as const
-    },
-    sidebarGroup: {
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '10px'
-    },
-    groupTitle: {
-      fontWeight: 'bold',
-      color: '#666',
-      fontSize: '0.9em',
-      textTransform: 'uppercase' as const
-    },
-    profileSection: {
-      padding: '10px',
-      border: '1px solid #ddd',
-      borderRadius: '4px',
-      marginBottom: '10px',
-      cursor: 'pointer'
-    }
+  const location = useLocation();
+  const { currentUser } = useUser();
+
+  const isActive = (path: string) => {
+    return location.pathname === path ? 'active' : '';
   };
 
   return (
-    <div style={styles.container}>
-      {/* 1. TOP BAR */}
-      <div style={styles.topBar}>
-        <Link to="/home" style={{ ...styles.link, fontWeight: 'bold' }}>SportSync</Link>
-        <div style={styles.navLinks}>
-          <Link to="/home" style={styles.link}>Home</Link>
-          <Link to="/my-matches" style={styles.link}>My Game</Link>
+    <div className="layout-container">
+      {/* 1. TOP BAR (Floating Glass) */}
+      <div className="top-bar">
+        <div className="brand-section">
+          <Link to="/home" className="brand-logo">
+            SPORT<span style={{ color: 'var(--color-neon-orange)' }}>SYNC</span>
+          </Link>
         </div>
-        <div style={{ display: 'flex', gap: '20px' }}>
-          <span>[Search placeholder]</span>
-          <span>[Notification placeholder]</span>
+
+        <div className="nav-links">
+          <Link to="/home" className={`nav-link ${isActive('/home')}`}>Home</Link>
+          <Link to="/my-teams" className={`nav-link ${isActive('/my-teams')}`}>My Teams</Link>
+          <Link to="/start-match" className={`nav-link ${isActive('/start-match')}`}>Play</Link>
+        </div>
+
+        <div className="top-actions">
+          <div className="action-icon">SEARCH</div>
+          <div className="action-icon">NOTIFICATIONS</div>
         </div>
       </div>
 
-      <div style={styles.bodyContainer}>
-        {/* 2. LEFT SIDEBAR */}
-        <aside style={styles.sidebar}>
+      <div className="body-container">
+        {/* 2. LEFT SIDEBAR (Floating Glass) */}
+        <aside className="sidebar">
           
           {/* Profile Section */}
-          <Link to="/profile" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={styles.profileSection}>
-              <div style={{ fontWeight: 'bold' }}>[User Name]</div>
-              <div style={{ fontSize: '0.9em', color: '#555' }}>[Email / Phone]</div>
-              <div style={{ fontSize: '0.8em', color: '#888', marginTop: '5px' }}>[User Type]</div>
+          <Link to="/profile" style={{ textDecoration: 'none' }}>
+            <div className="profile-card">
+              <div className="profile-avatar">
+                {currentUser?.profilePhoto ? (
+                  <img 
+                    src={currentUser.profilePhoto} 
+                    alt="Profile" 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} 
+                  />
+                ) : (
+                  // Fallback initials or default
+                  currentUser ? currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2) : 'U'
+                )}
+              </div>
+              <div className="profile-info">
+                <h3>{currentUser ? currentUser.name : 'Guest'}</h3>
+                <p>{currentUser ? currentUser.type : 'Viewer'}</p>
+              </div>
             </div>
           </Link>
           
           {/* Primary Actions */}
-          <div style={styles.sidebarGroup}>
-            <div style={styles.groupTitle}>ACTIONS</div>
-            <div>Upgrade your plan</div>
-            <Link to="/start-tournament" style={styles.link}>Start Tournament / Series</Link>
-            <Link to="/start-match" style={styles.link}>Start Match</Link>
+          <div className="sidebar-group">
+            <div className="group-title">QUICK ACTIONS</div>
+            <Link to="/start-tournament" className={`sidebar-link ${isActive('/start-tournament')}`}>
+              Start Tournament
+            </Link>
+            <Link to="/start-match" className={`sidebar-link ${isActive('/start-match')}`}>
+              Start Match
+            </Link>
           </div>
 
           {/* Navigation Items */}
-          <div style={styles.sidebarGroup}>
-             <div style={styles.groupTitle}>NAVIGATION</div>
-             <Link to="/home" style={styles.link}>Home</Link>
-             <Link to="/my-matches" style={styles.link}>My Matches</Link>
+          <div className="sidebar-group">
+            <div className="group-title">MAIN MENU</div>
+            <Link to="/home" className={`sidebar-link ${isActive('/home')}`}>
+              Home
+            </Link>
+            <Link to="/my-teams" className={`sidebar-link ${isActive('/my-teams')}`}>
+              My Teams
+            </Link>
+            <Link to="/leaderboard" className={`sidebar-link ${isActive('/leaderboard')}`}>
+              Leaderboard
+            </Link>
+            <Link to="/certificates" className={`sidebar-link ${isActive('/certificates')}`}>
+              Certificates
+            </Link>
+            <Link to="/news-feed" className={`sidebar-link ${isActive('/news-feed')}`}>
+              News Feed
+            </Link>
           </div>
 
           {/* Sports Section */}
-          <div style={styles.sidebarGroup}>
-             <div style={styles.groupTitle}>ALL SPORTS (Dropdown)</div>
-             <div style={{ paddingLeft: '10px' }}>Cricket</div>
-             <div style={{ paddingLeft: '10px' }}>Kabaddi</div>
-             <div style={{ paddingLeft: '10px' }}>Football</div>
-          </div>
-
-          {/* Discovery & Records */}
-          <div style={styles.sidebarGroup}>
-             <div style={styles.groupTitle}>DISCOVERY & RECORDS</div>
-             <Link to="/leaderboard" style={styles.link}>Leaderboard</Link>
-             <Link to="/certificates" style={styles.link}>Certificates</Link>
-             <Link to="/news-feed" style={styles.link}>News & Feed</Link>
+          <div className="sidebar-group">
+            <div className="group-title">SPORTS</div>
+            <div className="sidebar-link">Cricket</div>
+            <div className="sidebar-link">Kabaddi</div>
+            <div className="sidebar-link">Football</div>
           </div>
 
         </aside>
 
         {/* 3. MAIN CONTENT AREA */}
-        <main style={styles.mainContent}>
+        <main className="main-content">
           <Outlet />
         </main>
       </div>
