@@ -20,8 +20,12 @@ export interface MatchOfficial {
 export interface PlayerStats {
   playerId: string;
   runs: number;
-  balls: number;
-  wickets: number;
+  balls: number; // Balls faced
+  wickets: number; // Wickets taken
+  ballsBowled?: number;
+  runsConceded?: number;
+  catches?: number;
+  runouts?: number;
 }
 
 export interface MatchParticipant {
@@ -37,6 +41,8 @@ export interface MatchParticipant {
 export interface Match {
   id: string;
   sportId: string;
+  tournamentId?: string; // Link to Tournament
+  stage?: string; // e.g., "Group Stage", "Final"
   homeParticipant: MatchParticipant;
   awayParticipant: MatchParticipant;
   currentBattingTeamId?: string; // Tracks who is currently batting

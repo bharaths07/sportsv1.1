@@ -24,6 +24,10 @@ export interface Player {
   gender?: 'male' | 'female' | 'other';
   institutionId?: string;
   primarySportId?: string;
+  role?: 'Batsman' | 'Bowler' | 'All-Rounder' | 'Wicket Keeper';
+  battingStyle?: string; // e.g., "Right-hand bat"
+  bowlingStyle?: string; // e.g., "Right-arm fast"
+  jerseyNumber?: number;
   stats: PlayerStats;
   history: PlayerHistoryEntry[];
   active: boolean;

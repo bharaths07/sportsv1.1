@@ -1,11 +1,25 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
+import { MatchSummaryTab } from './MatchSummaryTab';
+import { MatchInfoTab } from './MatchInfoTab';
+import { MatchScorecardTab } from './MatchScorecardTab';
+import { MatchCommentaryTab } from './MatchCommentaryTab';
+import { MatchSquadsTab } from './MatchSquadsTab';
 
 export const MatchSummaryScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { matches, achievements, players, certificates } = useGlobalState();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { matches, followedMatches, toggleFollowMatch } = useGlobalState();
+  const [activeTab, setActiveTab] = useState<'summary' | 'scorecard' | 'comms' | 'squads' | 'info'>('summary');
+  const { achievements, players, certificates } = useGlobalState();
   const match = matches.find(m => m.id === id);
+  const isFollowed = match ? followedMatches.includes(match.id) : false;
+
+  // Navigation State Handling
+  const navState = location.state as { returnPath?: string; tournamentId?: string; stage?: string } | null;
+  const backLink = navState?.returnPath || '/';
 
   if (!match) {
     return (
@@ -45,135 +59,91 @@ export const MatchSummaryScreen: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
-      <div style={{ marginBottom: '20px' }}>
-        <Link to="/" style={{ textDecoration: 'none', color: '#666' }}>← Back to Home</Link>
-      </div>
-
-      <div style={{ backgroundColor: 'white', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-        
-        {/* Status Banner */}
-        <div style={{ backgroundColor: '#2e7d32', color: 'white', padding: '10px', textAlign: 'center', fontWeight: 'bold', letterSpacing: '1px' }}>
-          {match.status.toUpperCase()}
-        </div>
-
-        <div style={{ padding: '30px', textAlign: 'center' }}>
-          {/* Teams */}
-          <div style={{ fontSize: '18px', color: '#555', marginBottom: '20px' }}>
-            {match.homeParticipant.name} vs {match.awayParticipant.name}
-          </div>
-
-          {/* Big Score */}
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '30px', marginBottom: '30px' }}>
-             <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '14px', color: '#888' }}>{match.homeParticipant.name}</div>
-                <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{homeScore}/{homeWickets}</div>
-             </div>
-             <div style={{ fontSize: '24px', color: '#ccc' }}>-</div>
-             <div style={{ textAlign: 'left' }}>
-                <div style={{ fontSize: '14px', color: '#888' }}>{match.awayParticipant.name}</div>
-                <div style={{ fontSize: '32px', fontWeight: 'bold' }}>{awayScore}/{awayWickets}</div>
-             </div>
-          </div>
-
-          {/* Official Result */}
-          <div style={{ padding: '15px', backgroundColor: '#e8f5e9', borderRadius: '8px', color: '#2e7d32', fontWeight: 'bold', fontSize: '18px', marginBottom: '30px' }}>
-            🏆 {resultText}
-          </div>
-
-          {/* Achievements Section */}
-          {matchAchievements.length > 0 && (
-            <div style={{ marginBottom: '30px', textAlign: 'left' }}>
-              <h3 style={{ fontSize: '16px', borderBottom: '1px solid #eee', paddingBottom: '10px', color: '#d32f2f' }}>Match Honours</h3>
-              
-              {/* POTM Card */}
-              {potm && (
-                <div style={{ 
-                  backgroundColor: '#fff8e1', 
-                  border: '1px solid #ffe0b2', 
-                  borderRadius: '8px', 
-                  padding: '15px', 
-                  marginBottom: '10px',
+    <div style={{ padding: '24px', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Segoe UI, Arial, sans-serif' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <Link to={backLink} style={{ textDecoration: 'none', color: '#666' }}>
+          ← {navState?.returnPath ? 'Back to Tournament' : 'Back'}
+        </Link>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          {match.status !== 'completed' && match.status !== 'locked' && (
+            <>
+              <button
+                onClick={() => toggleFollowMatch(match.id)}
+                style={{
+                  padding: '6px 16px',
+                  borderRadius: '100px',
+                  border: isFollowed ? '1px solid #2196F3' : '1px solid #e2e8f0',
+                  backgroundColor: isFollowed ? '#e3f2fd' : 'white',
+                  color: isFollowed ? '#1976D2' : '#64748b',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '13px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '15px'
-                }}>
-                  <div style={{ fontSize: '30px' }}>⭐</div>
-                  <div>
-                    <div style={{ fontSize: '12px', color: '#f57c00', fontWeight: 'bold', textTransform: 'uppercase' }}>Player of the Match</div>
-                    <div style={{ fontWeight: 'bold', fontSize: '16px' }}>{getPlayerName(potm.playerId)}</div>
-                    <div style={{ fontSize: '13px', color: '#666' }}>{potm.description}</div>
-                  </div>
-                </div>
-              )}
-
-              {/* Other Achievements */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                {otherAchievements.map(ach => (
-                  <div key={ach.id} style={{ 
-                    border: '1px solid #eee', 
-                    borderRadius: '8px', 
-                    padding: '10px',
-                    fontSize: '13px'
-                  }}>
-                    <div style={{ fontWeight: 'bold', color: '#1976d2' }}>{ach.title}</div>
-                    <div>{getPlayerName(ach.playerId)}</div>
-                    <div style={{ color: '#888', fontSize: '11px' }}>{ach.description}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+                  gap: 6
+                }}
+              >
+                {isFollowed ? (
+                  <>
+                    <span style={{ fontSize: '16px', lineHeight: 0 }}>•</span> Following
+                  </>
+                ) : (
+                  <>
+                    <span style={{ fontSize: '16px', lineHeight: 0 }}>+</span> Follow Match
+                  </>
+                )}
+              </button>
+              <div style={{ width: 1, height: 20, backgroundColor: '#e2e8f0' }}></div>
+            </>
           )}
-
-          {/* Certificates Awarded Section */}
-          {matchCertificates.length > 0 && (
-              <div style={{ marginBottom: '30px', textAlign: 'left', backgroundColor: '#fafafa', padding: '15px', borderRadius: '8px' }}>
-                  <h3 style={{ fontSize: '16px', borderBottom: '1px solid #ddd', paddingBottom: '10px', color: '#666', marginTop: 0 }}>
-                      Certificates Awarded
-                  </h3>
-                  <div style={{ fontSize: '14px', color: '#444' }}>
-                      <div style={{ marginBottom: '5px' }}>📜 <strong>{participationCount}</strong> Participation Certificates issued.</div>
-                      {achievementCertificates.length > 0 && (
-                          <div style={{ marginTop: '10px' }}>
-                              <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Performance Certificates:</div>
-                              <ul style={{ margin: '0', paddingLeft: '20px', color: '#555' }}>
-                                  {achievementCertificates.map(c => (
-                                      <li key={c.id}>
-                                          {c.title} - {getPlayerName(c.playerId)}
-                                      </li>
-                                  ))}
-                              </ul>
-                          </div>
-                      )}
-                  </div>
-              </div>
-          )}
-
-          {/* Match Details (Trust Section) */}
-          <div style={{ borderTop: '1px solid #eee', paddingTop: '20px', textAlign: 'left' }}>
-             <h3 style={{ fontSize: '14px', color: '#999', textTransform: 'uppercase', marginBottom: '15px' }}>Official Match Record</h3>
-             
-             <div style={detailRow}>
-               <span style={labelStyle}>Date</span>
-               <span>{new Date(match.date).toLocaleDateString()} {new Date(match.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-             </div>
-             <div style={detailRow}>
-               <span style={labelStyle}>Location</span>
-               <span>{match.location}</span>
-             </div>
-             <div style={detailRow}>
-               <span style={labelStyle}>Organizer</span>
-               <span>{organizerName}</span>
-             </div>
-             <div style={detailRow}>
-               <span style={labelStyle}>Official Scorer</span>
-               <span>{scorerName}</span>
-             </div>
-             <div style={detailRow}>
-               <span style={labelStyle}>Match ID</span>
-               <span style={{ fontFamily: 'monospace', color: '#888' }}>{match.id}</span>
-             </div>
+          <div style={{ display: 'flex', gap: 24, alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: 0 }}>
+             {['summary', 'scorecard', 'comms', 'squads', 'info'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab as any)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: activeTab === tab ? '3px solid #0f172a' : '3px solid transparent',
+                    padding: '8px 4px',
+                    cursor: 'pointer',
+                    fontWeight: activeTab === tab ? 700 : 500,
+                    color: activeTab === tab ? '#0f172a' : '#64748b',
+                    fontSize: '14px',
+                    textTransform: 'capitalize'
+                  }}
+                >
+                  {tab === 'comms' ? 'Commentary' : tab}
+                </button>
+             ))}
           </div>
+        </div>
+      </div>
+
+      <div style={{ backgroundColor: 'white', borderRadius: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.08)', border: '1px solid #eee', overflow: 'hidden' }}>
+        <div style={{ padding: 20, borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+              {match.homeParticipant.name.charAt(0)}
+            </div>
+            <div style={{ fontWeight: 800 }}>{match.homeParticipant.name}</div>
+            <div style={{ color: '#94a3b8' }}>vs</div>
+            <div style={{ fontWeight: 800 }}>{match.awayParticipant.name}</div>
+            <div style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+              {match.awayParticipant.name.charAt(0)}
+            </div>
+          </div>
+          <div style={{ fontSize: 12, color: '#64748b' }}>
+            {navState?.stage || match.stage || (match.tournamentId ? match.tournamentId.replace(/-/g, ' ').toUpperCase() : 'Match Details')}
+          </div>
+        </div>
+
+        <div style={{ padding: 20 }}>
+          {activeTab === 'summary' && <MatchSummaryTab match={match} onTabChange={setActiveTab} />}
+                  {activeTab === 'scorecard' && <MatchScorecardTab match={match} />}
+                  {activeTab === 'comms' && <MatchCommentaryTab match={match} />}
+                  {activeTab === 'squads' && <MatchSquadsTab match={match} />}
+                  {activeTab === 'info' && <MatchInfoTab match={match} />}
         </div>
       </div>
     </div>

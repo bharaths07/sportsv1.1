@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Match, ScoreEvent, PlayerStats } from '../domain/match';
 import { Player } from '../domain/player';
+import { GameProfile } from '../domain/gameProfile';
 import { Team } from '../domain/team';
 import { FeedItem } from '../domain/feed';
 import { Achievement } from '../domain/achievement';
@@ -9,14 +10,47 @@ import { MOCK_MATCHES } from '../data/matches';
 import { MOCK_PLAYERS } from '../data/players';
 import { MOCK_TEAMS } from '../data/teams';
 import { MOCK_FEED } from '../data/feed';
+import { MOCK_TOURNAMENTS } from '../data/tournaments';
 
 interface GlobalState {
   matches: Match[];
   players: Player[];
+  gameProfiles: GameProfile[];
   teams: Team[];
+  tournaments: {
+    id: string;
+    name: string;
+    organizer: string;
+    dates: string;
+    location: string;
+    description: string;
+    bannerUrl: string;
+    status: 'upcoming' | 'ongoing' | 'completed';
+  }[];
   feedItems: FeedItem[];
   achievements: Achievement[];
   certificates: Certificate[];
+  followedTeams: string[];
+  followedTournaments: string[];
+  followedMatches: string[];
+  notifications: {
+    id: string;
+    type: 'match_start' | 'match_result' | 'tournament_event';
+    title: string;
+    body: string;
+    timestamp: string;
+    relatedMatchId?: string;
+    relatedTournamentId?: string;
+  }[];
+  notificationsEnabled: boolean;
+  matchStartEnabled: boolean;
+  matchResultEnabled: boolean;
+  tournamentNotificationsEnabled: boolean;
+  preferences: {
+    sport: string;
+    timezone: string;
+    language: string;
+  };
   currentUser: any | null; // Placeholder for now
   login: (method: string) => void;
   logout: () => void;
@@ -24,6 +58,14 @@ interface GlobalState {
   scoreMatch: (matchId: string, runs: number, isWicket: boolean) => void;
   startMatch: (matchId: string) => void;
   endMatch: (matchId: string) => void;
+  toggleFollowTeam: (teamId: string) => void;
+  toggleFollowTournament: (tournamentId: string) => void;
+  toggleFollowMatch: (matchId: string) => void;
+  setNotificationsEnabled: (enabled: boolean) => void;
+  setMatchStartEnabled: (enabled: boolean) => void;
+  setMatchResultEnabled: (enabled: boolean) => void;
+  setTournamentNotificationsEnabled: (enabled: boolean) => void;
+  updatePreferences: (prefs: Partial<GlobalState['preferences']>) => void;
   updateMatches: () => void;
   updatePlayers: () => void;
   updateTeams: () => void;
@@ -38,7 +80,21 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return saved ? JSON.parse(saved) : MOCK_MATCHES;
   });
   const [players] = useState<Player[]>(MOCK_PLAYERS);
+  const [gameProfiles] = useState<GameProfile[]>(() => {
+    return MOCK_PLAYERS.map(p => ({
+      gameProfileId: `gp_${p.id}`,
+      userId: p.id,
+      sport: 'cricket',
+      createdAt: '2022-01-21',
+      visibility: 'public',
+      role: p.role,
+      battingStyle: p.battingStyle,
+      bowlingStyle: p.bowlingStyle,
+      isPrimary: true
+    }));
+  });
   const [teams] = useState<Team[]>(MOCK_TEAMS);
+  const [tournaments] = useState(MOCK_TOURNAMENTS);
   const [feedItems, setFeedItems] = useState<FeedItem[]>(() => {
     const saved = localStorage.getItem('scoreheroes_feed');
     const items = saved ? JSON.parse(saved) : MOCK_FEED;
@@ -62,6 +118,50 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const saved = localStorage.getItem('scoreheroes_certificates');
     return saved ? JSON.parse(saved) : [];
   });
+  const [followedTeams, setFollowedTeams] = useState<string[]>(() => {
+    const saved = localStorage.getItem('scoreheroes_followed_teams');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [followedTournaments, setFollowedTournaments] = useState<string[]>(() => {
+    const saved = localStorage.getItem('scoreheroes_followed_tournaments');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [followedMatches, setFollowedMatches] = useState<string[]>(() => {
+    const saved = localStorage.getItem('scoreheroes_followed_matches');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [notifications, setNotifications] = useState<any[]>(() => {
+    const saved = localStorage.getItem('scoreheroes_notifications');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [notificationKeys, setNotificationKeys] = useState<string[]>(() => {
+    const saved = localStorage.getItem('scoreheroes_notification_keys');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('scoreheroes_notifications_enabled');
+    return saved ? JSON.parse(saved) : true;
+  });
+  const [matchStartEnabled, setMatchStartEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('scoreheroes_match_start_enabled');
+    return saved ? JSON.parse(saved) : true;
+  });
+  const [matchResultEnabled, setMatchResultEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('scoreheroes_match_result_enabled');
+    return saved ? JSON.parse(saved) : true;
+  });
+  const [tournamentNotificationsEnabled, setTournamentNotificationsEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('scoreheroes_tournament_notifications_enabled');
+    return saved ? JSON.parse(saved) : true;
+  });
+  const [preferences, setPreferences] = useState<GlobalState['preferences']>(() => {
+    const saved = localStorage.getItem('scoreheroes_preferences');
+    return saved ? JSON.parse(saved) : {
+      sport: 'Cricket',
+      timezone: 'Asia/Kolkata', // Default to IST as per Indian context in mocks
+      language: 'English'
+    };
+  });
   const [currentUser, setCurrentUser] = useState<any | null>(() => {
     const saved = localStorage.getItem('scoreheroes_user');
     return saved ? JSON.parse(saved) : null;
@@ -84,6 +184,25 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     localStorage.removeItem('scoreheroes_user');
   };
 
+  // Validate session on mount/update
+  useEffect(() => {
+    if (currentUser) {
+      const isValidUser = MOCK_PLAYERS.some(p => p.id === currentUser.id);
+      if (!isValidUser) {
+        console.warn('Invalid user session detected. Logging out.', currentUser);
+        logout();
+      }
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    console.log('GlobalState Debug:', { 
+      gameProfilesCount: gameProfiles.length, 
+      currentUserId: currentUser?.id,
+      gameProfiles: gameProfiles
+    });
+  }, [gameProfiles, currentUser]);
+
   useEffect(() => {
     localStorage.setItem('scoreheroes_matches', JSON.stringify(matches));
   }, [matches]);
@@ -100,10 +219,99 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     localStorage.setItem('scoreheroes_certificates', JSON.stringify(certificates));
   }, [certificates]);
 
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_followed_teams', JSON.stringify(followedTeams));
+  }, [followedTeams]);
+
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_followed_tournaments', JSON.stringify(followedTournaments));
+  }, [followedTournaments]);
+
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_followed_matches', JSON.stringify(followedMatches));
+  }, [followedMatches]);
+
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_notifications', JSON.stringify(notifications));
+  }, [notifications]);
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_notification_keys', JSON.stringify(notificationKeys));
+  }, [notificationKeys]);
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_notifications_enabled', JSON.stringify(notificationsEnabled));
+  }, [notificationsEnabled]);
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_match_start_enabled', JSON.stringify(matchStartEnabled));
+  }, [matchStartEnabled]);
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_match_result_enabled', JSON.stringify(matchResultEnabled));
+  }, [matchResultEnabled]);
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_tournament_notifications_enabled', JSON.stringify(tournamentNotificationsEnabled));
+  }, [tournamentNotificationsEnabled]);
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_preferences', JSON.stringify(preferences));
+  }, [preferences]);
+
+  const toggleFollowTeam = (teamId: string) => {
+    setFollowedTeams(prev => 
+      prev.includes(teamId) ? prev.filter(id => id !== teamId) : [...prev, teamId]
+    );
+  };
+
+  const toggleFollowTournament = (tournamentId: string) => {
+    setFollowedTournaments(prev => 
+      prev.includes(tournamentId) ? prev.filter(id => id !== tournamentId) : [...prev, tournamentId]
+    );
+  };
+
+  const toggleFollowMatch = (matchId: string) => {
+    setFollowedMatches(prev => 
+      prev.includes(matchId) ? prev.filter(id => id !== matchId) : [...prev, matchId]
+    );
+  };
+
+  const updatePreferences = (prefs: Partial<GlobalState['preferences']>) => {
+    setPreferences(prev => ({ ...prev, ...prefs }));
+  };
+
   const updateMatches = () => { console.log('updateMatches called'); };
 
   const addMatch = (match: Match) => {
     setMatches(prev => [match, ...prev]);
+  };
+
+  const maybeNotify = (payload: {
+    type: 'match_start' | 'match_result' | 'tournament_event';
+    title: string;
+    body: string;
+    key: string;
+    relatedMatchId?: string;
+    relatedTournamentId?: string;
+  }) => {
+    if (!notificationsEnabled) return;
+    if (payload.type === 'match_start' && !matchStartEnabled) return;
+    if (payload.type === 'match_result' && !matchResultEnabled) return;
+    if (payload.type === 'tournament_event' && !tournamentNotificationsEnabled) return;
+    if (notificationKeys.includes(payload.key)) return;
+    const n = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: payload.type,
+      title: payload.title,
+      body: payload.body,
+      timestamp: new Date().toISOString(),
+      relatedMatchId: payload.relatedMatchId,
+      relatedTournamentId: payload.relatedTournamentId
+    };
+    setNotifications(prev => [n, ...prev]);
+    setNotificationKeys(prev => [...prev, payload.key]);
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        try {
+          new Notification(payload.title, { body: payload.body, silent: true });
+        } catch {}
+      }
+    }
   };
 
   const startMatch = (matchId: string) => {
@@ -111,6 +319,19 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         if (m.id !== matchId) return m;
         // Only allow Draft -> Live transition
         if (m.status !== 'draft') return m;
+        const isMatchFollowed = followedMatches.includes(m.id);
+        const involvesFollowed = isMatchFollowed || followedTeams.includes(m.homeParticipant.id) || followedTeams.includes(m.awayParticipant.id);
+        if (involvesFollowed) {
+          const title = `${m.homeParticipant.name} vs ${m.awayParticipant.name} is about to start`;
+          const body = `Starts at ${new Date(m.date).toLocaleString()} • ${m.location}`;
+          maybeNotify({
+            type: 'match_start',
+            title,
+            body,
+            key: `match_start_${m.id}`,
+            relatedMatchId: m.id
+          });
+        }
         
         return { 
             ...m, 
@@ -444,17 +665,73 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       visibility: 'public'
     };
     setFeedItems(prev => [newFeedItem, ...prev]);
+    
+    const isMatchFollowed = followedMatches.includes(match.id);
+    const involvesFollowed = isMatchFollowed || followedTeams.includes(match.homeParticipant.id) || followedTeams.includes(match.awayParticipant.id);
+    
+    if (involvesFollowed) {
+      const title = resultText;
+      const body = `${match.homeParticipant.name} vs ${match.awayParticipant.name} • ${match.location}`;
+      maybeNotify({
+        type: 'match_result',
+        title,
+        body,
+        key: `match_result_${match.id}`,
+        relatedMatchId: match.id
+      });
+    }
+
+    // Auto-unfollow match if it was followed
+    if (isMatchFollowed) {
+        setFollowedMatches(prev => prev.filter(id => id !== match.id));
+    }
   };
 
   const updatePlayers = () => { console.log('updatePlayers called'); };
   const updateTeams = () => { console.log('updateTeams called'); };
   const updateFeed = () => { console.log('updateFeed called'); };
 
+  useEffect(() => {
+    followedTournaments.forEach(tid => {
+      const t = tournaments.find(x => x.id === tid);
+      if (!t) return;
+      if (t.status === 'upcoming') {
+        maybeNotify({
+          type: 'tournament_event',
+          title: `${t.name} schedule announced`,
+          body: `${t.organizer} • ${t.location}`,
+          key: `tournament_schedule_${t.id}`,
+          relatedTournamentId: t.id
+        });
+      }
+      if (t.status === 'ongoing') {
+        maybeNotify({
+          type: 'tournament_event',
+          title: `${t.name} begins today`,
+          body: `${t.organizer} • ${t.location}`,
+          key: `tournament_start_${t.id}`,
+          relatedTournamentId: t.id
+        });
+      }
+      if (t.status === 'completed') {
+        maybeNotify({
+          type: 'tournament_event',
+          title: `${t.name} final announced`,
+          body: `${t.organizer} • ${t.location}`,
+          key: `tournament_final_${t.id}`,
+          relatedTournamentId: t.id
+        });
+      }
+    });
+  }, [followedTournaments, tournaments]);
+
   return (
     <GlobalContext.Provider value={{
       matches,
       players,
+      gameProfiles,
       teams,
+      tournaments,
       feedItems,
       achievements,
       certificates,
@@ -468,7 +745,24 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       updateMatches,
       updatePlayers,
       updateTeams,
-      updateFeed
+      updateFeed,
+      followedTeams,
+      followedTournaments,
+      followedMatches,
+      toggleFollowTeam,
+      toggleFollowTournament,
+      toggleFollowMatch,
+      notifications,
+      notificationsEnabled,
+      matchStartEnabled,
+      matchResultEnabled,
+      setNotificationsEnabled,
+      setMatchStartEnabled,
+      setMatchResultEnabled,
+      tournamentNotificationsEnabled,
+      preferences,
+      setTournamentNotificationsEnabled,
+      updatePreferences
     }}>
       {children}
     </GlobalContext.Provider>
@@ -477,7 +771,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
 export const useGlobalState = () => {
   const context = useContext(GlobalContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useGlobalState must be used within a GlobalProvider');
   }
   return context;
