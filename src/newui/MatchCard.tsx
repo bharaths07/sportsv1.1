@@ -38,7 +38,6 @@ export const MatchCard: React.FC<Props> = ({ match, isFollowed, className = '', 
 
   // Status Badge Logic
   let statusBadge = null;
-  let statusText = '';
   
   if (isLive) {
     statusBadge = (

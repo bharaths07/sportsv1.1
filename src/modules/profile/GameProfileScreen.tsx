@@ -31,8 +31,6 @@ export const GameProfileScreen: React.FC = () => {
     let runs = 0;
     let ballsFaced = 0;
     let wickets = 0;
-    let ballsBowled = 0;
-    let runsConceded = 0;
     let fours = 0;
     let sixes = 0;
     let highestScore = 0;
@@ -252,7 +250,7 @@ export const GameProfileScreen: React.FC = () => {
                   {stats?.recentMatches.length === 0 ? (
                       <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>No recent matches</div>
                   ) : (
-                      stats?.recentMatches.map((m, i) => {
+                      stats?.recentMatches.map((m) => {
                           const isHome = m.homeParticipant.players?.some(p => p.playerId === player.id);
                           const opponent = isHome ? m.awayParticipant.name : m.homeParticipant.name;
                           const pStats = isHome 

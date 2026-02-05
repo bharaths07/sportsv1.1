@@ -62,28 +62,28 @@ export const TeamScreen: React.FC = () => {
   
   const team = teams.find(t => t.id === id);
 
-  if (!team) {
-    return <div style={{ padding: '40px', textAlign: 'center' }}>Team not found</div>;
-  }
-
   // -- Data Derivation --
 
   // Matches Logic
-  const teamMatches = useMemo(() => matches.filter(m => 
-    m.homeParticipant.id === team.id || m.awayParticipant.id === team.id
-  ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()), [matches, team.id]);
+  const teamMatches = useMemo(() => {
+    if (!team) return [];
+    return matches.filter(m => 
+      m.homeParticipant.id === team.id || m.awayParticipant.id === team.id
+    ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [matches, team]);
 
   const completedMatches = teamMatches.filter(m => m.status === 'completed');
-  const upcomingMatches = teamMatches.filter(m => m.status === 'upcoming' || m.status === 'scheduled');
+  const upcomingMatches = teamMatches.filter(m => m.status === 'draft' || m.status === 'locked');
 
   const matchesPlayed = completedMatches.length;
-  const wins = completedMatches.filter(m => m.winnerId === team.id).length;
-  const losses = completedMatches.filter(m => m.winnerId && m.winnerId !== team.id).length;
+  const wins = team ? completedMatches.filter(m => m.winnerId === team.id).length : 0;
+  const losses = team ? completedMatches.filter(m => m.winnerId && m.winnerId !== team.id).length : 0;
   // Draws/NR logic if needed
   const winRate = matchesPlayed > 0 ? Math.round((wins / matchesPlayed) * 100) : 0;
 
   // Players Logic
   const squad = useMemo(() => {
+    if (!team) return [];
     return team.members.map(member => {
       const playerProfile = players.find(p => p.id === member.playerId);
       return {
@@ -99,7 +99,11 @@ export const TeamScreen: React.FC = () => {
       };
       return rank(a.role) - rank(b.role);
     });
-  }, [team.members, players]);
+  }, [team, players]);
+
+  if (!team) {
+    return <div style={{ padding: '40px', textAlign: 'center' }}>Team not found</div>;
+  }
 
   const captain = squad.find(m => m.role === 'captain');
 

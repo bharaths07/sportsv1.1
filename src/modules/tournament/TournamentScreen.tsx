@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useGlobalState } from '../../app/AppProviders';
 import { TournamentHeader } from './components/TournamentHeader';
 import { TournamentTabs } from './components/TournamentTabs';
 import { FeaturedMatches, FeaturedMatch } from './components/FeaturedMatches';

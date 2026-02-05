@@ -5,7 +5,7 @@ import { MatchCard } from './MatchCard';
 import './match-strip.css';
 
 export const MatchStrip: React.FC = () => {
-  const { matches, followedTeams, followedTournaments, followedMatches } = useGlobalState();
+  const { matches, followedTeams, followedMatches } = useGlobalState();
   const [tab, setTab] = useState<'top' | 'live'>('top');
 
   const getMatchScore = (match: any) => {

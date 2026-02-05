@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Match, ScoreEvent } from '../../domain/match';
-import { useGlobalState } from '../../app/AppProviders';
+import { Match } from '../../domain/match';
 
 interface Props {
   match: Match;
@@ -32,15 +31,13 @@ interface OverGroup {
 }
 
 export const MatchCommentaryTab: React.FC<Props> = ({ match }) => {
-  const { players } = useGlobalState();
-  
   // State for Filters
   const initialInnings = match.currentBattingTeamId === match.awayParticipant.id ? 'away' : 'home';
   const [activeInnings, setActiveInnings] = useState<'home' | 'away'>(initialInnings);
   const [filterType, setFilterType] = useState<'all' | 'wickets' | 'boundaries'>('all');
 
   const battingTeam = activeInnings === 'home' ? match.homeParticipant : match.awayParticipant;
-  const bowlingTeam = activeInnings === 'home' ? match.awayParticipant : match.homeParticipant;
+
 
   // --- Process Events into Commentary Structure ---
   const commentaryGroups = useMemo(() => {
@@ -52,10 +49,6 @@ export const MatchCommentaryTab: React.FC<Props> = ({ match }) => {
 
     // 2. Enrich and Group
     const groups: Record<number, OverGroup> = {};
-    let currentScore = battingTeam.score || 0; // Ideally we calculate backwards from total? 
-                                               // Or forward from 0? Forward is easier for cumulative.
-                                               // But we want to display reverse. 
-                                               // Strategy: Calculate forward first to tag scores, then reverse for display.
     
     // Let's re-sort chronological to calculate running score
     const chronologicalEvents = [...events].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());

@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MOCK_TEAMS } from '../../data/teams';
-import { Team, TeamType } from '../../domain/team';
+import { TeamType } from '../../domain/team';
 import { useGlobalState } from '../../app/AppProviders';
 import { FollowButton } from '../../components/FollowButton';
 

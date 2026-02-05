@@ -90,7 +90,7 @@ export const TournamentLeaderboard: React.FC = () => {
   
   // Edge Case Props (Mocked for now)
   const isTournamentEnded = false; 
-  const matchesPlayed = 15; // If 0, show empty state
+  const matchesPlayed: number = 15; // If 0, show empty state
 
   const processedData = useMemo(() => {
     return MOCK_PLAYERS.map(p => ({

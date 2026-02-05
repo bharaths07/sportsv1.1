@@ -224,7 +224,6 @@ export const MatchSquadsTab: React.FC<Props> = ({ match }) => {
             
             {(activeTeam.participant.players || []).slice(11).map((matchPlayer, index) => {
                 const profile = getPlayerDetails(matchPlayer.playerId);
-                const roleBadge = getPlayerRoleBadge(matchPlayer.playerId);
 
                 return (
                     <div 

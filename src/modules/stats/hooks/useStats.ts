@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { useGlobalState } from '../../../app/AppProviders';
-import { Match, MatchParticipant, PlayerStats } from '../../../domain/match';
 
 export type TimeRange = 'all_time' | 'last_12_months' | 'custom';
 export type StatFormat = 'all' | 't20' | 'odi' | 'test';

@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
-import { Match } from '../../domain/match';
 
 export const PlayerProfileScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,12 +18,8 @@ export const PlayerProfileScreen: React.FC = () => {
     let runs = 0;
     let ballsFaced = 0;
     let wickets = 0;
-    let ballsBowled = 0; // Not explicitly tracked in domain, inferred
-    let runsConceded = 0; // Not explicitly tracked in domain, inferred
     let fours = 0;
     let sixes = 0;
-    let catches = 0; // Not in domain yet
-    let runOuts = 0; // Not in domain yet
     let highestScore = 0;
     let bestBowlingWickets = 0;
     let bestBowlingRuns = 0;
@@ -72,8 +67,6 @@ export const PlayerProfileScreen: React.FC = () => {
     // Calculations
     const battingAvg = totalMatches > 0 ? (runs / totalMatches).toFixed(1) : '0.0'; // Ideally divide by dismissal count
     const strikeRate = ballsFaced > 0 ? ((runs / ballsFaced) * 100).toFixed(1) : '0.0';
-    const bowlingAvg = wickets > 0 ? (runsConceded / wickets).toFixed(1) : '-'; // Missing runs conceded
-    const economy = ballsBowled > 0 ? (runsConceded / (ballsBowled/6)).toFixed(1) : '-'; // Missing balls bowled
 
     return {
         totalMatches,
@@ -243,7 +236,7 @@ export const PlayerProfileScreen: React.FC = () => {
                   {stats?.recentMatches.length === 0 ? (
                       <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>No recent matches</div>
                   ) : (
-                      stats?.recentMatches.map((m, i) => {
+                      stats?.recentMatches.map((m) => {
                           const isHome = m.homeParticipant.players?.some(p => p.playerId === player.id);
                           const opponent = isHome ? m.awayParticipant.name : m.homeParticipant.name;
                           const pStats = isHome 

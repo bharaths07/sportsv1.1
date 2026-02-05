@@ -20,8 +20,7 @@ export interface ImpactScore {
 }
 
 export const calculateImpactScore = (
-  playerStats: PlayerStats, 
-  role: 'batter' | 'bowler' | 'all-rounder' = 'all-rounder'
+  playerStats: PlayerStats
 ): number => {
   let score = 0;
   let battingScore = 0;

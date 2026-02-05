@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Match } from '../../domain/match';
-import { useGlobalState } from '../../app/AppProviders';
 import { getMatchImpactRankings, ImpactScore } from '../../utils/cricketMetrics';
 import { IconsOfTheMatch } from './components/IconsOfTheMatch';
 import { IconPerformances } from './components/IconPerformances';
@@ -14,18 +13,17 @@ interface Props {
 
 export const MatchSummaryTab: React.FC<Props> = ({ match, onTabChange }) => {
   const navigate = useNavigate();
-  const { achievements } = useGlobalState();
   const [posterData, setPosterData] = useState<{ player?: ImpactScore, type: 'icon' | 'performance' | 'team_win' } | null>(null);
 
   // --- 1. Match Status Logic ---
   const statusText = useMemo(() => {
-    if (match.status === 'upcoming' || match.status === 'draft') {
+    if (match.status === 'draft' || match.status === 'locked') {
       const start = new Date(match.date);
       const now = new Date();
       if (now < start) return `Starts at ${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
       return 'Toss delayed';
     }
-    if (match.status === 'completed' || match.status === 'locked') {
+    if (match.status === 'completed') {
         if (match.winnerId) {
             const winner = match.winnerId === match.homeParticipant.id ? match.homeParticipant.name : match.awayParticipant.name;
             return `${winner} won the match`;
@@ -97,13 +95,13 @@ export const MatchSummaryTab: React.FC<Props> = ({ match, onTabChange }) => {
         <div style={{ 
           padding: '2px 6px',
           borderRadius: '4px',
-          backgroundColor: match.status === 'live' ? '#ef4444' : match.status === 'upcoming' ? '#f59e0b' : '#64748b',
+          backgroundColor: match.status === 'live' ? '#ef4444' : (match.status === 'draft' || match.status === 'locked') ? '#f59e0b' : '#64748b',
           color: 'white',
           fontSize: '10px',
           fontWeight: 700,
           textTransform: 'uppercase'
         }}>
-          {match.status === 'live' ? 'LIVE' : match.status === 'upcoming' ? 'UPCOMING' : 'COMPLETED'}
+          {match.status === 'live' ? 'LIVE' : (match.status === 'draft' || match.status === 'locked') ? 'UPCOMING' : 'COMPLETED'}
         </div>
         <span style={{ 
           fontSize: '14px', 

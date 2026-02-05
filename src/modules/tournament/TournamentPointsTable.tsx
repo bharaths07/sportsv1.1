@@ -1,5 +1,4 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
 interface TeamStats {
   id: string;
@@ -131,7 +130,7 @@ export const TournamentPointsTable: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {group.teams.map((team, index) => {
+                {group.teams.map((team) => {
                   const isLastQualified = team.position === group.cutoffPosition;
                   const borderStyle = isLastQualified ? '2px solid #cbd5e1' : '1px solid #f1f5f9';
                   

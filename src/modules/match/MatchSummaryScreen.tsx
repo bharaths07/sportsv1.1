@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
 import { MatchSummaryTab } from './MatchSummaryTab';
 import { MatchInfoTab } from './MatchInfoTab';
@@ -9,11 +9,9 @@ import { MatchSquadsTab } from './MatchSquadsTab';
 
 export const MatchSummaryScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const location = useLocation();
   const { matches, followedMatches, toggleFollowMatch } = useGlobalState();
   const [activeTab, setActiveTab] = useState<'summary' | 'scorecard' | 'comms' | 'squads' | 'info'>('summary');
-  const { achievements, players, certificates } = useGlobalState();
   const match = matches.find(m => m.id === id);
   const isFollowed = match ? followedMatches.includes(match.id) : false;
 
@@ -29,34 +27,6 @@ export const MatchSummaryScreen: React.FC = () => {
       </div>
     );
   }
-
-  const matchAchievements = achievements.filter(a => a.matchId === match.id);
-  const potm = matchAchievements.find(a => a.type === 'player_of_the_match');
-  const otherAchievements = matchAchievements.filter(a => a.type !== 'player_of_the_match');
-
-  const matchCertificates = certificates.filter(c => c.matchId === match.id);
-  const participationCount = matchCertificates.filter(c => c.type === 'participation').length;
-  const achievementCertificates = matchCertificates.filter(c => c.type === 'achievement');
-
-  const homeScore = match.homeParticipant.score || 0;
-  const awayScore = match.awayParticipant.score || 0;
-  const homeWickets = match.homeParticipant.wickets || 0;
-  const awayWickets = match.awayParticipant.wickets || 0;
-
-  let resultText = "Match Drawn";
-  if (match.winnerId) {
-    const winnerName = match.winnerId === match.homeParticipant.id ? match.homeParticipant.name : match.awayParticipant.name;
-    const runDiff = Math.abs(homeScore - awayScore);
-    resultText = `${winnerName} won by ${runDiff} runs`;
-  }
-
-  // Mock Officials for now
-  const organizerName = "Rahul Kumar"; 
-  const scorerName = "Rahul Kumar";
-
-  const getPlayerName = (playerId: string) => {
-    return players.find(p => p.id === playerId)?.firstName + ' ' + players.find(p => p.id === playerId)?.lastName || 'Unknown Player';
-  };
 
   return (
     <div style={{ padding: '24px', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Segoe UI, Arial, sans-serif' }}>
@@ -148,17 +118,4 @@ export const MatchSummaryScreen: React.FC = () => {
       </div>
     </div>
   );
-};
-
-const detailRow = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  marginBottom: '10px',
-  fontSize: '14px',
-  color: '#333'
-};
-
-const labelStyle = {
-  color: '#888',
-  fontWeight: '500'
 };

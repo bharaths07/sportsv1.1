@@ -7,7 +7,7 @@ interface Props {
   match: Match;
 }
 
-const formatCountdown = (dateISO: string, tz?: string) => {
+const formatCountdown = (dateISO: string) => {
   const now = new Date();
   const start = new Date(dateISO);
   const diffMs = start.getTime() - now.getTime();

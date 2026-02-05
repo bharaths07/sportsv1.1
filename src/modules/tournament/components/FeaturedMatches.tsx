@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 
 // Simple match interface for display
 export interface FeaturedMatch {

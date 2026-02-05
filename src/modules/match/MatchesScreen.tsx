@@ -336,7 +336,6 @@ const GroupedMatchesList: React.FC<GroupedMatchesListProps> = ({
       'EARLIER': []
     };
 
-    const now = new Date();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     

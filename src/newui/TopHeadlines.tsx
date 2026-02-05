@@ -58,25 +58,6 @@ const MOCK_NEWS: NewsItem[] = [
 export const TopHeadlines: React.FC = () => {
   const { followedTeams, followedTournaments } = useGlobalState();
 
-  const sortedNews = useMemo(() => {
-    return [...MOCK_NEWS].sort((a, b) => {
-      const isAFollowed = a.relatedEntityIds?.some(id => followedTeams.includes(id) || followedTournaments.includes(id));
-      const isBFollowed = b.relatedEntityIds?.some(id => followedTeams.includes(id) || followedTournaments.includes(id));
-      
-      if (isAFollowed && !isBFollowed) return -1;
-      if (!isAFollowed && isBFollowed) return 1;
-      
-      // Keep primary logic intact: Primary must stay primary if it's the intended featured story.
-      // But prompt says: "Headlines related to followed teams... appear higher in the list".
-      // Since layout is strict (1 Primary, N Secondary), we might need to swap Primary if a secondary is more relevant?
-      // "One featured news item" - usually this is editorially chosen.
-      // Prioritizing news usually means reordering the secondary list OR promoting a secondary to primary if very relevant?
-      // For simplicity and safety in V1, let's just reorder the Secondary list.
-      // Swapping Primary might break layout intent if image is missing.
-      return 0; 
-    });
-  }, [followedTeams, followedTournaments]);
-
   // Actually, let's just sort the secondary list. Primary is editorial choice usually.
   // Unless we want to fully dynamic the Primary slot.
   // Let's stick to reordering secondary list for now to be safe.

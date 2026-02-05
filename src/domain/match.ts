@@ -34,6 +34,7 @@ export interface MatchParticipant {
   score: number; // Current score
   wickets?: number; // Added for Cricket
   balls?: number;   // Added for Cricket
+  overs?: number;   // Added for Cricket
   result?: 'win' | 'loss' | 'draw';
   players?: PlayerStats[]; // Added for detailed stats tracking
 }

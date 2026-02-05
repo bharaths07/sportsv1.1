@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Match, ScoreEvent } from '../../domain/match';
+import { Match } from '../../domain/match';
 import { useGlobalState } from '../../app/AppProviders';
 import { useNavigate } from 'react-router-dom';
 
@@ -31,7 +31,7 @@ export const MatchScorecardTab: React.FC<Props> = ({ match }) => {
   };
 
   // --- Process Events for Detailed Stats ---
-  const { battingStats, bowlingStats, fallOfWickets, extrasStats } = useMemo(() => {
+  const { battingStats, fallOfWickets, extrasStats } = useMemo(() => {
     // Initialize stats maps
     const bStats: Record<string, { runs: number; balls: number; fours: number; sixes: number; out: boolean; dismissal: string }> = {};
     const bowlStats: Record<string, { balls: number; runs: number; wickets: number; maidens: number }> = {};
@@ -116,23 +116,7 @@ export const MatchScorecardTab: React.FC<Props> = ({ match }) => {
     // We will use the stored stats in bowlingTeam.players
     bowlingTeam.players?.forEach(p => {
         bowlStats[p.playerId] = {
-            balls: p.balls, // These are balls bowled? No, PlayerStats usually tracks batting. 
-                            // Wait, match.ts PlayerStats has `runs`, `balls`, `wickets`.
-                            // For a bowler, `wickets` is bowling wickets. `balls`?
-                            // Usually PlayerStats is a mix. Let's assume for this mock:
-                            // if in bowling team list, balls = balls bowled.
-                            // But usually `match.homeParticipant.players` lists everyone.
-                            // We need to differentiate batting stats from bowling stats.
-                            // The `PlayerStats` interface is generic.
-                            // Let's assume `balls` in `bowlingTeam.players` context means balls bowled if they have wickets or are bowlers.
-                            // This is ambiguous in the current domain model.
-                            // Let's rely on the `wickets` > 0 or `balls` > 0 for bowling.
             balls: 0, // We'll infer from events or assume a separate structure in real app.
-                      // For this task, I will use the `players` array from the bowling team
-                      // and assume `balls` there implies bowling if we are looking at them as the bowling team.
-                      // Actually, `match.homeParticipant` object has `players`. 
-                      // Does it have separate batting/bowling stats? No.
-                      // Let's just use the `wickets` field.
             runs: 0,
             wickets: p.wickets,
             maidens: 0
@@ -164,7 +148,6 @@ export const MatchScorecardTab: React.FC<Props> = ({ match }) => {
   const battingRows = (battingTeam.players || []).map(p => {
       const stats = battingStats[p.playerId];
       const name = getPlayerName(p.playerId);
-      const isStriker = match.currentBattingTeamId === battingTeam.id && false; // simplified
       return {
           id: p.playerId,
           name,

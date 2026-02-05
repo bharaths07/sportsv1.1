@@ -61,7 +61,6 @@ export const TournamentMatchesTab: React.FC<TournamentMatchesTabProps> = ({ matc
       
       const specificDateGroups: Record<string, Match[]> = {};
 
-      const now = new Date();
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       

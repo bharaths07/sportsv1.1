@@ -4,7 +4,7 @@ import { useGlobalState } from '../../app/AppProviders';
 
 export const ProfileScreen: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser, gameProfiles } = useGlobalState();
+  const { currentUser } = useGlobalState();
   const isGuest = !currentUser;
 
   // Resolve user display data

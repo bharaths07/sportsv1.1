@@ -15,13 +15,6 @@ interface SquadListProps {
 export const SquadList: React.FC<SquadListProps> = ({ squads, onTeamClick }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollRef.current) {
-      const amount = direction === 'left' ? -200 : 200;
-      scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
-    }
-  };
-
   return (
     <div style={{ marginBottom: '40px' }}>
       <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#1e293b', marginBottom: '16px' }}>Team Squads</h2>

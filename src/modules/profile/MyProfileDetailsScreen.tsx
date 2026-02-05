@@ -171,7 +171,7 @@ export const MyProfileDetailsScreen: React.FC = () => {
             { label: 'Location', value: userData.location },
             { label: 'Account Type', value: userData.type },
             { label: 'Member Since', value: userData.memberSince },
-          ].map((item, index) => (
+          ].map((item) => (
             <div key={item.label} style={{ 
               padding: '16px 20px', 
               borderBottom: '1px solid #f1f5f9',

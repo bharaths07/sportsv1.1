@@ -42,9 +42,9 @@ export const BowlingStatsTable: React.FC<BowlingStatsTableProps> = ({ stats, min
     });
   }, [stats, sortField, sortOrder, minQualification]);
 
-  const getPlayerName = (id: string) => {
-    const player = players.find(p => p.id === id);
-    return player ? player.name : 'Unknown Player';
+  const getPlayerName = (playerId: string) => {
+    const player = players.find(p => p.id === playerId);
+    return player ? `${player.firstName} ${player.lastName}` : 'Unknown Player';
   };
 
   const thStyle = {
