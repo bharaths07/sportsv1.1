@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MOCK_TEAMS } from '../../data/teams';
 import { TeamType } from '../../domain/team';
 import { useGlobalState } from '../../app/AppProviders';
 import { FollowButton } from '../../components/FollowButton';
@@ -23,7 +22,7 @@ const TEAM_TYPES: { label: string; value: TeamType }[] = [
 type SortOption = 'active' | 'members' | 'newest' | 'alpha';
 
 export const TeamListScreen: React.FC = () => {
-  const { followedTeams } = useGlobalState();
+  const { teams, followedTeams } = useGlobalState();
   
   // -- Filter States --
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,7 +64,7 @@ export const TeamListScreen: React.FC = () => {
 
   // -- Filter & Sort Logic --
   const filteredAndSortedTeams = useMemo(() => {
-    let result = [...MOCK_TEAMS];
+    let result = [...teams];
 
     // 1. Search
     if (debouncedSearch) {

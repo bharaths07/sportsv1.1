@@ -1,63 +1,138 @@
 import React, { useState } from 'react';
 import { useGlobalState } from '../app/AppProviders';
-import { LoadingButton } from './LoadingButton';
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  message?: string;
 }
 
-export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, message }) => {
-  const { login } = useGlobalState();
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
+  const { login, loginWithSupabase, currentUser } = useGlobalState();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [emailSent, setEmailSent] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (currentUser) {
+      setEmailSent(false);
+    }
+  }, [currentUser]);
 
-  const handleGoogleLogin = () => {
-    setIsLoggingIn(true);
-    setTimeout(() => {
-        login('google');
-        setIsLoggingIn(false);
-        onClose();
-    }, 1000);
+  if (!isOpen || currentUser) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email || emailSent) return;
+    
+    try {
+      await loginWithSupabase(email);
+      setEmailSent(true);
+      alert('We sent you a login link. You only need to click it once.');
+      onClose();
+    } catch (error: any) {
+      alert(error.message || 'Failed to login');
+    }
   };
 
   return (
     <div style={{
-       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-       backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000
     }}>
-      <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '8px', width: '300px', textAlign: 'center' }}>
-         <h2 style={{ marginTop: 0, color: '#333' }}>Login Required</h2>
-         <p style={{ color: '#666', marginBottom: '20px' }}>{message || "Please login to continue."}</p>
-         
-         <LoadingButton 
-            onClick={handleGoogleLogin}
-            isLoading={isLoggingIn}
-            loadingText="Signing in..."
-            style={{
-                width: '100%', 
-                padding: '12px', 
-                margin: '10px 0',
-                backgroundColor: '#db4437', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '4px', 
-                fontSize: '16px', 
-                fontWeight: 'bold'
-            }}
-         >
-           Sign in with Google
-         </LoadingButton>
-         
-         <button onClick={onClose} style={{
-             width: '100%', padding: '12px',
-             backgroundColor: '#f5f5f5', color: '#333', border: '1px solid #ddd', borderRadius: '4px', cursor: 'pointer',
-             marginTop: '10px'
-         }}>
-           Cancel
-         </button>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        padding: '24px',
+        width: '100%',
+        maxWidth: '400px',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+      }}>
+        <h2 style={{ marginTop: 0, marginBottom: '16px', fontSize: '1.25rem', fontWeight: 600 }}>
+          Login Required
+        </h2>
+        <p style={{ marginBottom: '24px', color: '#64748b' }}>
+          This is a demo login. No password required.
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>
+              Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter your name"
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                fontSize: '1rem'
+              }}
+              required
+            />
+          </div>
+
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                fontSize: '1rem'
+              }}
+              required
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                backgroundColor: 'white',
+                cursor: 'pointer'
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!name || !email || emailSent}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '6px',
+                border: 'none',
+                backgroundColor: (!name || !email || emailSent) ? '#94a3b8' : '#2563eb',
+                color: 'white',
+                cursor: (!name || !email || emailSent) ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {emailSent ? 'Email sent' : 'Continue'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

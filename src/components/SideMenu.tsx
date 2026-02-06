@@ -24,10 +24,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose }) => {
         {currentUser ? (
           <div className="side-menu-header">
             <div className="user-avatar-large">
-              {currentUser.name.charAt(0).toUpperCase()}
+              {currentUser.firstName.charAt(0).toUpperCase()}
             </div>
             <div className="user-info">
-              <div className="user-name">{currentUser.name}</div>
+              <div className="user-name">{currentUser.firstName} {currentUser.lastName}</div>
               <div className="user-role">{currentUser.type}</div>
             </div>
           </div>
@@ -40,30 +40,41 @@ export const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose }) => {
         )}
 
         <div className="side-menu-content">
-          {/* SECTION 1 — Personal (Always Visible) */}
+          {/* SECTION 1 — Primary Action */}
+          <div className="menu-section">
+            <h3 className="section-title">Primary Action</h3>
+            <Link to="/tournament/create" className="menu-item" onClick={onClose}>🏆 Start Tournament / Series</Link>
+            <Link to="/start-match" className="menu-item" onClick={onClose}>Start Match</Link>
+          </div>
+
+          {/* SECTION 2 — Personal */}
           <div className="menu-section">
             <h3 className="section-title">Personal</h3>
             <Link to="/profile" className="menu-item" onClick={onClose}>My Profile</Link>
-            <Link to="/saved-matches" className="menu-item" onClick={onClose}>Saved / Followed Matches</Link>
+            <Link to="/profile/cricket/me" className="menu-item" onClick={onClose}>Cricket Profile</Link>
+            <Link to="/certificates" className="menu-item" onClick={onClose}>Certificates</Link>
           </div>
 
-          {/* SECTION 2 — Creation / Management (Role-Based) */}
+          {/* SECTION 3 — Activity */}
+          <div className="menu-section">
+            <h3 className="section-title">Activity</h3>
+            <Link to="/saved-matches" className="menu-item" onClick={onClose}>Saved / Followed Matches</Link>
+            <Link to="/saved-tournaments" className="menu-item" onClick={onClose}>Saved Tournaments</Link>
+          </div>
+
+          {/* SECTION 4 — Management (Role-Based, excluding Start Match) */}
           {isOrganizer && (
             <div className="menu-section">
               <h3 className="section-title">Management</h3>
-              <Link to="/create-match" className="menu-item" onClick={onClose}>Create Match</Link>
               <Link to="/manage-matches" className="menu-item" onClick={onClose}>Manage Matches</Link>
               <Link to="/venues" className="menu-item" onClick={onClose}>Venues</Link>
               <Link to="/officials" className="menu-item" onClick={onClose}>Officials / Scorers</Link>
             </div>
           )}
 
-          {/* SECTION 3 — System (Always Visible) */}
+          {/* SECTION 5 — System */}
           <div className="menu-section">
             <h3 className="section-title">System</h3>
-            <Link to="/notifications" className="menu-item" onClick={onClose}>Notifications</Link>
-            <Link to="/settings" className="menu-item" onClick={onClose}>Settings</Link>
-            <Link to="/help" className="menu-item" onClick={onClose}>Help / Support</Link>
             {currentUser ? (
               <div className="menu-item danger" onClick={() => { logout(); onClose(); }}>Logout</div>
             ) : (

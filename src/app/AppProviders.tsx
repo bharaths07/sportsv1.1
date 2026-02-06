@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '../lib/supabase';
 import { Match, ScoreEvent, PlayerStats } from '../domain/match';
 import { Player } from '../domain/player';
 import { GameProfile } from '../domain/gameProfile';
@@ -6,27 +7,18 @@ import { Team } from '../domain/team';
 import { FeedItem } from '../domain/feed';
 import { Achievement } from '../domain/achievement';
 import { Certificate } from '../domain/certificate';
-import { MOCK_MATCHES } from '../data/matches';
-import { MOCK_PLAYERS } from '../data/players';
-import { MOCK_TEAMS } from '../data/teams';
-import { MOCK_FEED } from '../data/feed';
-import { MOCK_TOURNAMENTS } from '../data/tournaments';
+import { Tournament } from '../domain/tournament';
+import { MatchScorer } from '../domain/scorer';
+import { User } from '../domain/user';
 
 interface GlobalState {
   matches: Match[];
   players: Player[];
   gameProfiles: GameProfile[];
   teams: Team[];
-  tournaments: {
-    id: string;
-    name: string;
-    organizer: string;
-    dates: string;
-    location: string;
-    description: string;
-    bannerUrl: string;
-    status: 'upcoming' | 'ongoing' | 'completed';
-  }[];
+  tournaments: Tournament[];
+  users: User[];
+  matchScorers: MatchScorer[];
   feedItems: FeedItem[];
   achievements: Achievement[];
   certificates: Certificate[];
@@ -51,10 +43,16 @@ interface GlobalState {
     timezone: string;
     language: string;
   };
-  currentUser: any | null; // Placeholder for now
-  login: (method: string) => void;
+  currentUser: User | null;
+  login: (name: string, email: string) => void;
+  loginWithSupabase: (email: string) => Promise<void>;
   logout: () => void;
+  updateUserProfile: (data: Partial<User>) => void;
+  addPlayer: (player: Player) => void;
+  addTeam: (team: Team) => void;
+  addTeamMember: (teamId: string, member: { playerId: string; role: 'captain' | 'vice-captain' | 'member'; joinedAt: string }) => void;
   addMatch: (match: Match) => void;
+  updateMatch: (matchId: string, updates: Partial<Match>) => void;
   scoreMatch: (matchId: string, runs: number, isWicket: boolean) => void;
   startMatch: (matchId: string) => void;
   endMatch: (matchId: string) => void;
@@ -69,54 +67,78 @@ interface GlobalState {
   updateMatches: () => void;
   updatePlayers: () => void;
   updateTeams: () => void;
+  addTournament: (tournament: Tournament) => void;
+  updateTournament: (tournament: Tournament) => void;
+  addTeamToTournament: (tournamentId: string, teamId: string) => void;
+  removeTeamFromTournament: (tournamentId: string, teamId: string) => void;
+  updateTournamentStructure: (tournamentId: string, structure: any) => void;
+  updateTournamentScheduleMode: (tournamentId: string, scheduleMode: 'AUTO' | 'MANUAL' | 'LATER') => void;
   updateFeed: () => void;
+  assignScorer: (matchId: string, userId: string) => void;
+  removeScorer: (matchId: string, userId: string) => void;
+  getMatchScorers: (matchId: string) => MatchScorer[];
+  canScoreMatch: (matchId: string) => boolean;
 }
 
 const GlobalContext = createContext<GlobalState | undefined>(undefined);
 
 export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [matches, setMatches] = useState<Match[]>(() => {
-    const saved = localStorage.getItem('scoreheroes_matches');
-    return saved ? JSON.parse(saved) : MOCK_MATCHES;
+    try {
+      const saved = localStorage.getItem('scoreheroes_matches');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
-  const [players] = useState<Player[]>(MOCK_PLAYERS);
-  const [gameProfiles] = useState<GameProfile[]>(() => {
-    return MOCK_PLAYERS.map(p => ({
-      gameProfileId: `gp_${p.id}`,
-      userId: p.id,
-      sport: 'cricket',
-      createdAt: '2022-01-21',
-      visibility: 'public',
-      role: p.role,
-      battingStyle: p.battingStyle,
-      bowlingStyle: p.bowlingStyle,
-      isPrimary: true
-    }));
+  const [players, setPlayers] = useState<Player[]>(() => {
+    try {
+      const saved = localStorage.getItem('scoreheroes_players');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
-  const [teams] = useState<Team[]>(MOCK_TEAMS);
-  const [tournaments] = useState(MOCK_TOURNAMENTS);
+  const [gameProfiles] = useState<GameProfile[]>([]);
+  const [teams, setTeams] = useState<Team[]>(() => {
+    try {
+      const saved = localStorage.getItem('scoreheroes_teams');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [tournaments, setTournaments] = useState<Tournament[]>(() => {
+    try {
+      const saved = localStorage.getItem('scoreheroes_tournaments');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [feedItems, setFeedItems] = useState<FeedItem[]>(() => {
-    const saved = localStorage.getItem('scoreheroes_feed');
-    const items = saved ? JSON.parse(saved) : MOCK_FEED;
-    // Deduplicate IDs to prevent React keys warning
-    const seenIds = new Set();
-    return items.map((item: FeedItem) => {
-      if (seenIds.has(item.id)) {
-        // Regenerate ID for duplicates
-        const newId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        return { ...item, id: newId };
-      }
-      seenIds.add(item.id);
-      return item;
-    });
+    try {
+      const saved = localStorage.getItem('feedItems');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
   const [achievements, setAchievements] = useState<Achievement[]>(() => {
-    const saved = localStorage.getItem('scoreheroes_achievements');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('achievements');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
   const [certificates, setCertificates] = useState<Certificate[]>(() => {
-    const saved = localStorage.getItem('scoreheroes_certificates');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('certificates');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
   const [followedTeams, setFollowedTeams] = useState<string[]>(() => {
     const saved = localStorage.getItem('scoreheroes_followed_teams');
@@ -162,36 +184,190 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       language: 'English'
     };
   });
-  const [currentUser, setCurrentUser] = useState<any | null>(() => {
-    const saved = localStorage.getItem('scoreheroes_user');
-    return saved ? JSON.parse(saved) : null;
+  const [users, setUsers] = useState<User[]>(() => {
+    try {
+      const saved = localStorage.getItem('users');
+      const parsed = saved ? JSON.parse(saved) : [];
+      // Migration: Ensure name exists for legacy data
+      return parsed.map((u: any) => ({
+        ...u,
+        name: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim()
+      }));
+    } catch {
+      return [];
+    }
+  });
+  const [matchScorers, setMatchScorers] = useState<MatchScorer[]>(() => {
+    const saved = localStorage.getItem('scoreheroes_match_scorers');
+    return saved ? JSON.parse(saved) : [];
   });
 
-  const login = (method: string) => {
-    // Simulate login
-    const user = {
-      id: MOCK_PLAYERS[0].id,
-      name: `${MOCK_PLAYERS[0].firstName} ${MOCK_PLAYERS[0].lastName}`,
-      email: 'rahul.k@example.com',
-      method
-    };
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem('currentUser');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Step 2.2 — Read Auth Session on App Boot
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      const session = data.session;
+
+      if (session?.user) {
+        setCurrentUser({
+          id: session.user.id,
+          email: session.user.email!,
+          name: session.user.user_metadata?.name ?? 'User',
+        });
+      }
+    });
+  }, []);
+
+  // Step 2.3 — Add Listener for Auth Changes (Passive)
+  useEffect(() => {
+    const { 
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setCurrentUser({
+          id: session.user.id,
+          email: session.user.email!,
+          name: session.user.user_metadata?.name ?? 'User',
+        });
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('users', JSON.stringify(users));
+  }, [users]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('currentUser');
+    }
+  }, [currentUser]);
+
+  // NOTE: MVP-only auth. Replace with real backend auth before production.
+  const login = (name: string, email: string) => {
+    let user = users.find(u => u.email === email);
+
+    if (!user) {
+      // Split name for legacy fields
+      const nameParts = name.split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      user = {
+        id: crypto.randomUUID(),
+        name,
+        email,
+        role: 'user',
+        // Default legacy fields
+        firstName,
+        lastName,
+        memberSince: new Date().getFullYear().toString(),
+        followersCount: 0,
+        followingCount: 0,
+        profileViews: 0,
+        type: 'organizer' 
+      };
+      setUsers(prev => [...prev, user]);
+    }
+
     setCurrentUser(user);
-    localStorage.setItem('scoreheroes_user', JSON.stringify(user));
+  };
+
+  // Step 3.1 — Add Supabase Login Function (Parallel)
+  const loginWithSupabase = async (email: string) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    // ✅ Already logged in → do nothing
+    if (session) {
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      console.error('Supabase login error:', error.message);
+      throw error;
+    }
   };
 
   const logout = () => {
     setCurrentUser(null);
-    localStorage.removeItem('scoreheroes_user');
+  };
+
+  const updateUserProfile = (data: Partial<User>) => {
+    if (!currentUser) return;
+    const updatedUser = { ...currentUser, ...data };
+    setCurrentUser(updatedUser);
+  };
+
+  const assignScorer = (matchId: string, userId: string) => {
+    // Only admin can assign
+    if (currentUser?.role !== 'admin') return;
+
+    // Check if already assigned
+    if (matchScorers.some(ms => ms.matchId === matchId && ms.userId === userId)) return;
+
+    const newAssignment: MatchScorer = {
+      id: `ms_${Date.now()}`,
+      matchId,
+      userId,
+      assignedBy: currentUser.id,
+      assignedAt: new Date().toISOString()
+    };
+
+    const updatedScorers = [...matchScorers, newAssignment];
+    setMatchScorers(updatedScorers);
+    localStorage.setItem('scoreheroes_match_scorers', JSON.stringify(updatedScorers));
+  };
+
+  const removeScorer = (matchId: string, userId: string) => {
+    if (currentUser?.role !== 'admin') return;
+    const updatedScorers = matchScorers.filter(ms => !(ms.matchId === matchId && ms.userId === userId));
+    setMatchScorers(updatedScorers);
+    localStorage.setItem('scoreheroes_match_scorers', JSON.stringify(updatedScorers));
+  };
+
+  const getMatchScorers = (matchId: string) => {
+    return matchScorers.filter(ms => ms.matchId === matchId);
+  };
+
+  const canScoreMatch = (matchId: string) => {
+    if (!currentUser) return false;
+    
+    // 1. Match creator override
+    const match = matches.find(m => m.id === matchId);
+    if (match?.createdByUserId === currentUser.id) {
+      return true;
+    }
+
+    // 2. Assigned scorers
+    return matchScorers.some(ms => ms.matchId === matchId && ms.userId === currentUser.id);
   };
 
   // Validate session on mount/update
   useEffect(() => {
     if (currentUser) {
-      const isValidUser = MOCK_PLAYERS.some(p => p.id === currentUser.id);
-      if (!isValidUser) {
-        console.warn('Invalid user session detected. Logging out.', currentUser);
-        logout();
-      }
+      // Session validation logic removed as we don't rely on mock players anymore
+      // In a real app, this would be a server-side token check
     }
   }, [currentUser]);
 
@@ -208,16 +384,24 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [matches]);
 
   useEffect(() => {
-    localStorage.setItem('scoreheroes_feed', JSON.stringify(feedItems));
+    localStorage.setItem('feedItems', JSON.stringify(feedItems));
   }, [feedItems]);
 
   useEffect(() => {
-    localStorage.setItem('scoreheroes_achievements', JSON.stringify(achievements));
+    localStorage.setItem('achievements', JSON.stringify(achievements));
   }, [achievements]);
 
   useEffect(() => {
-    localStorage.setItem('scoreheroes_certificates', JSON.stringify(certificates));
+    localStorage.setItem('certificates', JSON.stringify(certificates));
   }, [certificates]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('currentUser');
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     localStorage.setItem('scoreheroes_followed_teams', JSON.stringify(followedTeams));
@@ -253,6 +437,26 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     localStorage.setItem('scoreheroes_preferences', JSON.stringify(preferences));
   }, [preferences]);
 
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_players', JSON.stringify(players));
+  }, [players]);
+
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_teams', JSON.stringify(teams));
+  }, [teams]);
+
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_tournaments', JSON.stringify(tournaments));
+  }, [tournaments]);
+
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_users', JSON.stringify(users));
+  }, [users]);
+
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_match_scorers', JSON.stringify(matchScorers));
+  }, [matchScorers]);
+
   const toggleFollowTeam = (teamId: string) => {
     setFollowedTeams(prev => 
       prev.includes(teamId) ? prev.filter(id => id !== teamId) : [...prev, teamId]
@@ -279,6 +483,10 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const addMatch = (match: Match) => {
     setMatches(prev => [match, ...prev]);
+  };
+
+  const updateMatch = (matchId: string, updates: Partial<Match>) => {
+    setMatches(prev => prev.map(m => m.id === matchId ? { ...m, ...updates } : m));
   };
 
   const maybeNotify = (payload: {
@@ -433,61 +641,35 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       awayResult = 'draw';
     }
 
-    // 1. Simulate Player Stats
-    const simulatePlayerStats = (totalRuns: number, totalWicketsTaken: number, playersPool: Player[]): PlayerStats[] => {
-       let remainingRuns = totalRuns;
-       let remainingWickets = totalWicketsTaken;
-       const stats: PlayerStats[] = [];
-       
-       const shuffledPool = [...playersPool].sort(() => 0.5 - Math.random());
-       const contributorsCount = Math.min(shuffledPool.length, 3 + Math.floor(Math.random() * 2));
-       const contributors = shuffledPool.slice(0, contributorsCount); 
-       
-       contributors.forEach((player, index) => {
-          let runs = 0;
-          let wickets = 0;
-          
-          if (index === contributors.length - 1) {
-              runs = remainingRuns;
-          } else {
-              runs = Math.floor(Math.random() * (remainingRuns / 2));
-              remainingRuns -= runs;
-          }
+    // Resolve REAL Teams
+    const teamA = teams.find(t => t.id === match.homeParticipant.id);
+    const teamB = teams.find(t => t.id === match.awayParticipant.id);
 
-          if (remainingWickets > 0) {
-              const maxWicketsForPlayer = Math.min(remainingWickets, 6);
-              const w = Math.floor(Math.random() * (maxWicketsForPlayer + 1));
-              if (index === contributors.length - 1) {
-                   wickets = remainingWickets;
-              } else {
-                   wickets = w;
-                   remainingWickets -= w;
-              }
-          }
+    // Step 1.5: Use members from real teams
+    const teamAPlayers = teamA?.members ?? [];
+    const teamBPlayers = teamB?.members ?? [];
 
-          stats.push({
-              playerId: player.id,
-              runs: runs,
-              balls: Math.floor(runs * 1.5) || 1,
-              wickets: wickets
-          });
-       });
-       
-       return stats;
-    };
-    
-    // Split MOCK_PLAYERS to ensure distinct players for home and away teams
-    const shuffledGlobal = [...MOCK_PLAYERS].sort(() => 0.5 - Math.random());
-    const midPoint = Math.floor(shuffledGlobal.length / 2);
-    const homePool = shuffledGlobal.slice(0, midPoint);
-    const awayPool = shuffledGlobal.slice(midPoint);
+    // Step 1.6: Deterministic zero-state stats
+    const homeStats: PlayerStats[] = teamAPlayers.map(m => ({
+      playerId: m.playerId,
+      runs: 0,
+      balls: 0,
+      wickets: 0,
+      catches: 0
+    }));
 
-    const homeStats = simulatePlayerStats(homeScore, match.awayParticipant.wickets || 0, homePool);
-    const awayStats = simulatePlayerStats(awayScore, match.homeParticipant.wickets || 0, awayPool);
+    const awayStats: PlayerStats[] = teamBPlayers.map(m => ({
+      playerId: m.playerId,
+      runs: 0,
+      balls: 0,
+      wickets: 0,
+      catches: 0
+    }));
 
-    // 2. Generate Achievements
-    const newAchievements: Achievement[] = [];
     const allStats = [...homeStats, ...awayStats];
+
+    // 2. Generate Achievements (Will be empty for zero stats, but logic preserved)
+    const newAchievements: Achievement[] = [];
     
     // Player of the Match (Highest Impact: Runs + Wickets*20)
     if (allStats.length > 0) {
@@ -501,7 +683,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
       // Only award POTM if impact is significant (>= 20 points, e.g. 20 runs or 1 wicket)
       if (impact >= 20) {
-        const player = MOCK_PLAYERS.find(p => p.id === topScorer.playerId);
+        const player = players.find(p => p.id === topScorer.playerId);
         if (player) {
           const desc = [];
           if (topScorer.runs > 0) desc.push(`${topScorer.runs} runs`);
@@ -522,7 +704,8 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     // Centuries, Half Centuries & Five Wickets
     allStats.forEach(stat => {
-        const player = MOCK_PLAYERS.find(p => p.id === stat.playerId);
+        // Use real players state
+        const player = players.find(p => p.id === stat.playerId);
         if (!player) return;
 
         // Prevent duplicate awards for same performance (e.g. 100 includes 50)
@@ -569,13 +752,10 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // 3. Generate Certificates
     const newCertificates: Certificate[] = [];
     const sportName = match.sportId === 's1' ? 'Cricket' : 'Football';
-    const organizerName = "Rahul Kumar"; // Mock
+    const organizerName = currentUser?.firstName ? `${currentUser.firstName} ${currentUser.lastName}` : "Organizer";
 
     // Participation Certificates
     allStats.forEach(stat => {
-        const player = MOCK_PLAYERS.find(p => p.id === stat.playerId);
-        if (!player) return;
-
         // Determine team name
         const isHome = homeStats.some(s => s.playerId === stat.playerId);
         const teamName = isHome ? match.homeParticipant.name : match.awayParticipant.name;
@@ -600,10 +780,6 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     // Achievement Certificates
     newAchievements.forEach(ach => {
-        const player = MOCK_PLAYERS.find(p => p.id === ach.playerId);
-        if (!player) return;
-
-        // Determine team name
         const isHome = homeStats.some(s => s.playerId === ach.playerId);
         const teamName = isHome ? match.homeParticipant.name : match.awayParticipant.name;
 
@@ -627,64 +803,37 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     });
 
     if (newCertificates.length > 0) {
-        setCertificates(prev => [...newCertificates, ...prev]);
+      setCertificates(prev => [...newCertificates, ...prev]);
     }
 
-    // Add "Match Ended" event
-    const endEvent: ScoreEvent = {
-      id: Date.now().toString(),
-      timestamp: new Date().toISOString(),
-      points: 0,
-      description: 'Match Ended',
-      type: 'status_change',
-    };
-
-    const updatedMatch = {
-      ...match,
-      status: 'locked' as const, // Auto-lock immediately as per Day 14 requirements (skip 'completed' manual step)
+    // 4. Update Match Status
+    updateMatch(match.id, { 
+      status: 'completed',
       winnerId,
       homeParticipant: { ...match.homeParticipant, result: homeResult, players: homeStats },
       awayParticipant: { ...match.awayParticipant, result: awayResult, players: awayStats },
-      events: [endEvent, ...(match.events || [])]
-    };
+      actualEndTime: new Date().toISOString()
+    });
 
-    setMatches(prev => prev.map(m => m.id === matchId ? updatedMatch : m));
-
-    // Add Feed Item
-    const resultText = winnerId 
-      ? `${winnerId === match.homeParticipant.id ? match.homeParticipant.name : match.awayParticipant.name} won by ${Math.abs(homeScore - awayScore)} runs`
-      : 'Match Drawn';
-
-    const newFeedItem: FeedItem = {
-      id: Date.now().toString(),
-      type: 'match_update',
-      title: `Match Ended: ${resultText}`,
+    // 5. Update Feed
+    const feedItem: FeedItem = {
+      id: `${Date.now()}_end`,
+      type: 'match_result',
+      title: 'Match Completed',
       publishedAt: new Date().toISOString(),
-      relatedEntityId: matchId,
-      content: `${match.homeParticipant.name} ${homeScore} - ${awayScore} ${match.awayParticipant.name}`,
+      relatedEntityId: match.id,
+      content: `${match.homeParticipant.name} ${homeScore}/${match.homeParticipant.wickets || 0} vs ${match.awayParticipant.name} ${awayScore}/${match.awayParticipant.wickets || 0}. Winner: ${winnerId === match.homeParticipant.id ? match.homeParticipant.name : (winnerId === match.awayParticipant.id ? match.awayParticipant.name : 'Draw')}`,
       visibility: 'public'
     };
-    setFeedItems(prev => [newFeedItem, ...prev]);
+    setFeedItems(prev => [feedItem, ...prev]);
     
-    const isMatchFollowed = followedMatches.includes(match.id);
-    const involvesFollowed = isMatchFollowed || followedTeams.includes(match.homeParticipant.id) || followedTeams.includes(match.awayParticipant.id);
-    
-    if (involvesFollowed) {
-      const title = resultText;
-      const body = `${match.homeParticipant.name} vs ${match.awayParticipant.name} • ${match.location}`;
-      maybeNotify({
-        type: 'match_result',
-        title,
-        body,
-        key: `match_result_${match.id}`,
-        relatedMatchId: match.id
-      });
-    }
-
-    // Auto-unfollow match if it was followed
-    if (isMatchFollowed) {
-        setFollowedMatches(prev => prev.filter(id => id !== match.id));
-    }
+    maybeNotify({
+      type: 'match_result',
+      title: 'Match Result',
+      body: feedItem.content,
+      key: `match_result_${match.id}`,
+      relatedMatchId: match.id
+    });
   };
 
   const updatePlayers = () => { console.log('updatePlayers called'); };
@@ -725,8 +874,75 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     });
   }, [followedTournaments, tournaments]);
 
+  const addPlayer = (player: Player) => {
+    setPlayers(prev => [player, ...prev]);
+  };
+
+  const addTournament = (tournament: Tournament) => {
+    setTournaments(prev => [tournament, ...prev]);
+  };
+
+  const updateTournament = (tournament: Tournament) => {
+    setTournaments(prev => prev.map(t => t.id === tournament.id ? tournament : t));
+  };
+
+  const addTeamToTournament = (tournamentId: string, teamId: string) => {
+    setTournaments(prev => prev.map(t => {
+      if (t.id === tournamentId) {
+        const currentTeams = t.teams || [];
+        if (currentTeams.includes(teamId)) return t;
+        return { ...t, teams: [...currentTeams, teamId] };
+      }
+      return t;
+    }));
+  };
+
+  const removeTeamFromTournament = (tournamentId: string, teamId: string) => {
+    setTournaments(prev => prev.map(t => {
+      if (t.id === tournamentId) {
+        return { ...t, teams: (t.teams || []).filter(id => id !== teamId) };
+      }
+      return t;
+    }));
+  };
+
+  const updateTournamentStructure = (tournamentId: string, structure: any) => {
+    setTournaments(prev => prev.map(t => {
+      if (t.id === tournamentId) {
+        return { ...t, structure };
+      }
+      return t;
+    }));
+  };
+
+  const updateTournamentScheduleMode = (tournamentId: string, scheduleMode: 'AUTO' | 'MANUAL' | 'LATER') => {
+    setTournaments(prev => prev.map(t => {
+      if (t.id === tournamentId) {
+        return { ...t, scheduleMode };
+      }
+      return t;
+    }));
+  };
+
+  const addTeam = (team: Team) => {
+    setTeams(prev => [team, ...prev]);
+  };
+
+  const addTeamMember = (teamId: string, member: { playerId: string; role: 'captain' | 'vice-captain' | 'member'; joinedAt: string }) => {
+    setTeams(prev => prev.map(t => t.id === teamId ? { ...t, members: [...t.members, member] } : t));
+  };
+
   return (
     <GlobalContext.Provider value={{
+      addPlayer,
+      addTeam,
+      addTeamMember,
+      addTournament,
+      updateTournament,
+      addTeamToTournament,
+      removeTeamFromTournament,
+      updateTournamentStructure,
+      updateTournamentScheduleMode,
       matches,
       players,
       gameProfiles,
@@ -737,8 +953,11 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       certificates,
       currentUser,
       login,
+      loginWithSupabase,
       logout,
+      updateUserProfile,
       addMatch,
+      updateMatch,
       startMatch,
       scoreMatch,
       endMatch,
@@ -746,6 +965,12 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       updatePlayers,
       updateTeams,
       updateFeed,
+      users,
+      matchScorers,
+      assignScorer,
+      removeScorer,
+      getMatchScorers,
+      canScoreMatch,
       followedTeams,
       followedTournaments,
       followedMatches,

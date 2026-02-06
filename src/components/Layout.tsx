@@ -62,8 +62,8 @@ const Layout: React.FC = () => {
           {/* Primary Actions */}
           <div className="sidebar-group">
             <div className="group-title">QUICK ACTIONS</div>
-            <Link to="/start-tournament" className={`sidebar-link ${isActive('/start-tournament')}`}>
-              Start Tournament
+            <Link to="/tournament/create" className={`sidebar-link ${isActive('/tournament/create')}`}>
+              🏆 START TOURNAMENT / SERIES
             </Link>
             <Link to="/start-match" className={`sidebar-link ${isActive('/start-match')}`}>
               Start Match

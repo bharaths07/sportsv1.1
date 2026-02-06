@@ -1,296 +1,248 @@
-import React, { useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { Share2, QrCode, SlidersHorizontal, Trophy, Award, ChevronLeft } from 'lucide-react';
+import { MatchCard } from '../match/components/MatchCard';
+import { StatsCard, BattingSummaryCard, BowlingSummaryCard, FieldingSummaryCard } from './components/StatsCards';
+import { TrophiesTab, BadgesTab } from './components/AchievementCards';
+import { CurrentTeamCard, PastTeamCard, TeamsTab } from './components/TeamCards';
+import { MediaTabs } from './components/MediaTabs';
 import { useGlobalState } from '../../app/AppProviders';
 
-export const GameProfileScreen: React.FC = () => {
-  const { sport } = useParams<{ sport: string }>();
+type Tab = 'matches' | 'stats' | 'trophies' | 'teams' | 'highlights' | 'photos' | 'badges';
+
+export const GameProfileScreen = () => {
+  const { userId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { players, matches, teams, gameProfiles, currentUser } = useGlobalState();
-  const [activeTab, setActiveTab] = useState<'batting' | 'bowling' | 'fielding'>('batting');
+  const { currentUser, players, matches } = useGlobalState();
+  
+  // Logic to determine if we are viewing "my" profile or someone else's
+  // If route is /profile/cricket/me, userId is undefined, but we treat it as current user
+  // If route is /profile/cricket/:userId, we check if userId matches currentUser.id
+  const isMeRoute = !userId; 
+  // In a real app, we would fetch player data based on userId or currentUser.id
+  const player = isMeRoute 
+    ? players.find(p => p.userId === currentUser?.id)
+    : players.find(p => p.id === userId);
+  
+  // If isMeRoute is true, we are the owner. 
+  // If userId is present, we check if it matches current user's ID
+  const isOwner = isMeRoute || (currentUser && player && player.userId === currentUser.id);
 
-  // 1. Resolve User and Game Profile
-  if (!currentUser) {
-    return <div style={{ padding: '20px', textAlign: 'center' }}>Please login to view profile</div>;
+  const playerMatches = player ? matches.filter(m => 
+    m.homeParticipant.players?.some(p => p.playerId === player.id) ||
+    m.awayParticipant.players?.some(p => p.playerId === player.id)
+  ) : [];
+
+  const activeTab = (searchParams.get('tab') as Tab) || 'matches';
+
+  const handleTabChange = (tab: Tab) => {
+    setSearchParams({ tab });
+  };
+
+  if (!player) {
+    return <div className="p-4 text-center">Player not found</div>;
   }
-
-  const gameProfile = gameProfiles.find(gp => 
-    gp.userId === currentUser.id && 
-    gp.sport.toLowerCase() === sport?.toLowerCase()
-  );
-
-  // In our mock data, User ID matches Player ID. 
-  // In a real app, we'd fetch the User details separately.
-  // Here we fallback to finding the Player object to get Name/Jersey etc.
-  const player = players.find(p => p.id === currentUser.id);
-
-  // --- Aggregation Logic (Reused from PlayerProfileScreen) ---
-  const stats = useMemo(() => {
-    if (!player) return null;
-
-    let totalMatches = 0;
-    let runs = 0;
-    let ballsFaced = 0;
-    let wickets = 0;
-    let fours = 0;
-    let sixes = 0;
-    let highestScore = 0;
-    let bestBowlingWickets = 0;
-    let bestBowlingRuns = 0;
-
-    // Filter matches where this player participated
-    const playerMatches = matches.filter(m => 
-        (m.homeParticipant.players?.some(p => p.playerId === player.id) || 
-         m.awayParticipant.players?.some(p => p.playerId === player.id)) &&
-         (m.status === 'completed' || m.status === 'live')
-    );
-
-    totalMatches = playerMatches.length;
-
-    // Iterate matches to sum stats
-    playerMatches.forEach(m => {
-        const homeP = m.homeParticipant.players?.find(p => p.playerId === player.id);
-        const awayP = m.awayParticipant.players?.find(p => p.playerId === player.id);
-        const pStats = homeP || awayP;
-
-        if (pStats) {
-            runs += pStats.runs;
-            ballsFaced += pStats.balls;
-            wickets += pStats.wickets;
-            
-            if (pStats.runs > highestScore) highestScore = pStats.runs;
-            
-            if (pStats.wickets > bestBowlingWickets) {
-                bestBowlingWickets = pStats.wickets;
-                bestBowlingRuns = 20; // Mock
-            }
-        }
-        
-        m.events?.forEach(e => {
-            if (e.scorerId === player.id && e.type === 'run') {
-                if (e.points === 4) fours++;
-                if (e.points === 6) sixes++;
-            }
-        });
-    });
-
-    const battingAvg = totalMatches > 0 ? (runs / totalMatches).toFixed(1) : '0.0';
-    const strikeRate = ballsFaced > 0 ? ((runs / ballsFaced) * 100).toFixed(1) : '0.0';
-
-    return {
-        totalMatches,
-        runs,
-        wickets,
-        battingAvg,
-        strikeRate,
-        highestScore,
-        bestBowling: `${bestBowlingWickets}/${bestBowlingRuns}`,
-        fours,
-        sixes,
-        recentMatches: playerMatches.slice(0, 5)
-    };
-  }, [player, matches]);
-
-  if (!gameProfile || !player) {
-    return <div style={{ padding: '20px', textAlign: 'center' }}>Game Profile not found for {sport}</div>;
-  }
-
-  const teamIds = teams.filter(t => t.members.some(m => m.playerId === player.id)).map(t => t.name);
 
   return (
-    <div style={{ paddingBottom: '40px', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
-      {/* 1. Header with Concept Change */}
-      <div style={{ 
-          backgroundColor: '#dc2626', // Using a distinct color or standard brand color
-          color: 'white',
-          padding: '16px 20px',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-      }}>
-          <div onClick={() => navigate('/profile')} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>←</span>
-            <span style={{ fontWeight: 600 }}>Game Profile ({gameProfile.sport})</span>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* 1. Header Section */}
+      <div className="relative bg-gradient-to-br from-red-600 to-red-800 pb-0 pt-safe-top text-white">
+        {/* Top Actions Container */}
+        <div className="mx-auto max-w-[1200px] px-4 py-3 sm:px-6">
+          <div className="flex items-center justify-between">
+            <button onClick={() => navigate(-1)} className="rounded-full bg-white/10 p-2 backdrop-blur-sm transition-colors hover:bg-white/20">
+              <ChevronLeft className="h-5 w-5 text-white" />
+            </button>
+            <div className="flex items-center space-x-3">
+              <button className="rounded-full bg-white/10 p-2 backdrop-blur-sm transition-colors hover:bg-white/20">
+                <QrCode className="h-5 w-5 text-white" />
+              </button>
+              <button className="rounded-full bg-white/10 p-2 backdrop-blur-sm transition-colors hover:bg-white/20">
+                <Share2 className="h-5 w-5 text-white" />
+              </button>
+              <button className="cursor-not-allowed rounded-full bg-white/5 p-2 backdrop-blur-sm opacity-50">
+                <SlidersHorizontal className="h-5 w-5 text-white" />
+              </button>
+            </div>
           </div>
-          <div>Go PRO &gt;</div>
+        </div>
+
+        {/* Profile Content Container (Step A & B) */}
+        <div className="mx-auto max-w-[1200px] px-4 pb-8 pt-4 sm:px-5 lg:px-6">
+          <div className="grid grid-cols-12 gap-8">
+            {/* Left Column: Identity (60% approx) */}
+            <div className="col-span-12 flex flex-col items-start md:col-span-7 lg:col-span-8">
+              <div className="flex w-full flex-col items-start sm:flex-row sm:items-center sm:space-x-6">
+                {/* Avatar */}
+                <div className="relative mb-4 sm:mb-0">
+                  <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-white/20 shadow-xl sm:h-28 sm:w-28 lg:h-32 lg:w-32">
+                    <img 
+                      src={player.cricketAvatarUrl || player.avatarUrl} 
+                      alt={`${player.firstName} ${player.lastName}`}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  {isOwner && (
+                    <button className="absolute bottom-0 right-0 rounded-full bg-gray-900/80 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+                      EDIT
+                    </button>
+                  )}
+                </div>
+
+                {/* Text Content */}
+                <div className="flex-1">
+                  <h1 className="text-[22px] font-bold text-white sm:text-3xl lg:text-4xl">{`${player.firstName} ${player.lastName}`}</h1>
+                  
+                  {/* Meta Line 1: Location & Views */}
+                  <div className="mt-2 flex items-center space-x-3 text-sm font-medium text-red-100/90">
+                    {player.location && (
+                      <span className="flex items-center">
+                        {player.location}
+                      </span>
+                    )}
+                    {player.profileViews && (
+                      <>
+                        <span className="h-1 w-1 rounded-full bg-red-200/50" />
+                        <span>{player.profileViews} views</span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Meta Line 2: Roles */}
+                  <div className="mt-1 flex items-center space-x-1 text-xs text-red-100/80 sm:text-sm">
+                    <span>{player.role}</span>
+                    {player.battingStyle && (
+                      <>
+                        <span>,</span>
+                        <span>{player.battingStyle}</span>
+                      </>
+                    )}
+                    {player.bowlingStyle && (
+                      <>
+                        <span>,</span>
+                        <span>{player.bowlingStyle}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA Row - Vertical on Mobile, Horizontal on Tablet/Desktop */}
+              <div className="mt-6 flex w-full flex-col space-y-3 sm:ml-[136px] sm:w-auto sm:flex-row sm:space-x-3 sm:space-y-0 lg:ml-[152px]">
+                <button className="flex w-full items-center justify-center space-x-2 rounded-lg border border-white/30 bg-white/10 px-6 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition-colors hover:bg-white/20 sm:w-auto">
+                  <Trophy className="h-4 w-4" />
+                  <span>Top Players</span>
+                </button>
+                <button className="flex w-full items-center justify-center space-x-2 rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-red-700 shadow-lg transition-transform active:scale-95 sm:w-auto">
+                  <Award className="h-4 w-4" />
+                  <span>Insights</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Right Column: Visual Space (40% approx) - Hidden on mobile, visible on md+ */}
+            <div className="hidden md:col-span-5 md:block lg:col-span-4">
+              <div className="h-full w-full rounded-xl bg-white/5 backdrop-blur-sm">
+                {/* Placeholder for future stadium image or pattern */}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* 2. Profile Card */}
-      <div style={{ backgroundColor: 'white', padding: '24px 20px', borderBottom: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-             {/* Avatar */}
-             <div style={{ 
-                 width: '64px', height: '64px', 
-                 borderRadius: '50%', 
-                 backgroundColor: '#e2e8f0', 
-                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                 fontSize: '24px', fontWeight: 700, color: '#64748b'
-             }}>
-                 {player.firstName[0]}{player.lastName[0]}
-             </div>
-             
-             {/* Info */}
-             <div style={{ flex: 1 }}>
-                 <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0' }}>
-                     {player.firstName} {player.lastName}
-                 </h1>
-                 <div style={{ fontSize: '14px', color: '#64748b', marginBottom: '8px' }}>
-                     {teamIds.join(', ') || 'Free Agent'}
-                 </div>
-                 <div style={{ display: 'flex', gap: '8px' }}>
-                     <span style={{ 
-                         backgroundColor: '#eff6ff', color: '#1d4ed8', 
-                         fontSize: '11px', fontWeight: 700, 
-                         padding: '4px 8px', borderRadius: '100px',
-                         textTransform: 'uppercase'
-                     }}>
-                         {gameProfile.role || 'Player'}
-                     </span>
-                 </div>
-             </div>
-             
-             {/* Jersey Number */}
-             {player.jerseyNumber && (
-                 <div style={{ fontSize: '32px', fontWeight: 900, color: '#cbd5e1', lineHeight: 1 }}>
-                     {player.jerseyNumber}
-                 </div>
-             )}
+      {/* 2. Tabs Navigation (Step C) */}
+      <div className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
+        <div className="mx-auto max-w-[1200px] px-4 sm:px-5 lg:px-6">
+          <div className="flex overflow-x-auto scrollbar-hide sm:justify-center lg:justify-start">
+            {[
+              { id: 'matches', label: 'Matches', count: 12 },
+              { id: 'stats', label: 'Stats' },
+              { id: 'trophies', label: 'Trophies', count: player.trophies.length, countColor: 'bg-yellow-100 text-yellow-700' },
+              { id: 'badges', label: 'Badges', count: player.badges.length, countColor: 'bg-purple-100 text-purple-700' },
+              { id: 'teams', label: 'Teams' },
+              { id: 'highlights', label: 'Highlights' },
+              { id: 'photos', label: 'Photos', count: player.photos.length, countColor: 'bg-green-100 text-green-700' }
+            ].map((tab) => (
+              <button 
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id as Tab)}
+                className={`flex min-w-fit items-center space-x-2 border-b-2 px-4 py-4 text-[13px] font-medium transition-colors sm:text-sm lg:text-[15px] ${
+                  activeTab === tab.id 
+                    ? 'border-red-600 text-red-600' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <span className={activeTab === tab.id ? 'font-bold' : ''}>{tab.label}</span>
+                {tab.count !== undefined && (
+                  <span className={`rounded-full px-2 py-0.5 text-xs ${tab.countColor || 'bg-gray-100 text-gray-600'}`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
-          
-          <div style={{ marginTop: '16px', fontSize: '13px', color: '#475569', display: 'flex', gap: '16px' }}>
-              <div>🏏 {gameProfile.battingStyle || 'Right-hand bat'}</div>
-              <div>🥎 {gameProfile.bowlingStyle || 'Right-arm medium'}</div>
-          </div>
+        </div>
       </div>
 
-      <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-          
-          {/* 3. Career Summary */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
-              <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                  <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>{stats?.totalMatches}</div>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Matches</div>
+      {/* 3. Tab Content Container (Step D) */}
+      <div className="mx-auto min-h-[400px] max-w-[1200px] px-4 py-6 sm:px-5 lg:px-6">
+        {activeTab === 'matches' && (
+          <div className="space-y-4">
+            {playerMatches.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <p>No matches played yet.</p>
               </div>
-              <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                  <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>{stats?.runs}</div>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Runs</div>
-              </div>
-              <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                  <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>{stats?.wickets}</div>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Wickets</div>
-              </div>
+            ) : (
+              playerMatches.map(match => (
+                <MatchCard key={match.id} match={match} />
+              ))
+            )}
           </div>
+        )}
 
-          {/* 4. Detailed Stats Tabs */}
-          <div style={{ backgroundColor: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', borderBottom: '1px solid #f1f5f9' }}>
-                  {['batting', 'bowling', 'fielding'].map(tab => (
-                      <button
-                          key={tab}
-                          onClick={() => setActiveTab(tab as any)}
-                          style={{
-                              flex: 1,
-                              padding: '12px',
-                              background: activeTab === tab ? '#f8fafc' : 'white',
-                              border: 'none',
-                              borderBottom: activeTab === tab ? '2px solid #0f172a' : '2px solid transparent',
-                              fontWeight: activeTab === tab ? 700 : 500,
-                              color: activeTab === tab ? '#0f172a' : '#64748b',
-                              cursor: 'pointer',
-                              textTransform: 'capitalize'
-                          }}
-                      >
-                          {tab}
-                      </button>
-                  ))}
-              </div>
-              
-              <div style={{ padding: '20px' }}>
-                  {activeTab === 'batting' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                          <div>
-                              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Average</div>
-                              <div style={{ fontSize: '18px', fontWeight: 700 }}>{stats?.battingAvg}</div>
-                          </div>
-                          <div>
-                              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Strike Rate</div>
-                              <div style={{ fontSize: '18px', fontWeight: 700 }}>{stats?.strikeRate}</div>
-                          </div>
-                          <div>
-                              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Highest Score</div>
-                              <div style={{ fontSize: '18px', fontWeight: 700 }}>{stats?.highestScore}</div>
-                          </div>
-                          <div>
-                              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Boundaries</div>
-                              <div style={{ fontSize: '18px', fontWeight: 700 }}>{stats?.fours} (4s) / {stats?.sixes} (6s)</div>
-                          </div>
-                      </div>
-                  )}
-                  {activeTab === 'bowling' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                          <div>
-                              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Wickets</div>
-                              <div style={{ fontSize: '18px', fontWeight: 700 }}>{stats?.wickets}</div>
-                          </div>
-                          <div>
-                              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Best Figures</div>
-                              <div style={{ fontSize: '18px', fontWeight: 700 }}>{stats?.bestBowling}</div>
-                          </div>
-                      </div>
-                  )}
-                  {activeTab === 'fielding' && (
-                       <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>
-                           Fielding stats not yet available
-                       </div>
-                  )}
-              </div>
+        {activeTab === 'stats' && (
+          <div>
+            <h3 className="mb-4 text-lg font-bold text-slate-900">Career Stats</h3>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <BattingSummaryCard stats={player.stats.batting} />
+              <BowlingSummaryCard stats={player.stats.bowling} />
+              <FieldingSummaryCard stats={player.stats.fielding} />
+            </div>
           </div>
+        )}
 
-          {/* 5. Recent Form */}
-          <div style={{ marginBottom: '40px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>Recent Form</h3>
-              <div style={{ backgroundColor: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                  {stats?.recentMatches.length === 0 ? (
-                      <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>No recent matches</div>
-                  ) : (
-                      stats?.recentMatches.map((m) => {
-                          const isHome = m.homeParticipant.players?.some(p => p.playerId === player.id);
-                          const opponent = isHome ? m.awayParticipant.name : m.homeParticipant.name;
-                          const pStats = isHome 
-                            ? m.homeParticipant.players?.find(p => p.playerId === player.id)
-                            : m.awayParticipant.players?.find(p => p.playerId === player.id);
-                          
-                          return (
-                              <div 
-                                  key={m.id}
-                                  onClick={() => navigate(`/match/${m.id}`)}
-                                  style={{ 
-                                      padding: '16px', 
-                                      borderBottom: '1px solid #f1f5f9', 
-                                      display: 'flex', 
-                                      justifyContent: 'space-between',
-                                      alignItems: 'center',
-                                      cursor: 'pointer'
-                                  }}
-                              >
-                                  <div>
-                                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>vs {opponent}</div>
-                                      <div style={{ fontSize: '12px', color: '#94a3b8' }}>{new Date(m.date).toLocaleDateString()}</div>
-                                  </div>
-                                  <div style={{ textAlign: 'right' }}>
-                                      <div style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>
-                                          {pStats?.runs} <span style={{ fontSize: '12px', fontWeight: 400, color: '#64748b' }}>({pStats?.balls})</span>
-                                      </div>
-                                      {pStats?.wickets ? (
-                                          <div style={{ fontSize: '12px', fontWeight: 600, color: '#7e22ce' }}>
-                                              {pStats.wickets} Wkts
-                                          </div>
-                                      ) : null}
-                                  </div>
-                              </div>
-                          );
-                      })
-                  )}
-              </div>
+        {activeTab === 'trophies' && (
+          <div>
+            <TrophiesTab trophies={player.trophies} />
           </div>
+        )}
 
+        {activeTab === 'badges' && (
+          <div>
+            <BadgesTab badges={player.badges} />
+          </div>
+        )}
+
+        {activeTab === 'teams' && (
+          <TeamsTab currentTeam={player.currentTeam} pastTeams={player.pastTeams} />
+        )}
+
+        {activeTab === 'highlights' && (
+          <MediaTabs 
+            highlights={player.highlights} 
+            photos={[]} 
+            activeTab="highlights" 
+          />
+        )}
+
+        {activeTab === 'photos' && (
+          <MediaTabs 
+            highlights={[]} 
+            photos={player.photos} 
+            activeTab="photos" 
+          />
+        )}
       </div>
     </div>
   );

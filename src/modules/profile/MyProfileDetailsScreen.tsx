@@ -4,218 +4,185 @@ import { useGlobalState } from '../../app/AppProviders';
 
 export const MyProfileDetailsScreen: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser, logout } = useGlobalState();
+  const { currentUser } = useGlobalState();
   const isGuest = !currentUser;
 
   // Resolve user display data
   const userData = isGuest ? {
     name: 'Guest User',
-    email: 'Not logged in',
-    initial: 'G',
+    location: 'Location not set',
     memberSince: '-',
-    location: '-',
-    type: 'Guest',
+    avatarUrl: null,
+    initial: 'G',
     followers: 0,
     views: 0,
-    avatarUrl: null
+    bio: ''
   } : {
-    name: currentUser.name,
-    email: currentUser.email,
-    initial: currentUser.name.charAt(0),
-    memberSince: `Since ${new Date().getFullYear()}`, // Mock
-    location: 'Bengaluru (Bangalore)', // Mock
-    type: 'Registered',
-    followers: 3, // Mock
-    views: 40, // Mock
-    avatarUrl: null // Mock for now, support adding it later
+    name: `${currentUser.firstName} ${currentUser.lastName}`,
+    location: currentUser.location || 'Location not set',
+    memberSince: currentUser.memberSince, // "Since 2022"
+    avatarUrl: currentUser.avatarUrl,
+    initial: currentUser.firstName.charAt(0),
+    followers: currentUser.followersCount,
+    views: currentUser.profileViews,
+    bio: currentUser.bio
+  };
+
+  const handleCtaClick = () => {
+    if (isGuest) {
+      navigate('/login');
+    } else {
+      navigate('/profile/edit');
+    }
   };
 
   return (
-    <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', paddingBottom: '80px' }}>
+    <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
-      {/* A. Header */}
-      <div style={{ 
-        backgroundColor: 'white', 
-        padding: '16px 20px', 
-        borderBottom: '1px solid #e2e8f0',
-        display: 'flex', alignItems: 'center', gap: '16px'
-      }}>
-        <div 
-          onClick={() => navigate('/profile')}
-          style={{ cursor: 'pointer', fontSize: '20px', color: '#64748b' }}
-        >
-          ←
+      {/* 1. Red Top App Bar & Header Background */}
+      <div style={{ backgroundColor: '#dc2626', paddingBottom: '60px' }}>
+        {/* App Bar */}
+        <div style={{ 
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '16px 20px', color: 'white'
+        }}>
+          <div onClick={() => navigate('/profile')} style={{ fontSize: '24px', cursor: 'pointer' }}>
+            ←
+          </div>
+          <div onClick={() => navigate('/profile/cricket/me')} style={{ fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+            Cricket profile 
+            <span style={{ fontSize: '12px' }}>›</span>
+          </div>
         </div>
-        <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-          My Profile
-        </h1>
       </div>
 
-      <div style={{ padding: '20px' }}>
+      {/* 2. Profile Content (Overlapping) */}
+      <div style={{ 
+        backgroundColor: 'white', 
+        borderTopLeftRadius: '0px', borderTopRightRadius: '0px', 
+        flex: 1,
+        position: 'relative',
+        padding: '0 20px'
+      }}>
         
-        {/* B. Profile Card (Personal Header) */}
-        <div style={{ 
-          backgroundColor: 'white', borderRadius: '12px', padding: '24px 20px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
-          marginBottom: '20px'
-        }}>
-          {/* Avatar with Edit Overlay */}
-          <div style={{ position: 'relative', marginBottom: '16px' }}>
+        {/* Avatar & Basic Info Row */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '24px' }}>
+          
+          {/* Avatar (Overlapping) */}
+          <div style={{ 
+            marginTop: '-40px', // Pull up into red area
+            marginRight: '16px',
+            position: 'relative'
+          }}>
             <div style={{ 
-              width: '96px', height: '96px', borderRadius: '50%', backgroundColor: '#f1f5f9',
+              width: '100px', height: '100px', 
+              borderRadius: '50%', 
+              backgroundColor: '#f1f5f9',
+              border: '4px solid white',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              overflow: 'hidden',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '36px', fontWeight: 700, color: '#64748b',
-              border: '4px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              fontSize: '32px', color: '#64748b', fontWeight: 700
             }}>
-              {userData.initial}
+              {userData.avatarUrl ? (
+                <img src={userData.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                userData.initial
+              )}
             </div>
+            {/* Edit Overlay on Avatar */}
             {!isGuest && (
-              <div style={{ 
-                position: 'absolute', bottom: '0', right: '0',
-                width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#0f172a',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'white', fontSize: '14px', border: '2px solid white', cursor: 'pointer'
-              }}>
-                ✎
+              <div 
+                onClick={() => navigate('/profile/edit')}
+                style={{
+                  position: 'absolute', bottom: '0', left: '0', right: '0',
+                  backgroundColor: 'rgba(0,0,0,0.6)',
+                  color: 'white', fontSize: '10px', textAlign: 'center',
+                  padding: '2px 0', cursor: 'pointer'
+                }}
+              >
+                Edit
               </div>
             )}
           </div>
 
-          {/* Identity */}
-          <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px 0' }}>
-            {userData.name}
-          </h2>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', color: '#64748b', fontSize: '14px' }}>
-            <span>📍</span>
-            <span>{userData.location}</span>
-          </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8', fontSize: '13px' }}>
-            <span>📅</span>
-            <span>{userData.memberSince}</span>
-          </div>
-
-          {/* Quick Stats Strip */}
-          <div style={{ 
-            display: 'flex', width: '100%', marginTop: '24px', paddingTop: '24px',
-            borderTop: '1px solid #f1f5f9'
-          }}>
-            {/* 1. QR Code */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', opacity: isGuest ? 0.5 : 1 }}>
-              <div style={{ fontSize: '24px', color: '#0f172a' }}>🏁</div>
-              <span style={{ fontSize: '12px', color: '#64748b' }}>QR code</span>
-            </div>
-            
-            {/* Divider */}
-            <div style={{ width: '1px', backgroundColor: '#e2e8f0', height: '40px' }} />
-
-            {/* 2. Followers */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-              <div style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>{userData.followers}</div>
-              <span style={{ fontSize: '12px', color: '#64748b' }}>Followers</span>
-            </div>
-
-            {/* Divider */}
-            <div style={{ width: '1px', backgroundColor: '#e2e8f0', height: '40px' }} />
-
-            {/* 3. Views */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-              <div style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>{userData.views}</div>
-              <span style={{ fontSize: '12px', color: '#64748b' }}>Profile views</span>
-            </div>
-          </div>
-          
-          {/* Primary CTA */}
-          <div style={{ marginTop: '24px', width: '100%' }}>
-             {isGuest ? (
-               <button 
-                onClick={() => navigate('/login')}
-                style={{ 
-                  width: '100%', padding: '12px', backgroundColor: '#3b82f6', color: 'white', 
-                  border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer'
-                }}
-               >
-                 Login to Complete Profile
-               </button>
-             ) : (
-               <button 
-                onClick={() => console.log('Edit Profile')}
-                style={{ 
-                  width: '100%', padding: '12px', backgroundColor: '#f1f5f9', color: '#334155', 
-                  border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer'
-                }}
-               >
-                 Edit Profile
-               </button>
-             )}
-          </div>
-        </div>
-
-        {/* C. Account Info Section */}
-        <div style={{ 
-          backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', 
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '24px'
-        }}>
-          <h3 style={{ 
-            fontSize: '14px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', 
-            padding: '16px 20px', borderBottom: '1px solid #f1f5f9', margin: 0 
-          }}>
-            Account Details
-          </h3>
-          
-          {[
-            { label: 'Display Name', value: userData.name },
-            { label: 'Email Address', value: userData.email },
-            { label: 'Location', value: userData.location },
-            { label: 'Account Type', value: userData.type },
-            { label: 'Member Since', value: userData.memberSince },
-          ].map((item) => (
-            <div key={item.label} style={{ 
-              padding: '16px 20px', 
-              borderBottom: '1px solid #f1f5f9',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+          {/* Name & Identity Details (Right of Avatar) */}
+          <div style={{ paddingTop: '12px', flex: 1 }}>
+            <h1 style={{ 
+              fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px 0',
+              lineHeight: '1.2'
             }}>
-              <span style={{ fontSize: '14px', color: '#64748b' }}>{item.label}</span>
-              <span style={{ fontSize: '14px', fontWeight: 500, color: '#0f172a' }}>{item.value}</span>
+              {userData.name}
+            </h1>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b', fontSize: '13px' }}>
+                <span>📍</span>
+                <span>{userData.location}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8', fontSize: '12px' }}>
+                <span>📅</span>
+                <span>Since {userData.memberSince}</span>
+              </div>
             </div>
-          ))}
+          </div>
+
+          {/* "Go PRO" button replacement (optional, per user request for no monetization, we omit or use Edit) 
+              The user asked for "Full-width primary CTA", so we keep this area clean 
+              or maybe put a small "Edit" button here if needed. 
+              For now, clean.
+          */}
         </div>
 
-        {/* D. Actions */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {!isGuest && (
-            <button 
-              onClick={() => console.log('Change Password')}
-              style={{ 
-                width: '100%', padding: '14px', backgroundColor: 'white', color: '#334155',
-                border: '1px solid #cbd5e1', borderRadius: '12px', fontSize: '14px', fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              Change Password
-            </button>
-          )}
-          
-          <button 
-            onClick={() => { logout(); navigate('/'); }}
-            style={{ 
-              width: '100%', padding: '14px', backgroundColor: '#fee2e2', color: '#dc2626',
-              border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 600,
-              cursor: 'pointer'
+        {/* 3. Stats Strip */}
+        <div style={{ 
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '20px 0',
+          borderTop: '1px solid #f1f5f9',
+          borderBottom: '1px solid #f1f5f9'
+        }}>
+          {/* QR Code */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+            <div style={{ fontSize: '20px', color: '#059669' }}>⚃</div> {/* Greenish QR icon look */}
+            <span style={{ fontSize: '12px', color: '#64748b' }}>QR code</span>
+          </div>
+
+          <div style={{ width: '1px', height: '30px', backgroundColor: '#e2e8f0' }} />
+
+          {/* Followers */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+            <div style={{ fontSize: '18px', fontWeight: 700, color: '#059669' }}>{userData.followers}</div>
+            <span style={{ fontSize: '12px', color: '#64748b' }}>Followers</span>
+          </div>
+
+          <div style={{ width: '1px', height: '30px', backgroundColor: '#e2e8f0' }} />
+
+          {/* Profile Views */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+            <div style={{ fontSize: '18px', fontWeight: 700, color: '#059669' }}>{userData.views}</div>
+            <span style={{ fontSize: '12px', color: '#64748b' }}>Profile views</span>
+          </div>
+        </div>
+
+        {/* 4. Full Width CTA (Bottom) */}
+        <div style={{ marginTop: '40px' }}>
+          <button
+            onClick={handleCtaClick}
+            style={{
+              width: '100%',
+              padding: '16px',
+              backgroundColor: '#059669', // Green CTA like "Go PRO" or "Buy now" in image
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
             }}
           >
-            {isGuest ? 'Clear Guest Session' : 'Logout'}
+            {isGuest ? 'Login to Complete Profile' : 'Edit Profile'}
           </button>
-          
-          {!isGuest && (
-             <div style={{ textAlign: 'center', marginTop: '8px' }}>
-               <span style={{ fontSize: '12px', color: '#94a3b8', textDecoration: 'underline', cursor: 'pointer' }}>
-                 Delete Account
-               </span>
-             </div>
-          )}
         </div>
 
       </div>

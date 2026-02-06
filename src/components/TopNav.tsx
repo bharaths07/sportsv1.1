@@ -29,7 +29,6 @@ export const TopNav: React.FC = () => {
         {/* 2. Primary Sections (Center) - Destinations Only */}
         <div className="nav-center">
           <Link to="/" className={isActive('/')}>Home</Link>
-          <Link to="/live" className={isActive('/live')}>Live</Link>
           <Link to="/matches" className={isActive('/matches')}>Matches</Link>
           <Link to="/tournaments" className={isActive('/tournaments')}>Tournaments</Link>
           <Link to="/teams" className={isActive('/teams')}>Teams</Link>
@@ -49,7 +48,7 @@ export const TopNav: React.FC = () => {
           <div className="avatar-container" onClick={() => setShowMenu(true)}>
             <div className="avatar-circle">
               {currentUser ? (
-                <span>{currentUser.name.charAt(0).toUpperCase()}</span>
+                <span>{currentUser.firstName.charAt(0).toUpperCase()}</span>
               ) : (
                 <span>👤</span>
               )}

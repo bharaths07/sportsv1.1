@@ -72,8 +72,10 @@ const ActiveFilters: React.FC<{
 const MainTabs: React.FC<{
   activeTab: string;
   onTabChange: (tab: string) => void;
-}> = ({ activeTab, onTabChange }) => {
+  showAssigned?: boolean;
+}> = ({ activeTab, onTabChange, showAssigned }) => {
   const tabs = ['Top Matches', 'Live', 'Upcoming', 'Finished'];
+  if (showAssigned) tabs.push('Assigned');
   
   return (
     <div style={{ 
@@ -536,7 +538,7 @@ const GroupedMatchesList: React.FC<GroupedMatchesListProps> = ({
 // --- Main Screen ---
 
 export const MatchesScreen: React.FC = () => {
-  const { matches, followedMatches, tournaments, followedTournaments } = useGlobalState();
+  const { matches, followedMatches, tournaments, followedTournaments, currentUser, getMatchScorers } = useGlobalState();
   const [activeTab, setActiveTab] = useState('Top Matches');
   
   // Filters
@@ -572,7 +574,13 @@ export const MatchesScreen: React.FC = () => {
     let result = [...matches];
 
     // 1. Tab Context
-    if (activeTab === 'Live') {
+    if (activeTab === 'Assigned') {
+      result = result.filter(m => {
+         if (!currentUser) return false;
+         const scorers = getMatchScorers(m.id);
+         return scorers.some(s => s.userId === currentUser.id);
+      });
+    } else if (activeTab === 'Live') {
       result = result.filter(m => m.status === 'live');
     } else if (activeTab === 'Upcoming') {
       result = result.filter(m => m.status === 'draft');
@@ -612,7 +620,7 @@ export const MatchesScreen: React.FC = () => {
     }
 
     return result;
-  }, [matches, activeTab, activeFormat, activeLevel, activeLocation, activeTournamentId, showFollowedOnly, followedMatches]);
+  }, [matches, activeTab, activeFormat, activeLevel, activeLocation, activeTournamentId, showFollowedOnly, followedMatches, currentUser, getMatchScorers]);
 
   // Active Chips Logic
   const activeChips = [];
@@ -681,7 +689,11 @@ export const MatchesScreen: React.FC = () => {
             }} onClick={() => setGroupByTournament(true)}>By Tournament</span>
         </div>
 
-        <MainTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        <MainTabs 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab} 
+          showAssigned={!!currentUser} 
+        />
       </div>
 
       {/* 2. Main Layout */}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tournament } from '../../../data/tournaments';
+import { Tournament } from '../../../domain/tournament';
 
 interface TournamentHeaderProps {
   tournament: Tournament;

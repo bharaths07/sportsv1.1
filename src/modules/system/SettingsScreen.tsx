@@ -50,7 +50,7 @@ export const SettingsScreen: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
                   <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>Name</div>
-                  <div style={{ fontSize: '16px', fontWeight: '500' }}>{currentUser.name}</div>
+                  <div style={{ fontSize: '16px', fontWeight: '500' }}>{currentUser.firstName} {currentUser.lastName}</div>
                 </div>
                 <div>
                   <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>Email</div>

@@ -54,12 +54,18 @@ export const MatchStrip: React.FC = () => {
       </div>
 
       <div className="nu-cards-row">
-        {data.map(m => {
-           const isTeamFollowed = followedTeams.includes(m.homeParticipant.id) || followedTeams.includes(m.awayParticipant.id);
-           const isMatchFollowed = followedMatches.includes(m.id);
-           const isFollowed = isMatchFollowed || isTeamFollowed;
-           return <MatchCard key={m.id} match={m} isFollowed={isFollowed} />;
-        })}
+        {data.length === 0 ? (
+          <div className="nu-empty-state">
+            {tab === 'live' ? 'No live matches right now.' : 'No matches available.'}
+          </div>
+        ) : (
+          data.map(m => {
+             const isTeamFollowed = followedTeams.includes(m.homeParticipant.id) || followedTeams.includes(m.awayParticipant.id);
+             const isMatchFollowed = followedMatches.includes(m.id);
+             const isFollowed = isMatchFollowed || isTeamFollowed;
+             return <MatchCard key={m.id} match={m} isFollowed={isFollowed} />;
+          })
+        )}
       </div>
     </section>
   );

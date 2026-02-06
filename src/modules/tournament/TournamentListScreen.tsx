@@ -66,35 +66,49 @@ export const TournamentListScreen: React.FC = () => {
   };
 
   const topCarouselItems = useMemo(() => {
-    const examples = [
-      { id: 't20wc2026', name: 'T20 WC 2026', poster: 'https://placehold.co/120x160/0d1630/ffffff?text=T20+WC' },
-      { id: 'wpl2026', name: 'WPL 2026', poster: 'https://placehold.co/120x160/12223d/ffffff?text=WPL' },
-      { id: 'nivind2026', name: 'NZ vs IND 2026', poster: 'https://placehold.co/120x160/1f2e46/ffffff?text=NZ+vs+IND' },
-      { id: 'engsl2026', name: 'ENG vs SL 2026', poster: 'https://placehold.co/120x160/2a3a55/ffffff?text=ENG+vs+SL' },
-      { id: 'auspak2026', name: 'AUS vs PAK 2026', poster: 'https://placehold.co/120x160/33435f/ffffff?text=AUS+vs+PAK' },
-      { id: 'u192026', name: 'U19 World Cup 2026', poster: 'https://placehold.co/120x160/3b4b67/ffffff?text=U19+WC' }
-    ];
-    return examples;
-  }, []);
+    // Show real tournaments in carousel (Ongoing/Upcoming prioritized)
+    const featured = tournaments
+      .filter(t => t.status !== 'completed')
+      .slice(0, 10);
+      
+    return featured.map(t => ({
+      id: t.id,
+      name: t.name,
+      poster: t.bannerUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=random`
+    }));
+  }, [tournaments]);
+
+  // ... (keep existing code)
 
   return (
     <div style={{ padding: '24px 32px', backgroundColor: '#ffffff' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '32px' }}>
         <div>
-          <div style={{ backgroundColor: '#1f2b3a', borderRadius: '12px', padding: '16px', position: 'relative', overflow: 'hidden', marginBottom: '24px' }}>
-            <button onClick={() => scrollByCards('left')} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', zIndex: 2, width: '32px', height: '32px', borderRadius: '16px', border: 'none', background: '#0d1522', color: '#fff', cursor: 'pointer' }}>{'<'}</button>
-            <div ref={carouselRef} style={{ display: 'flex', gap: '16px', overflowX: 'auto', padding: '8px 48px', scrollBehavior: 'smooth' }}>
-              {topCarouselItems.map(item => (
-                <div key={item.id} style={{ width: '120px', minWidth: '120px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div style={{ width: '120px', height: '160px', borderRadius: '8px', backgroundImage: `url(${item.poster})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                  <div style={{ color: '#e8eef7', fontSize: '13px', marginTop: '8px', textAlign: 'center' }}>{item.name}</div>
-                </div>
-              ))}
+          {topCarouselItems.length > 0 && (
+            <div style={{ backgroundColor: '#1f2b3a', borderRadius: '12px', padding: '16px', position: 'relative', overflow: 'hidden', marginBottom: '24px' }}>
+              <button onClick={() => scrollByCards('left')} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', zIndex: 2, width: '32px', height: '32px', borderRadius: '16px', border: 'none', background: '#0d1522', color: '#fff', cursor: 'pointer' }}>{'<'}</button>
+              <div ref={carouselRef} style={{ display: 'flex', gap: '16px', overflowX: 'auto', padding: '8px 48px', scrollBehavior: 'smooth' }}>
+                {topCarouselItems.map(item => (
+                  <Link key={item.id} to={`/tournament/${item.id}`} style={{ textDecoration: 'none' }}>
+                    <div style={{ width: '120px', minWidth: '120px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <div style={{ width: '120px', height: '160px', borderRadius: '8px', backgroundImage: `url(${item.poster})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                      <div style={{ color: '#e8eef7', fontSize: '13px', marginTop: '8px', textAlign: 'center' }}>{item.name}</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              <button onClick={() => scrollByCards('right')} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', zIndex: 2, width: '32px', height: '32px', borderRadius: '16px', border: 'none', background: '#0d1522', color: '#fff', cursor: 'pointer' }}>{'>'}</button>
             </div>
-            <button onClick={() => scrollByCards('right')} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', zIndex: 2, width: '32px', height: '32px', borderRadius: '16px', border: 'none', background: '#0d1522', color: '#fff', cursor: 'pointer' }}>{'>'}</button>
-          </div>
+          )}
 
-          {groupedByMonth.map(([month, items]) => (
+          {groupedByMonth.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: '#64748b' }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🏆</div>
+              <div style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a' }}>No tournaments found</div>
+              <p style={{ marginTop: '8px' }}>There are no tournaments matching your filters.</p>
+            </div>
+          ) : (
+            groupedByMonth.map(([month, items]) => (
             <div key={month} style={{ marginBottom: '24px' }}>
               <div style={{ fontSize: '14px', fontWeight: 600, color: '#333', marginBottom: '8px' }}>{month}</div>
               <div style={{ height: '1px', backgroundColor: '#eee', marginBottom: '8px' }} />
@@ -112,7 +126,7 @@ export const TournamentListScreen: React.FC = () => {
                 ))}
               </div>
             </div>
-          ))}
+          )))}
         </div>
 
         <aside style={{ width: '100%' }}>

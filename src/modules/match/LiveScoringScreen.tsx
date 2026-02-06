@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
-import { LoginModal } from '../../components/LoginModal';
+import { useRequireAuth } from '../../hooks/useRequireAuth';
 import { LoadingButton } from '../../components/LoadingButton';
 
 export const LiveScoringScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { matches, currentUser, scoreMatch, endMatch, startMatch } = useGlobalState();
+  const requireAuth = useRequireAuth();
+  const { matches, currentUser, scoreMatch, endMatch, startMatch, canScoreMatch } = useGlobalState();
   const match = matches.find(m => m.id === id);
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [isEnding, setIsEnding] = useState(false); // Double-click protection
   
   // Dev toggle for Viewer/Scorer mode verification
@@ -25,10 +25,50 @@ export const LiveScoringScreen: React.FC = () => {
   }
 
   // Determine permissions
-  const isCreator = currentUser && (match.createdByUserId === currentUser.id || !match.createdByUserId);
-  const isScorer = match.officials?.some(o => o.userId === currentUser?.id && o.role === 'scorer');
-  const hasPermission = isCreator || isScorer;
+  const hasPermission = canScoreMatch(match.id);
   const canScore = !isSimulatingViewer && hasPermission;
+
+  // Route Protection
+  useEffect(() => {
+    requireAuth(currentUser);
+  }, [currentUser, requireAuth]);
+
+  if (!canScore) {
+    if (!currentUser) {
+        // If not logged in, show access denied but provide login button or just let them view
+        // Actually, LiveScoring should probably redirect to Login if they try to access it directly?
+        // But maybe they just want to VIEW live score?
+        // The screen is "LiveScoringScreen", usually for scorers. Viewers use "MatchScreen" (Summary).
+        // If this route `/match/:id/live` is for scorers only:
+        // requireAuth(currentUser); // This would redirect immediately.
+        
+        // But wait, "Access Denied" below says "You are not assigned as a scorer".
+        // If not logged in, they are definitely not assigned.
+    }
+
+    return (
+      <div className="p-8 text-center" style={{ padding: '40px', textAlign: 'center' }}>
+        <h2 className="text-xl font-bold text-red-600 mb-2" style={{ color: '#dc2626', fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>Access Denied</h2>
+        <p className="text-gray-600 mb-4" style={{ color: '#4b5563', marginBottom: '24px' }}>You are not assigned as a scorer for this match.</p>
+        
+        {!currentUser && (
+            <button 
+                onClick={() => requireAuth(null)}
+                style={{ 
+                    marginBottom: '16px', display: 'block', margin: '0 auto 16px',
+                    padding: '8px 16px', backgroundColor: '#2563eb', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer'
+                }}
+            >
+                Login to Score
+            </button>
+        )}
+
+        <Link to={`/match/${match.id}`} className="text-blue-600 underline" style={{ color: '#2563eb', textDecoration: 'underline' }}>
+          Go to Match Summary
+        </Link>
+      </div>
+    );
+  }
 
   const battingTeamId = match.currentBattingTeamId || match.homeParticipant.id;
   const isHomeBatting = battingTeamId === match.homeParticipant.id;
@@ -83,11 +123,6 @@ export const LiveScoringScreen: React.FC = () => {
 
   return (
     <div style={{ padding: '20px', width: '100%', maxWidth: '600px', margin: '0 auto', fontFamily: 'Arial, sans-serif', boxSizing: 'border-box' }}>
-      <LoginModal 
-        isOpen={showLoginModal} 
-        onClose={() => setShowLoginModal(false)} 
-        message="Login required to score."
-      />
 
       {/* 1. Match Header */}
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>

@@ -1,54 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useParams } from 'react-router-dom';
+import { useGlobalState } from '../../app/AppProviders';
+import { calculateStandings } from '../../utils/tournament/calculateStandings';
 
-interface TeamStats {
-  id: string;
-  position: number;
-  teamName: string;
-  teamCode: string;
-  matchesPlayed: number;
-  won: number;
-  lost: number;
-  points: number;
-  nrr: string;
-  status: 'qualified' | 'contention' | 'eliminated';
-  flagUrl?: string;
-}
-
-interface GroupTable {
-  groupName: string;
-  qualificationRule: string; // e.g., "Top 2 qualify for Semi-Finals"
-  cutoffPosition: number; // e.g., 2
-  teams: TeamStats[];
-}
-
-const MOCK_POINTS_DATA: GroupTable[] = [
-  {
-    groupName: "Group A",
-    qualificationRule: "Top 2 qualify for Semi-Finals",
-    cutoffPosition: 2,
-    teams: [
-      { id: 't1', position: 1, teamName: 'India', teamCode: 'IND', matchesPlayed: 4, won: 4, lost: 0, points: 8, nrr: '+2.104', status: 'qualified', flagUrl: 'https://placehold.co/40x40/ff9933/ffffff?text=IND' },
-      { id: 't2', position: 2, teamName: 'Australia', teamCode: 'AUS', matchesPlayed: 4, won: 3, lost: 1, points: 6, nrr: '+1.450', status: 'qualified', flagUrl: 'https://placehold.co/40x40/ffcc00/000000?text=AUS' },
-      { id: 't3', position: 3, teamName: 'Pakistan', teamCode: 'PAK', matchesPlayed: 4, won: 2, lost: 2, points: 4, nrr: '-0.200', status: 'eliminated', flagUrl: 'https://placehold.co/40x40/006600/ffffff?text=PAK' },
-      { id: 't4', position: 4, teamName: 'Ireland', teamCode: 'IRE', matchesPlayed: 4, won: 1, lost: 3, points: 2, nrr: '-1.100', status: 'eliminated', flagUrl: 'https://placehold.co/40x40/009e49/ffffff?text=IRE' },
-      { id: 't5', position: 5, teamName: 'USA', teamCode: 'USA', matchesPlayed: 4, won: 0, lost: 4, points: 0, nrr: '-2.500', status: 'eliminated', flagUrl: 'https://placehold.co/40x40/3c3b6e/ffffff?text=USA' },
-    ]
-  },
-  {
-    groupName: "Group B",
-    qualificationRule: "Top 2 qualify for Semi-Finals",
-    cutoffPosition: 2,
-    teams: [
-      { id: 't6', position: 1, teamName: 'South Africa', teamCode: 'SA', matchesPlayed: 3, won: 3, lost: 0, points: 6, nrr: '+1.800', status: 'qualified', flagUrl: 'https://placehold.co/40x40/007749/ffffff?text=SA' },
-      { id: 't7', position: 2, teamName: 'England', teamCode: 'ENG', matchesPlayed: 3, won: 2, lost: 1, points: 4, nrr: '+0.900', status: 'contention', flagUrl: 'https://placehold.co/40x40/ce1124/ffffff?text=ENG' },
-      { id: 't8', position: 3, teamName: 'West Indies', teamCode: 'WI', matchesPlayed: 3, won: 2, lost: 1, points: 4, nrr: '+0.850', status: 'contention', flagUrl: 'https://placehold.co/40x40/7b0028/ffffff?text=WI' },
-      { id: 't9', position: 4, teamName: 'Bangladesh', teamCode: 'BAN', matchesPlayed: 3, won: 0, lost: 3, points: 0, nrr: '-1.500', status: 'eliminated', flagUrl: 'https://placehold.co/40x40/006a4e/ffffff?text=BAN' },
-      { id: 't10', position: 5, teamName: 'Netherlands', teamCode: 'NED', matchesPlayed: 3, won: 0, lost: 3, points: 0, nrr: '-2.100', status: 'eliminated', flagUrl: 'https://placehold.co/40x40/ff8200/ffffff?text=NED' },
-    ]
-  }
-];
-
-const StatusLabel: React.FC<{ status: TeamStats['status'] }> = ({ status }) => {
+const StatusLabel: React.FC<{ status: string }> = ({ status }) => {
   switch (status) {
     case 'qualified':
       return (
@@ -62,16 +17,7 @@ const StatusLabel: React.FC<{ status: TeamStats['status'] }> = ({ status }) => {
         </span>
       );
     case 'contention':
-      return (
-        <span style={{ 
-          display: 'inline-flex', alignItems: 'center', gap: '4px',
-          fontSize: '11px', fontWeight: 700, 
-          color: '#b45309', backgroundColor: '#fef3c7',
-          padding: '2px 8px', borderRadius: '12px'
-        }}>
-          ⚠️ In Contention
-        </span>
-      );
+      return null; 
     case 'eliminated':
       return (
         <span style={{ 
@@ -89,9 +35,75 @@ const StatusLabel: React.FC<{ status: TeamStats['status'] }> = ({ status }) => {
 };
 
 export const TournamentPointsTable: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const { tournaments, teams: allTeams, matches: allMatches } = useGlobalState();
+
+  const tournament = tournaments.find(t => t.id === id);
+  
+  const tableData = useMemo(() => {
+    if (!tournament) return [];
+
+    // 1. Get Tournament Teams
+    const teamIds = tournament.teams || [];
+    const tournamentTeams = allTeams.filter(t => teamIds.includes(t.id));
+
+    // 2. Get Tournament Matches (Completed only)
+    const tournamentMatches = allMatches.filter(m => 
+      m.tournamentId === id
+    );
+
+    // 3. Calculate Standings
+    const standings = calculateStandings(tournamentTeams, tournamentMatches);
+
+    // 4. Enhance with UI fields
+    const enhancedStandings = standings.map(s => {
+        const team = tournamentTeams.find(t => t.id === s.teamId);
+        return {
+            ...s,
+            teamCode: team?.name.substring(0, 3).toUpperCase() || s.teamName.substring(0, 3).toUpperCase(),
+            nrr: '0.000',
+            status: 'contention',
+            flagUrl: team?.logoUrl
+        };
+    });
+
+    return [{
+      groupName: "Standings",
+      qualificationRule: "League Table",
+      cutoffPosition: 0,
+      teams: enhancedStandings
+    }];
+  }, [tournament, allTeams, allMatches, id]);
+
+  const hasCompletedMatches = useMemo(() => {
+     return allMatches.some(m => m.tournamentId === id && (m.status === 'completed' || m.status === 'locked'));
+  }, [allMatches, id]);
+
+  if (!tournament) return <div>Tournament not found</div>;
+
+  if (!tournament.teams || tournament.teams.length === 0) {
+     return (
+       <div className="flex flex-col items-center justify-center py-12 text-center space-y-2">
+         <div className="text-4xl">📊</div>
+         <h3 className="text-slate-900 font-medium">No standings available</h3>
+         <p className="text-slate-500 text-sm">Add teams to see the table.</p>
+       </div>
+     );
+  }
+
+  if (!hasCompletedMatches) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center space-y-2 bg-white rounded-xl border border-slate-200 shadow-sm mx-auto max-w-[900px]">
+        <div className="text-4xl mb-2">⏳</div>
+        <h3 className="text-slate-900 font-medium">No results yet</h3>
+        <p className="text-slate-500 text-sm">Standings will update after the first match completes.</p>
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '48px', maxWidth: '900px', margin: '0 auto' }}>
-      {MOCK_POINTS_DATA.map((group) => (
+      {tableData.map((group) => (
         <div key={group.groupName} style={{ 
           backgroundColor: 'white', 
           borderRadius: '16px', 
@@ -122,50 +134,49 @@ export const TournamentPointsTable: React.FC = () => {
                 <tr style={{ backgroundColor: '#fff', borderBottom: '1px solid #e2e8f0' }}>
                   <th style={{ padding: '16px', textAlign: 'left', color: '#64748b', fontWeight: 600, width: '60px' }}>Pos</th>
                   <th style={{ padding: '16px', textAlign: 'left', color: '#64748b', fontWeight: 600 }}>Team</th>
-                  <th style={{ padding: '16px', textAlign: 'right', color: '#64748b', fontWeight: 600, width: '60px' }}>P</th>
-                  <th style={{ padding: '16px', textAlign: 'right', color: '#64748b', fontWeight: 600, width: '60px' }}>W</th>
-                  <th style={{ padding: '16px', textAlign: 'right', color: '#64748b', fontWeight: 600, width: '60px' }}>L</th>
-                  <th style={{ padding: '16px', textAlign: 'right', color: '#64748b', fontWeight: 600, width: '80px' }}>NRR</th>
-                  <th style={{ padding: '16px', textAlign: 'right', color: '#0f172a', fontWeight: 700, width: '60px' }}>Pts</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: '12px' }}>P</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: '12px' }}>W</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: '12px' }}>L</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: '12px' }}>T</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: '12px' }}>Pts</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: '12px' }}>NRR</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, color: '#64748b', fontSize: '12px' }}>Form</th>
                 </tr>
               </thead>
               <tbody>
-                {group.teams.map((team) => {
-                  const isLastQualified = team.position === group.cutoffPosition;
-                  const borderStyle = isLastQualified ? '2px solid #cbd5e1' : '1px solid #f1f5f9';
-                  
-                  return (
-                    <tr key={team.id} style={{ 
-                      borderBottom: borderStyle,
-                      backgroundColor: team.status === 'qualified' ? '#f0fdf4' : 'white'
-                    }}>
+                {group.teams.map((team, index) => (
+                  <tr key={team.teamId} style={{ 
+                    borderBottom: index !== group.teams.length - 1 ? '1px solid #f1f5f9' : 'none',
+                    backgroundColor: index % 2 === 0 ? '#fff' : '#f8fafc'
+                  }}>
                       <td style={{ padding: '16px', color: '#64748b', fontWeight: 500 }}>
-                        {team.position}
+                        {index + 1}
                       </td>
                       <td style={{ padding: '16px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <img 
-                              src={team.flagUrl} 
-                              alt={team.teamCode} 
-                              style={{ width: '24px', height: '24px', borderRadius: '4px', objectFit: 'cover' }}
-                            />
-                            <span style={{ fontWeight: 600, color: '#0f172a' }}>{team.teamName}</span>
-                          </div>
-                          {/* Status Label (Mobile/Desktop friendly) */}
-                          <div style={{ marginLeft: '36px' }}>
-                            <StatusLabel status={team.status} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          {team.flagUrl ? (
+                            <img src={team.flagUrl} alt="" style={{ width: '24px', height: '24px', borderRadius: '4px', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ width: '24px', height: '24px', borderRadius: '4px', backgroundColor: '#e2e8f0' }} />
+                          )}
+                          <div>
+                            <div style={{ fontWeight: 600, color: '#0f172a' }}>{team.teamName}</div>
+                            <div style={{ fontSize: '11px', color: '#64748b' }}>{team.teamCode}</div>
                           </div>
                         </div>
                       </td>
-                      <td style={{ padding: '16px', textAlign: 'right', color: '#0f172a' }}>{team.matchesPlayed}</td>
-                      <td style={{ padding: '16px', textAlign: 'right', color: '#0f172a' }}>{team.won}</td>
-                      <td style={{ padding: '16px', textAlign: 'right', color: '#0f172a' }}>{team.lost}</td>
-                      <td style={{ padding: '16px', textAlign: 'right', color: '#64748b', fontFamily: 'monospace' }}>{team.nrr}</td>
-                      <td style={{ padding: '16px', textAlign: 'right', color: '#0f172a', fontWeight: 700, fontSize: '15px' }}>{team.points}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: '#0f172a' }}>{team.played}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', color: '#15803d', fontWeight: 600 }}>{team.won}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', color: '#b91c1c', fontWeight: 600 }}>{team.lost}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', color: '#64748b', fontWeight: 600 }}>{team.tied || 0}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 800, color: '#0f172a', fontSize: '15px' }}>{team.points}</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', fontFamily: 'monospace', color: '#64748b' }}>{team.nrr}</td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <StatusLabel status={team.status} />
+                      </td>
                     </tr>
-                  );
-                })}
+                  )
+                )}
               </tbody>
             </table>
           </div>
@@ -182,7 +193,7 @@ export const TournamentPointsTable: React.FC = () => {
             gap: '6px'
           }}>
             <span style={{ fontSize: '14px' }}>ℹ️</span>
-            Teams ranked by Points, then Net Run Rate (NRR).
+            Teams ranked by Points, then Wins, then Name.
           </div>
         </div>
       ))}

@@ -1,14 +1,55 @@
-export type FeedType = 'news' | 'match_update' | 'achievement' | 'announcement';
+export type FeedType = 'news' | 'match_update' | 'achievement' | 'announcement' | 'user_post' | 'highlight';
+
+export interface FeedComment {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  content: string;
+  createdAt: string;
+}
 
 export interface FeedItem {
   id: string;
   type: FeedType;
-  title: string;
+  title?: string;
   content: string;
-  authorId?: string; // User ID or System
+  
+  // Author Details
+  authorId: string;
+  authorName: string;
+  authorAvatar?: string;
+  authorType: 'user' | 'system' | 'team' | 'tournament';
+
+  // Context
   relatedEntityId?: string; // MatchID, PlayerID, etc.
-  imageUrl?: string;
+  institutionId?: string;
+  
+  // Media
+  media: {
+    type: 'image' | 'video';
+    url: string;
+    thumbnailUrl?: string;
+    aspectRatio?: number;
+  }[];
+
+  // Engagement
+  likesCount: number;
+  commentsCount: number;
+  sharesCount: number;
+  hashtags: string[];
+  
+  // User Context (computed)
+  isLikedByCurrentUser?: boolean;
+  
+  // Metadata
   publishedAt: string;
   visibility: 'public' | 'institution' | 'private';
-  institutionId?: string; // If specific to an institution
+  location?: string;
+}
+
+export interface FeedFilter {
+  hashtag?: string;
+  authorId?: string;
+  type?: FeedType;
 }

@@ -1,172 +1,36 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { useTournamentStats } from '../stats/useTournamentStats';
+import { LeaderboardCategory } from '../stats/types';
 
-type LeaderboardCategory = 'BAT' | 'BOWL' | 'FIELD' | 'MVP';
-
-interface PlayerStats {
-  id: string;
-  name: string;
-  team: string;
-  teamCode: string; // e.g., 'IND'
-  avatar: string;
-  matches: number;
-  innings: number; // Added innings explicitly
-  // Batting
-  runs: number;
-  ballsFaced: number;
-  notOuts: number;
-  // Bowling
-  wickets: number;
-  overs: number;
-  runsConceded: number;
-  // Fielding
-  catches: number;
-  runOuts: number;
-  stumpings: number;
-}
-
-// Extended Mock Data to test tie-breakers and logic
-const MOCK_PLAYERS: PlayerStats[] = [
-  // Top contender
-  { id: 'p1', name: 'N Jagadeesan', team: 'India A', teamCode: 'IND', avatar: 'https://placehold.co/100x100/e2e8f0/64748b?text=NJ', matches: 5, innings: 5, runs: 320, ballsFaced: 210, notOuts: 1, wickets: 0, overs: 0, runsConceded: 0, catches: 2, runOuts: 0, stumpings: 0 },
-  // Close second (fewer runs)
-  { id: 'p5', name: 'Heinrich Klaasen', team: 'South Africa', teamCode: 'RSA', avatar: 'https://placehold.co/100x100/e2e8f0/64748b?text=HK', matches: 5, innings: 5, runs: 310, ballsFaced: 150, notOuts: 1, wickets: 0, overs: 0, runsConceded: 0, catches: 4, runOuts: 0, stumpings: 2 },
-  // Tie-breaker scenario: Same runs as someone else, check Avg
-  { id: 'p3', name: 'A Badoni', team: 'India A', teamCode: 'IND', avatar: 'https://placehold.co/100x100/e2e8f0/64748b?text=AB', matches: 5, innings: 5, runs: 245, ballsFaced: 160, notOuts: 2, wickets: 2, overs: 8, runsConceded: 60, catches: 3, runOuts: 1, stumpings: 0 },
-  { id: 'p7', name: 'Glenn Maxwell', team: 'Australia', teamCode: 'AUS', avatar: 'https://placehold.co/100x100/e2e8f0/64748b?text=GM', matches: 5, innings: 5, runs: 245, ballsFaced: 130, notOuts: 0, wickets: 4, overs: 10, runsConceded: 85, catches: 5, runOuts: 2, stumpings: 0 },
+export const TournamentLeaderboard: React.FC<{ tournamentId?: string }> = ({ tournamentId: propTournamentId }) => {
+  const { tournamentId: paramTournamentId } = useParams();
+  const tournamentId = propTournamentId || paramTournamentId || '';
   
-  // Others
-  { id: 'p2', name: 'R Ngarava', team: 'Zimbabwe', teamCode: 'ZIM', avatar: 'https://placehold.co/100x100/e2e8f0/64748b?text=RN', matches: 4, innings: 2, runs: 12, ballsFaced: 10, notOuts: 0, wickets: 12, overs: 16, runsConceded: 110, catches: 1, runOuts: 0, stumpings: 0 },
-  { id: 'p4', name: 'Rashid Khan', team: 'Afghanistan', teamCode: 'AFG', avatar: 'https://placehold.co/100x100/e2e8f0/64748b?text=RK', matches: 3, innings: 1, runs: 45, ballsFaced: 20, notOuts: 0, wickets: 9, overs: 12, runsConceded: 80, catches: 1, runOuts: 0, stumpings: 0 },
-  { id: 'p6', name: 'Trent Boult', team: 'New Zealand', teamCode: 'NZ', avatar: 'https://placehold.co/100x100/e2e8f0/64748b?text=TB', matches: 4, innings: 1, runs: 5, ballsFaced: 8, notOuts: 1, wickets: 10, overs: 16, runsConceded: 96, catches: 0, runOuts: 0, stumpings: 0 },
-  
-  // Bowling Tie-Breaker Scenarios
-  // Same wickets (10), but better average (lower runs conceded)
-  { id: 'p12', name: 'Jasprit Bumrah', team: 'India A', teamCode: 'IND', avatar: 'https://placehold.co/100x100/e2e8f0/64748b?text=JB', matches: 4, innings: 0, runs: 0, ballsFaced: 0, notOuts: 0, wickets: 10, overs: 16, runsConceded: 80, catches: 1, runOuts: 0, stumpings: 0 },
-  
-  // Same wickets (10), Same Avg (80 runs), but better Economy (more overs bowled for same runs - implies lower econ? No. 
-  // Wait. Avg = Runs/Wickets. Eco = Runs/Overs.
-  // Scenario: W=10, Runs=80. Avg = 8.
-  // Player A: 16 overs. Eco = 80/16 = 5.0.
-  // Player B: 15 overs. Eco = 80/15 = 5.33.
-  // Player A wins on Economy.
-  { id: 'p13', name: 'Pat Cummins', team: 'Australia', teamCode: 'AUS', avatar: 'https://placehold.co/100x100/e2e8f0/64748b?text=PC', matches: 4, innings: 2, runs: 30, ballsFaced: 20, notOuts: 1, wickets: 10, overs: 15, runsConceded: 80, catches: 2, runOuts: 0, stumpings: 0 },
-
-  // Fielding Tie-Breaker Scenarios
-  // Player F1: 10 pts (5 catches, 5 RO)
-  { id: 'f1', name: 'Ravindra Jadeja', team: 'India A', teamCode: 'IND', avatar: 'https://placehold.co/100x100/e2e8f0/64748b?text=RJ', matches: 5, innings: 3, runs: 120, ballsFaced: 80, notOuts: 1, wickets: 8, overs: 20, runsConceded: 100, catches: 5, runOuts: 5, stumpings: 0 },
-  // Player F2: 10 pts (4 catches, 6 RO) -> Lost to F1 on Catches
-  { id: 'f2', name: 'Suresh Raina', team: 'India A', teamCode: 'IND', avatar: 'https://placehold.co/100x100/e2e8f0/64748b?text=SR', matches: 5, innings: 4, runs: 150, ballsFaced: 100, notOuts: 0, wickets: 2, overs: 5, runsConceded: 40, catches: 4, runOuts: 6, stumpings: 0 },
-  // Player F3: 10 pts (5 catches, 4 RO, 1 St) -> Tie Catches (5), Lost to F1 on RO (4 vs 5)
-  { id: 'f3', name: 'MS Dhoni', team: 'India A', teamCode: 'IND', avatar: 'https://placehold.co/100x100/e2e8f0/64748b?text=MSD', matches: 5, innings: 4, runs: 200, ballsFaced: 140, notOuts: 2, wickets: 0, overs: 0, runsConceded: 0, catches: 5, runOuts: 4, stumpings: 1 },
-
-  { id: 'p8', name: 'Virat Kohli', team: 'India A', teamCode: 'IND', avatar: 'https://placehold.co/100x100/e2e8f0/64748b?text=VK', matches: 5, innings: 5, runs: 210, ballsFaced: 150, notOuts: 0, wickets: 0, overs: 0, runsConceded: 0, catches: 2, runOuts: 0, stumpings: 0 },
-  { id: 'p9', name: 'Steve Smith', team: 'Australia', teamCode: 'AUS', avatar: 'https://placehold.co/100x100/e2e8f0/64748b?text=SS', matches: 5, innings: 5, runs: 190, ballsFaced: 160, notOuts: 1, wickets: 0, overs: 0, runsConceded: 0, catches: 4, runOuts: 0, stumpings: 0 },
-  { id: 'p10', name: 'Kane Williamson', team: 'New Zealand', teamCode: 'NZ', avatar: 'https://placehold.co/100x100/e2e8f0/64748b?text=KW', matches: 5, innings: 5, runs: 280, ballsFaced: 220, notOuts: 1, wickets: 0, overs: 0, runsConceded: 0, catches: 1, runOuts: 0, stumpings: 0 },
-  { id: 'p11', name: 'Babar Azam', team: 'Pakistan', teamCode: 'PAK', avatar: 'https://placehold.co/100x100/e2e8f0/64748b?text=BA', matches: 5, innings: 5, runs: 260, ballsFaced: 200, notOuts: 0, wickets: 0, overs: 0, runsConceded: 0, catches: 0, runOuts: 0, stumpings: 0 },
-];
-
-const calculateBattingStats = (p: PlayerStats) => {
-  const avg = p.innings - p.notOuts > 0 ? p.runs / (p.innings - p.notOuts) : p.runs; // Standard Cricket Avg: Runs / (Innings - NotOuts)
-  const sr = p.ballsFaced > 0 ? (p.runs / p.ballsFaced) * 100 : 0;
-  return { ...p, avg, sr };
-};
-
-const calculateBowlingStats = (p: PlayerStats) => {
-  const eco = p.overs > 0 ? p.runsConceded / p.overs : 0;
-  const avg = p.wickets > 0 ? p.runsConceded / p.wickets : 0;
-  return { ...p, eco, bowlingAvg: avg };
-};
-
-const calculateFieldingStats = (p: PlayerStats) => {
-  const points = (p.catches * 1) + (p.runOuts * 1) + (p.stumpings * 1);
-  return { ...p, fieldingPoints: points };
-};
-
-export const TournamentLeaderboard: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<LeaderboardCategory>('BAT');
   const [teamFilter, setTeamFilter] = useState<string>('All');
   const [minInnings, setMinInnings] = useState<number>(1);
   const [minOvers, setMinOvers] = useState<number>(1);
+
+  const { leaderboardData, matchCount } = useTournamentStats(tournamentId, activeCategory);
+
+  // Filter Logic
+  const filteredData = leaderboardData.filter(p => {
+    if (teamFilter !== 'All' && p.teamName !== teamFilter) return false;
+    if (activeCategory === 'BAT' && p.innings < minInnings) return false;
+    if (activeCategory === 'BOWL' && p.overs < minOvers) return false;
+    return true;
+  });
+
+  const topPerformer = filteredData[0];
+  const otherPerformers = filteredData.slice(1, 10); // Top 10
   
-  // Edge Case Props (Mocked for now)
-  const isTournamentEnded = false; 
-  const matchesPlayed: number = 15; // If 0, show empty state
-
-  const processedData = useMemo(() => {
-    return MOCK_PLAYERS.map(p => ({
-      ...p,
-      ...calculateBattingStats(p),
-      ...calculateBowlingStats(p),
-      ...calculateFieldingStats(p),
-      mvpPoints: (p.runs * 1) + (p.wickets * 25) + (p.catches * 10) + (p.runOuts * 10) + (p.stumpings * 10)
-    }));
-  }, []);
-
-  const uniqueTeams = useMemo(() => ['All', ...Array.from(new Set(MOCK_PLAYERS.map(p => p.team)))], []);
-
-  const leaderboardData = useMemo(() => {
-    let data = [...processedData];
-
-    // Apply Filters
-    if (teamFilter !== 'All') {
-      data = data.filter(p => p.team === teamFilter);
-    }
-    if (activeCategory === 'BAT') {
-      data = data.filter(p => p.innings >= minInnings);
-    }
-    if (activeCategory === 'BOWL') {
-      data = data.filter(p => p.overs >= minOvers);
-    }
-
-    // Sorting Logic
-    switch (activeCategory) {
-      case 'BAT':
-        return data.sort((a, b) => {
-          // 1. Total Runs (DESC)
-          if (b.runs !== a.runs) return b.runs - a.runs;
-          // 2. Batting Average (DESC)
-          if (b.avg !== a.avg) return b.avg - a.avg;
-          // 3. Strike Rate (DESC)
-          if (b.sr !== a.sr) return b.sr - a.sr;
-          // 4. Innings Played (ASC - fewer is better)
-          return a.innings - b.innings;
-        });
-      case 'BOWL':
-        return data.sort((a, b) => {
-          // 1. Total Wickets (DESC)
-          if (b.wickets !== a.wickets) return b.wickets - a.wickets;
-          // 2. Bowling Average (ASC - lower is better)
-          // Handle cases where avg is 0 (no wickets) vs defined avg. But here wickets > 0 usually for leaderboard.
-          // If both have wickets, lower avg is better.
-          if (a.bowlingAvg !== b.bowlingAvg) return a.bowlingAvg - b.bowlingAvg;
-          // 3. Economy Rate (ASC - lower is better)
-          if (a.eco !== b.eco) return a.eco - b.eco;
-          // 4. Overs Bowled (DESC - more is better)
-          return b.overs - a.overs;
-        });
-      case 'FIELD':
-        return data.sort((a, b) => {
-          // 1. Total Fielding Points (DESC)
-          if (b.fieldingPoints !== a.fieldingPoints) return b.fieldingPoints - a.fieldingPoints;
-          // 2. More Catches (DESC)
-          if (b.catches !== a.catches) return b.catches - a.catches;
-          // 3. More Run-outs (DESC)
-          if (b.runOuts !== a.runOuts) return b.runOuts - a.runOuts;
-          // 4. More matches played (DESC - more involvement)
-          return b.matches - a.matches;
-        });
-      case 'MVP':
-        return data.sort((a, b) => b.mvpPoints - a.mvpPoints);
-      default:
-        return data;
-    }
-  }, [activeCategory, processedData, teamFilter, minInnings, minOvers]);
-
-  const topPerformer = leaderboardData[0];
-  const otherPerformers = leaderboardData.slice(1, 11); // Top 10 only for list
+  // Extract unique teams from data for filter
+  const uniqueTeams = Array.from(new Set(leaderboardData.map(p => p.teamName)));
+  const isTournamentEnded = false; // Could be derived from tournament status
 
   // Empty State: No matches
-  if (matchesPlayed === 0) {
+  if (matchCount === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 20px', color: '#64748b' }}>
         <div style={{ fontSize: '48px', marginBottom: '16px' }}>🏏</div>
@@ -215,7 +79,7 @@ export const TournamentLeaderboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Filters (Only visible for BAT/BOWL usually, but keeping simple) */}
+      {/* Filters */}
       {activeCategory !== 'MVP' && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginBottom: '24px' }}>
           <select 
@@ -231,8 +95,9 @@ export const TournamentLeaderboard: React.FC = () => {
               cursor: 'pointer'
             }}
           >
+            <option value="All">All Teams</option>
             {uniqueTeams.map(team => (
-              <option key={team} value={team}>{team === 'All' ? 'All Teams' : team}</option>
+              <option key={team} value={team}>{team}</option>
             ))}
           </select>
           
@@ -318,7 +183,7 @@ export const TournamentLeaderboard: React.FC = () => {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
             <img 
-              src={topPerformer.avatar} 
+              src={topPerformer.avatar || `https://ui-avatars.com/api/?name=${topPerformer.name}&background=random`} 
               alt={topPerformer.name} 
               style={{ 
                 width: '90px', height: '90px', borderRadius: '50%', 
@@ -328,14 +193,14 @@ export const TournamentLeaderboard: React.FC = () => {
             />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '22px', fontWeight: 800, marginBottom: '2px', lineHeight: 1.2 }}>{topPerformer.name}</div>
-              <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', fontWeight: 500, marginBottom: '16px' }}>{topPerformer.team}</div>
+              <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', fontWeight: 500, marginBottom: '16px' }}>{topPerformer.teamName}</div>
               
               <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-end' }}>
                 <div>
                   <div style={{ fontSize: '36px', fontWeight: 800, lineHeight: 1 }}>
                     {activeCategory === 'BAT' && topPerformer.runs}
                     {activeCategory === 'BOWL' && topPerformer.wickets}
-                    {activeCategory === 'FIELD' && topPerformer.fieldingPoints}
+                    {activeCategory === 'FIELD' && (topPerformer.catches + topPerformer.runOuts + topPerformer.stumpings)}
                     {activeCategory === 'MVP' && topPerformer.mvpPoints}
                   </div>
                   <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>
@@ -359,12 +224,11 @@ export const TournamentLeaderboard: React.FC = () => {
                         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>Inns</div>
                       </div>
                       <div>
-                        <div style={{ fontSize: '16px', fontWeight: 700 }}>{topPerformer.avg.toFixed(1)}</div>
+                        <div style={{ fontSize: '16px', fontWeight: 700 }}>{topPerformer.battingAvg.toFixed(1)}</div>
                         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>Avg</div>
                       </div>
                     </>
                   )}
-                  {/* ... other categories secondary stats ... */}
                    {activeCategory === 'BOWL' && (
                     <>
                        <div>
@@ -376,7 +240,7 @@ export const TournamentLeaderboard: React.FC = () => {
                         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>Avg</div>
                       </div>
                       <div>
-                        <div style={{ fontSize: '16px', fontWeight: 700 }}>{topPerformer.eco.toFixed(1)}</div>
+                        <div style={{ fontSize: '16px', fontWeight: 700 }}>{topPerformer.economy.toFixed(1)}</div>
                         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>Econ</div>
                       </div>
                     </>
@@ -397,29 +261,15 @@ export const TournamentLeaderboard: React.FC = () => {
                       </div>
                     </>
                   )}
-                  {activeCategory === 'MVP' && (
-                    <>
-                       <div>
-                        <div style={{ fontSize: '16px', fontWeight: 700 }}>{topPerformer.runs}</div>
-                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>Runs</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '16px', fontWeight: 700 }}>{topPerformer.wickets}</div>
-                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>Wkts</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '16px', fontWeight: 700 }}>{topPerformer.fieldingPoints}</div>
-                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>Field</div>
-                      </div>
-                    </>
-                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
       ) : (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>No players found for this filter.</div>
+        <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+          No players match the current filters.
+        </div>
       )}
 
       {/* 3. Ranked List Table */}
@@ -494,21 +344,21 @@ export const TournamentLeaderboard: React.FC = () => {
               
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <img 
-                  src={player.avatar} 
+                  src={player.avatar || `https://ui-avatars.com/api/?name=${player.name}&background=random`} 
                   alt={player.name} 
                   style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', backgroundColor: '#f1f5f9' }} 
                 />
                 <div>
                   <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>{player.name}</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>{player.team}</div>
+                  <div style={{ fontSize: '12px', color: '#64748b' }}>{player.teamName}</div>
                 </div>
               </div>
 
               {activeCategory === 'BAT' && (
                 <>
                   <div style={{ textAlign: 'right', fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{player.runs}</div>
-                  <div style={{ textAlign: 'right', fontSize: '13px', color: '#475569' }}>{player.avg.toFixed(1)}</div>
-                  <div style={{ textAlign: 'right', fontSize: '13px', color: '#475569' }}>{player.sr.toFixed(0)}</div>
+                  <div style={{ textAlign: 'right', fontSize: '13px', color: '#475569' }}>{player.battingAvg.toFixed(1)}</div>
+                  <div style={{ textAlign: 'right', fontSize: '13px', color: '#475569' }}>{player.battingSr.toFixed(0)}</div>
                   <div style={{ textAlign: 'right', fontSize: '13px', color: '#475569' }}>{player.innings}</div>
                 </>
               )}
@@ -517,14 +367,14 @@ export const TournamentLeaderboard: React.FC = () => {
                 <>
                   <div style={{ textAlign: 'right', fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{player.wickets}</div>
                   <div style={{ textAlign: 'right', fontSize: '13px', color: '#475569' }}>{player.bowlingAvg.toFixed(1)}</div>
-                  <div style={{ textAlign: 'right', fontSize: '13px', color: '#475569' }}>{player.eco.toFixed(1)}</div>
+                  <div style={{ textAlign: 'right', fontSize: '13px', color: '#475569' }}>{player.economy.toFixed(1)}</div>
                   <div style={{ textAlign: 'right', fontSize: '13px', color: '#475569' }}>{player.overs}</div>
                 </>
               )}
 
               {activeCategory === 'FIELD' && (
                 <>
-                  <div style={{ textAlign: 'right', fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{player.fieldingPoints}</div>
+                  <div style={{ textAlign: 'right', fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{player.catches + player.runOuts + player.stumpings}</div>
                   <div style={{ textAlign: 'right', fontSize: '13px', color: '#475569' }}>{player.catches}</div>
                   <div style={{ textAlign: 'right', fontSize: '13px', color: '#475569' }}>{player.runOuts}</div>
                   <div style={{ textAlign: 'right', fontSize: '13px', color: '#475569' }}>{player.stumpings}</div>
@@ -536,7 +386,7 @@ export const TournamentLeaderboard: React.FC = () => {
                     <div style={{ textAlign: 'right', fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{player.mvpPoints}</div>
                     <div style={{ textAlign: 'right', fontSize: '13px', color: '#475569' }}>{player.runs}</div>
                     <div style={{ textAlign: 'right', fontSize: '13px', color: '#475569' }}>{player.wickets}</div>
-                    <div style={{ textAlign: 'right', fontSize: '13px', color: '#475569' }}>{player.fieldingPoints}</div>
+                    <div style={{ textAlign: 'right', fontSize: '13px', color: '#475569' }}>{player.catches + player.runOuts + player.stumpings}</div>
                  </>
               )}
             </div>
@@ -561,7 +411,6 @@ export const TournamentLeaderboard: React.FC = () => {
             <div>Wickets: <span style={{ fontWeight: 600 }}>25 pts</span></div>
             <div>Catches: <span style={{ fontWeight: 600 }}>10 pts</span></div>
             <div>Run-outs: <span style={{ fontWeight: 600 }}>10 pts</span></div>
-            <div>Stumpings: <span style={{ fontWeight: 600 }}>10 pts</span></div>
           </div>
         </div>
       )}

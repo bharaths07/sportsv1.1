@@ -1,4 +1,4 @@
-export type MatchStatus = 'draft' | 'live' | 'completed' | 'locked' | 'cancelled';
+export type MatchStatus = 'draft' | 'live' | 'completed' | 'locked' | 'cancelled' | 'scheduled' | 'created';
 
 
 export interface ScoreEvent {
@@ -37,6 +37,16 @@ export interface MatchParticipant {
   overs?: number;   // Added for Cricket
   result?: 'win' | 'loss' | 'draw';
   players?: PlayerStats[]; // Added for detailed stats tracking
+  squad?: {
+    playerIds: string[];
+    captainId?: string;
+    wicketKeeperId?: string;
+  };
+}
+
+export interface Toss {
+  winnerTeamId: string;
+  decision: 'BAT' | 'BOWL';
 }
 
 export interface Match {
@@ -47,6 +57,7 @@ export interface Match {
   homeParticipant: MatchParticipant;
   awayParticipant: MatchParticipant;
   currentBattingTeamId?: string; // Tracks who is currently batting
+  toss?: Toss;
   date: string; // Scheduled start time
   actualStartTime?: string;
   actualEndTime?: string;

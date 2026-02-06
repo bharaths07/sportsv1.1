@@ -1,57 +1,23 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
-import { LoginModal } from '../../components/LoginModal';
 import { EmptyState } from '../../components/EmptyState';
 import { Certificate } from '../../domain/certificate';
 
 export const MyCertificatesScreen: React.FC = () => {
   const { currentUser, certificates } = useGlobalState();
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null);
 
-  // 1. Auth Check
+  // 1. Auth Check (Redirect if Guest)
   if (!currentUser) {
-    return (
-      <div style={{ padding: '40px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
-        <div style={{ fontSize: '60px', marginBottom: '20px' }}>🔐</div>
-        <h2 style={{ color: '#333', marginBottom: '10px' }}>Login Required</h2>
-        <p style={{ color: '#666', marginBottom: '30px' }}>
-          You need to be logged in to view and download your certificates.
-        </p>
-        <button 
-          onClick={() => setShowLoginModal(true)}
-          style={{
-            padding: '12px 24px',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '16px',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}
-        >
-          Login to View Certificates
-        </button>
-        <div style={{ marginTop: '20px' }}>
-          <Link to="/" style={{ color: '#007bff', textDecoration: 'none' }}>Return to Home</Link>
-        </div>
-
-        <LoginModal 
-          isOpen={showLoginModal} 
-          onClose={() => setShowLoginModal(false)} 
-          message="Please login to view your certificates."
-        />
-      </div>
-    );
+    return <Navigate to="/login" replace />;
   }
 
   // 2. Filter Certificates
   const myCertificates = certificates.filter(c => c.playerId === currentUser.id)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  // 3. Download/Preview Logic
+  // 3. View Logic
   const handlePreview = (cert: Certificate) => {
     setSelectedCertificate(cert);
   };
@@ -66,10 +32,20 @@ export const MyCertificatesScreen: React.FC = () => {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
         <div>
-          <h1 style={{ margin: 0, color: '#1a237e' }}>My Certificates</h1>
+          <h1 style={{ margin: 0, color: '#1a237e' }}>Certificates</h1>
           <p style={{ margin: '5px 0 0', color: '#666' }}>
             Official records of your participation and achievements.
           </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#64748b' }}>
+            {(currentUser.firstName || currentUser.name || '?').charAt(0)}
+          </div>
+          <div>
+            <div style={{ fontWeight: '600', color: '#0f172a' }}>
+              {currentUser.firstName ? `${currentUser.firstName} ${currentUser.lastName}` : currentUser.name}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -83,55 +59,58 @@ export const MyCertificatesScreen: React.FC = () => {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
           {myCertificates.map(cert => (
-            <div key={cert.id} style={{ 
+            <div key={cert.id} onClick={() => handlePreview(cert)} style={{ 
               backgroundColor: 'white', 
               borderRadius: '12px', 
               boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
               overflow: 'hidden',
               border: '1px solid #eee',
               display: 'flex',
-              flexDirection: 'column'
-            }}>
+              flexDirection: 'column',
+              cursor: 'pointer',
+              transition: 'transform 0.2s, box-shadow 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
+            }}
+            >
               <div style={{ padding: '20px', flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                   <span style={{ fontSize: '24px' }}>📜</span>
                   <span style={{ fontSize: '12px', color: '#888', backgroundColor: '#f5f5f5', padding: '4px 8px', borderRadius: '4px', height: 'fit-content' }}>
-                    {new Date(cert.date).toLocaleDateString()}
+                    {new Date(cert.date).getFullYear()}
                   </span>
+                </div>
+                <div style={{ 
+                  fontSize: '11px', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '0.5px', 
+                  color: cert.type === 'achievement' ? '#e65100' : '#1565c0',
+                  fontWeight: 'bold',
+                  marginBottom: '4px'
+                }}>
+                  {cert.type === 'achievement' ? 'Achievement' : 'Participation'}
                 </div>
                 <h3 style={{ margin: '0 0 10px', color: '#333' }}>{cert.title}</h3>
                 <p style={{ margin: '0 0 15px', color: '#666', fontSize: '14px' }}>
                   {cert.metadata.matchName}
                 </p>
-                <div style={{ fontSize: '12px', color: '#888' }}>
-                  {cert.metadata.organizerName} • {cert.metadata.location}
+                <div style={{ fontSize: '12px', color: '#888', borderTop: '1px solid #f0f0f0', paddingTop: '10px' }}>
+                  <div style={{ marginBottom: '4px' }}><strong>Issuer:</strong> {cert.metadata.organizerName}</div>
+                  <div>{cert.metadata.location}</div>
                 </div>
               </div>
-              <button 
-                onClick={() => handlePreview(cert)}
-                style={{
-                  width: '100%',
-                  padding: '15px',
-                  backgroundColor: '#f0f4c3',
-                  color: '#827717',
-                  border: 'none',
-                  borderTop: '1px solid #e6ee9c',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
-                }}
-              >
-                <span>📥</span> Download / Print
-              </button>
             </div>
           ))}
         </div>
       )}
 
-      {/* Certificate Preview Modal */}
+      {/* Certificate Preview Modal (View Only) */}
       {selectedCertificate && (
         <div style={{
           position: 'fixed',
@@ -180,7 +159,7 @@ export const MyCertificatesScreen: React.FC = () => {
               <p style={{ fontSize: '18px', color: '#666', fontStyle: 'italic', marginBottom: '30px' }}>This certifies that</p>
               
               <h2 style={{ fontSize: '36px', color: '#000', borderBottom: '2px solid #1a237e', display: 'inline-block', paddingBottom: '10px', marginBottom: '30px' }}>
-                {currentUser.name}
+                {currentUser.firstName ? `${currentUser.firstName} ${currentUser.lastName}` : currentUser.name}
               </h2>
               
               <p style={{ fontSize: '18px', marginBottom: '20px' }}>{selectedCertificate.description}</p>
@@ -206,22 +185,6 @@ export const MyCertificatesScreen: React.FC = () => {
 
             <div style={{ marginTop: '30px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
               <button 
-                onClick={() => window.print()}
-                style={{
-                  padding: '12px 24px',
-                  backgroundColor: '#2e7d32',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  fontSize: '16px',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                }}
-              >
-                🖨️ Print / Save as PDF
-              </button>
-              <button 
                 onClick={closePreview}
                 style={{
                   padding: '12px 24px',
@@ -236,28 +199,6 @@ export const MyCertificatesScreen: React.FC = () => {
                 Close
               </button>
             </div>
-
-            <style>{`
-              @media print {
-                body * {
-                  visibility: hidden;
-                }
-                #printable-certificate-view, #printable-certificate-view * {
-                  visibility: visible;
-                }
-                #printable-certificate-view {
-                  position: absolute;
-                  left: 0;
-                  top: 0;
-                  width: 100%;
-                  height: 100%;
-                  margin: 0;
-                  padding: 40px;
-                  background-color: white;
-                  border: 10px solid #1a237e;
-                }
-              }
-            `}</style>
           </div>
         </div>
       )}

@@ -6,12 +6,13 @@ import { MatchInfoTab } from './MatchInfoTab';
 import { MatchScorecardTab } from './MatchScorecardTab';
 import { MatchCommentaryTab } from './MatchCommentaryTab';
 import { MatchSquadsTab } from './MatchSquadsTab';
+import { ScorerAssignment } from './components/ScorerAssignment';
 
 export const MatchSummaryScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const { matches, followedMatches, toggleFollowMatch } = useGlobalState();
-  const [activeTab, setActiveTab] = useState<'summary' | 'scorecard' | 'comms' | 'squads' | 'info'>('summary');
+  const { matches, followedMatches, toggleFollowMatch, currentUser } = useGlobalState();
+  const [activeTab, setActiveTab] = useState<'summary' | 'scorecard' | 'comms' | 'squads' | 'info' | 'settings'>('summary');
   const match = matches.find(m => m.id === id);
   const isFollowed = match ? followedMatches.includes(match.id) : false;
 
@@ -27,6 +28,10 @@ export const MatchSummaryScreen: React.FC = () => {
       </div>
     );
   }
+
+  const isAdmin = currentUser?.role === 'admin';
+  const tabs = ['summary', 'scorecard', 'comms', 'squads', 'info'];
+  if (isAdmin) tabs.push('settings');
 
   return (
     <div style={{ padding: '24px', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Segoe UI, Arial, sans-serif' }}>
@@ -67,7 +72,7 @@ export const MatchSummaryScreen: React.FC = () => {
             </>
           )}
           <div style={{ display: 'flex', gap: 24, alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: 0 }}>
-             {['summary', 'scorecard', 'comms', 'squads', 'info'].map((tab) => (
+             {tabs.map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab as any)}
@@ -114,6 +119,7 @@ export const MatchSummaryScreen: React.FC = () => {
                   {activeTab === 'comms' && <MatchCommentaryTab match={match} />}
                   {activeTab === 'squads' && <MatchSquadsTab match={match} />}
                   {activeTab === 'info' && <MatchInfoTab match={match} />}
+                  {activeTab === 'settings' && <ScorerAssignment matchId={match.id} />}
         </div>
       </div>
     </div>
