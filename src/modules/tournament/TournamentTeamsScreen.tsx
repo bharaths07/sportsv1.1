@@ -1,13 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, X, Share2, Search, Users, Shield } from 'lucide-react';
+import { Plus, X, Share2, Search, Users, Shield, ArrowRight, Trophy, CheckCircle, Copy } from 'lucide-react';
 import { useGlobalState } from '../../app/AppProviders';
 import { Team } from '../../domain/team';
+import { PageContainer } from '../../components/layout/PageContainer';
+import { PageHeader } from '../../components/layout/PageHeader';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Avatar } from '../../components/ui/Avatar';
+import { toast } from 'react-hot-toast';
 
 export const TournamentTeamsScreen: React.FC = () => {
   const { tournamentId } = useParams<{ tournamentId: string }>();
   const navigate = useNavigate();
-  const { tournaments, teams, addTeamToTournament, removeTeamFromTournament, currentUser } = useGlobalState();
+  const { tournaments, teams, addTeamToTournament, removeTeamFromTournament } = useGlobalState();
   
   const [showAddOptions, setShowAddOptions] = useState(false);
   const [showExistingTeamSearch, setShowExistingTeamSearch] = useState(false);
@@ -67,114 +74,106 @@ export const TournamentTeamsScreen: React.FC = () => {
   if (!tournament) return <div>Tournament not found</div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 px-4 py-4 flex items-center justify-between sticky top-0 z-20">
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => navigate(`/tournament/${tournamentId}`)}
-            className="p-2 -ml-2 rounded-full hover:bg-slate-100 transition-colors"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="w-6 h-6 text-slate-700" />
-          </button>
-          <div>
-            <h1 className="text-lg font-bold text-slate-800">Add Teams</h1>
-            <p className="text-xs text-slate-500">Add teams that will participate</p>
-          </div>
-        </div>
-      </header>
+    <PageContainer>
+      <PageHeader 
+        title="Add Teams" 
+        description="Manage participating teams for this tournament"
+        backUrl={`/tournament/${tournamentId}`}
+        action={
+            <Button 
+                onClick={() => navigate(`/tournament/${tournamentId}/structure`)}
+                disabled={!isNextEnabled}
+                variant="primary"
+                className="gap-2"
+            >
+                <span>Next Step</span>
+                <ArrowRight className="w-4 h-4" />
+            </Button>
+        }
+      />
 
-      {/* Content */}
-      <main className="flex-1 p-4 pb-24 max-w-lg mx-auto w-full space-y-6">
+      <div className="max-w-3xl mx-auto space-y-6">
         
         {/* Added Teams List */}
-        {addedTeams.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
-              <Users className="w-8 h-8 text-slate-400" />
-            </div>
-            <div>
-              <h3 className="text-slate-900 font-medium">No teams added yet</h3>
-              <p className="text-slate-500 text-sm mt-1">Add at least 2 teams to proceed</p>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm text-slate-500 px-1">
-              <span>{addedTeams.length} Teams Added</span>
-            </div>
-            {addedTeams.map(team => (
-              <div key={team.id} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {team.logoUrl ? (
-                    <img src={team.logoUrl} alt={team.name} className="w-10 h-10 rounded-lg object-cover bg-slate-100" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
-                      {team.name.charAt(0)}
+        <Card className="min-h-[300px]">
+            {addedTeams.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
+                        <Users className="w-8 h-8 text-slate-400" />
                     </div>
-                  )}
-                  <div>
-                    <h3 className="font-bold text-slate-800">{team.name}</h3>
-                    <p className="text-xs text-slate-500">{team.institutionId || 'City'}</p> 
-                  </div>
+                    <div>
+                        <h3 className="text-slate-900 font-medium">No teams added yet</h3>
+                        <p className="text-slate-500 text-sm mt-1">Add at least 2 teams to proceed</p>
+                    </div>
+                    <Button 
+                        onClick={() => setShowAddOptions(true)}
+                        variant="outline"
+                        className="mt-4"
+                    >
+                        <Plus className="w-4 h-4 mr-2" /> Add Team
+                    </Button>
                 </div>
-                <button 
-                  onClick={() => handleRemoveTeam(team.id)}
-                  className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+            ) : (
+                <div className="p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h3 className="font-bold text-slate-800">Participating Teams ({addedTeams.length})</h3>
+                        <Button 
+                            onClick={() => setShowAddOptions(true)}
+                            size="sm"
+                            variant="outline"
+                        >
+                            <Plus className="w-4 h-4 mr-2" /> Add More
+                        </Button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {addedTeams.map(team => (
+                            <div key={team.id} className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between group hover:border-blue-200 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <Avatar
+                                        src={team.logoUrl}
+                                        alt={team.name}
+                                        fallback={team.name.charAt(0)}
+                                        className="w-10 h-10 rounded-lg bg-white shadow-sm"
+                                    />
+                                    <div>
+                                        <h3 className="font-bold text-slate-800 text-sm">{team.name}</h3>
+                                        <p className="text-xs text-slate-500">{team.institutionId || 'City'}</p> 
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => handleRemoveTeam(team.id)}
+                                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                                    title="Remove team"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </Card>
 
-        {/* Add Team Button */}
-        <button
-          onClick={() => setShowAddOptions(true)}
-          className="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center gap-2 text-slate-600 font-bold hover:border-teal-500 hover:text-teal-600 hover:bg-teal-50 transition-all"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Add Team</span>
-        </button>
-
-      </main>
-
-      {/* Footer Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4">
-        <div className="max-w-lg mx-auto">
-          <button
-            disabled={!isNextEnabled}
-            onClick={() => navigate(`/tournament/${tournamentId}/structure`)}
-            className={`w-full py-3 rounded-xl font-bold text-center transition-all
-              ${isNextEnabled 
-                ? 'bg-teal-600 text-white shadow-lg shadow-teal-600/20 active:scale-95' 
-                : 'bg-slate-100 text-slate-400 cursor-not-allowed'}
-            `}
-          >
-            Next
-          </button>
-        </div>
       </div>
 
-      {/* Add Team Options Bottom Sheet / Modal */}
+      {/* Add Team Options Modal */}
       {showAddOptions && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-200">
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-2xl overflow-hidden shadow-2xl scale-100">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <h3 className="font-bold text-slate-800">Add Team</h3>
-              <button onClick={() => setShowAddOptions(false)} className="p-1 rounded-full hover:bg-slate-100">
+              <button onClick={() => setShowAddOptions(false)} className="p-1 rounded-full hover:bg-slate-200 transition-colors">
                 <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
             
-            <div className="p-2">
+            <div className="p-2 space-y-1">
               <button 
                 onClick={() => setShowExistingTeamSearch(true)}
-                className="w-full p-4 flex items-center gap-4 hover:bg-slate-50 rounded-xl transition-colors text-left"
+                className="w-full p-4 flex items-center gap-4 hover:bg-slate-50 rounded-xl transition-colors text-left group"
               >
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                   <Search className="w-5 h-5" />
                 </div>
                 <div>
@@ -185,9 +184,9 @@ export const TournamentTeamsScreen: React.FC = () => {
 
               <button 
                 onClick={handleCreateNewTeam}
-                className="w-full p-4 flex items-center gap-4 hover:bg-slate-50 rounded-xl transition-colors text-left"
+                className="w-full p-4 flex items-center gap-4 hover:bg-slate-50 rounded-xl transition-colors text-left group"
               >
-                <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                   <Plus className="w-5 h-5" />
                 </div>
                 <div>
@@ -198,9 +197,9 @@ export const TournamentTeamsScreen: React.FC = () => {
 
               <button 
                 onClick={handleInviteTeam}
-                className="w-full p-4 flex items-center gap-4 hover:bg-slate-50 rounded-xl transition-colors text-left"
+                className="w-full p-4 flex items-center gap-4 hover:bg-slate-50 rounded-xl transition-colors text-left group"
               >
-                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors">
                   <Share2 className="w-5 h-5" />
                 </div>
                 <div>
@@ -215,54 +214,56 @@ export const TournamentTeamsScreen: React.FC = () => {
 
       {/* Add Existing Team Search Overlay */}
       {showExistingTeamSearch && (
-        <div className="fixed inset-0 z-[60] bg-white flex flex-col">
-          <div className="p-4 border-b border-slate-200 flex items-center gap-3">
-            <button onClick={() => setShowExistingTeamSearch(false)} className="p-2 -ml-2 rounded-full hover:bg-slate-100">
-              <ArrowLeft className="w-6 h-6 text-slate-700" />
-            </button>
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input 
-                type="text" 
-                placeholder="Search teams..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-slate-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                autoFocus
-              />
+        <div className="fixed inset-0 z-[60] bg-white flex flex-col animate-in slide-in-from-bottom-10 duration-200">
+          <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
+            <div className="p-4 border-b border-slate-200 flex items-center gap-3">
+                <button onClick={() => setShowExistingTeamSearch(false)} className="p-2 -ml-2 rounded-full hover:bg-slate-100 transition-colors">
+                <ArrowRight className="w-6 h-6 text-slate-700 rotate-180" />
+                </button>
+                <div className="flex-1">
+                <Input 
+                    placeholder="Search teams..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    startIcon={Search}
+                    autoFocus
+                    className="bg-slate-100 border-transparent focus:bg-white focus:border-blue-500"
+                />
+                </div>
             </div>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto p-4">
-            {availableTeams.length === 0 ? (
-              <div className="text-center py-8 text-slate-400 text-sm">No teams found</div>
-            ) : (
-              <div className="space-y-2">
-                {availableTeams.map(team => (
-                  <button 
-                    key={team.id}
-                    onClick={() => handleAddExistingTeam(team)}
-                    className="w-full p-3 flex items-center gap-3 bg-white border border-slate-100 rounded-xl hover:border-teal-500 hover:shadow-sm transition-all text-left group"
-                  >
-                     {team.logoUrl ? (
-                        <img src={team.logoUrl} alt={team.name} className="w-10 h-10 rounded-lg object-cover bg-slate-100" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 font-bold group-hover:bg-teal-50 group-hover:text-teal-600">
-                          {team.name.charAt(0)}
+            
+            <div className="flex-1 overflow-y-auto p-4 bg-slate-50">
+                {availableTeams.length === 0 ? (
+                <div className="text-center py-12 text-slate-400 text-sm">
+                    {searchQuery ? 'No teams found matching your search.' : 'Type to search for teams.'}
+                </div>
+                ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {availableTeams.map(team => (
+                    <button 
+                        key={team.id}
+                        onClick={() => handleAddExistingTeam(team)}
+                        className="w-full p-3 flex items-center gap-3 bg-white border border-slate-200 rounded-xl hover:border-blue-500 hover:shadow-md transition-all text-left group"
+                    >
+                        <Avatar
+                            src={team.logoUrl}
+                            alt={team.name}
+                            fallback={team.name.charAt(0)}
+                            className="w-12 h-12 rounded-lg bg-slate-100 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors"
+                        />
+                        <div>
+                            <h4 className="font-bold text-slate-800 group-hover:text-blue-700 transition-colors">{team.name}</h4>
+                            <p className="text-xs text-slate-500">{team.institutionId || 'City'}</p>
                         </div>
-                      )}
-                      <div>
-                        <h4 className="font-bold text-slate-800">{team.name}</h4>
-                        <p className="text-xs text-slate-500">{team.institutionId || 'City'}</p>
-                      </div>
-                  </button>
-                ))}
-              </div>
-            )}
+                    </button>
+                    ))}
+                </div>
+                )}
+            </div>
           </div>
         </div>
       )}
 
-    </div>
+    </PageContainer>
   );
 };

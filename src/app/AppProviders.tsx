@@ -1,5 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
+import { matchService } from '../services/matchService';
+import { teamService } from '../services/teamService';
+import { tournamentService } from '../services/tournamentService';
+import { profileService } from '../services/profileService';
+import { achievementService } from '../services/achievementService';
+import { certificateService } from '../services/certificateService';
+import { feedService } from '../services/feedService';
+import { scorerService } from '../services/scorerService';
+import { playerService } from '../services/playerService';
+import { scoreEngine } from '../services/scoreEngine';
 import { Match, ScoreEvent, PlayerStats } from '../domain/match';
 import { Player } from '../domain/player';
 import { GameProfile } from '../domain/gameProfile';
@@ -44,17 +54,17 @@ interface GlobalState {
     language: string;
   };
   currentUser: User | null;
-  login: (name: string, email: string) => void;
-  loginWithSupabase: (email: string) => Promise<void>;
+  login: (email: string, password: string, name?: string) => Promise<void>;
+  loginWithSupabase: (email: string, name?: string) => Promise<void>;
   logout: () => void;
-  updateUserProfile: (data: Partial<User>) => void;
+  updateUserProfile: (data: Partial<User>) => Promise<void>;
   addPlayer: (player: Player) => void;
   addTeam: (team: Team) => void;
   addTeamMember: (teamId: string, member: { playerId: string; role: 'captain' | 'vice-captain' | 'member'; joinedAt: string }) => void;
   addMatch: (match: Match) => void;
   updateMatch: (matchId: string, updates: Partial<Match>) => void;
-  scoreMatch: (matchId: string, runs: number, isWicket: boolean) => void;
-  startMatch: (matchId: string) => void;
+  scoreMatch: (matchId: string, eventOrRuns: number | Partial<ScoreEvent>, isWicketLegacy?: boolean) => void;
+  startMatch: (matchId: string, initialData?: { strikerId: string; nonStrikerId: string; bowlerId: string }) => void;
   endMatch: (matchId: string) => void;
   toggleFollowTeam: (teamId: string) => void;
   toggleFollowTournament: (tournamentId: string) => void;
@@ -83,14 +93,7 @@ interface GlobalState {
 const GlobalContext = createContext<GlobalState | undefined>(undefined);
 
 export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [matches, setMatches] = useState<Match[]>(() => {
-    try {
-      const saved = localStorage.getItem('scoreheroes_matches');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [matches, setMatches] = useState<Match[]>([]);
   const [players, setPlayers] = useState<Player[]>(() => {
     try {
       const saved = localStorage.getItem('scoreheroes_players');
@@ -100,22 +103,8 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   });
   const [gameProfiles] = useState<GameProfile[]>([]);
-  const [teams, setTeams] = useState<Team[]>(() => {
-    try {
-      const saved = localStorage.getItem('scoreheroes_teams');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-  const [tournaments, setTournaments] = useState<Tournament[]>(() => {
-    try {
-      const saved = localStorage.getItem('scoreheroes_tournaments');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [feedItems, setFeedItems] = useState<FeedItem[]>(() => {
     try {
       const saved = localStorage.getItem('feedItems');
@@ -184,19 +173,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       language: 'English'
     };
   });
-  const [users, setUsers] = useState<User[]>(() => {
-    try {
-      const saved = localStorage.getItem('users');
-      const parsed = saved ? JSON.parse(saved) : [];
-      // Migration: Ensure name exists for legacy data
-      return parsed.map((u: any) => ({
-        ...u,
-        name: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim()
-      }));
-    } catch {
-      return [];
-    }
-  });
+  const [users, setUsers] = useState<User[]>([]);
   const [matchScorers, setMatchScorers] = useState<MatchScorer[]>(() => {
     const saved = localStorage.getItem('scoreheroes_match_scorers');
     return saved ? JSON.parse(saved) : [];
@@ -211,17 +188,80 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   });
 
+  const refreshData = async () => {
+    try {
+      const [
+        fetchedMatches,
+        fetchedTeams,
+        fetchedTournaments,
+        fetchedUsers,
+        fetchedAchievements,
+        fetchedCertificates,
+        fetchedFeedItems,
+        fetchedScorers,
+        fetchedPlayers
+      ] = await Promise.all([
+        matchService.getAllMatches(),
+        teamService.getAllTeams(),
+        tournamentService.getAllTournaments(),
+        profileService.getAllProfiles(),
+        achievementService.getAllAchievements(),
+        certificateService.getAllCertificates(),
+        feedService.getAllFeedItems(),
+        scorerService.getAllScorers(),
+        playerService.getAllPlayers()
+      ]);
+      setMatches(fetchedMatches);
+      setTeams(fetchedTeams);
+      setTournaments(fetchedTournaments);
+      setUsers(fetchedUsers);
+      setAchievements(fetchedAchievements);
+      setCertificates(fetchedCertificates);
+      setFeedItems(fetchedFeedItems);
+      setMatchScorers(fetchedScorers);
+      
+      if (fetchedPlayers.length > 0) {
+        setPlayers(fetchedPlayers);
+      } else {
+        // Fallback: Map users to players for legacy compatibility if players table is empty
+        const mappedPlayers: Player[] = fetchedUsers.map(u => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: 'player' as const,
+          firstName: u.name?.split(' ')[0] || '',
+          lastName: u.name?.split(' ').slice(1).join(' ') || '',
+          active: true,
+          status: 'active' as const,
+          stats: { matchesPlayed: 0, wins: 0, losses: 0, draws: 0, scoreAccumulated: 0 },
+          history: []
+        }));
+        setPlayers(mappedPlayers);
+      }
+    } catch (error) {
+      console.error('Failed to load initial data:', error);
+    }
+  };
+
   // Step 2.2 — Read Auth Session on App Boot
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    refreshData();
+
+    supabase.auth.getSession().then(async ({ data }) => {
       const session = data.session;
 
       if (session?.user) {
-        setCurrentUser({
-          id: session.user.id,
-          email: session.user.email!,
-          name: session.user.user_metadata?.name ?? 'User',
-        });
+        const profile = await profileService.getProfile(session.user.id);
+        if (profile) {
+          setCurrentUser(profile);
+        } else {
+          setCurrentUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.name ?? 'User',
+            role: 'user'
+          });
+        }
       }
     });
   }, []);
@@ -230,13 +270,21 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   useEffect(() => {
     const { 
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        setCurrentUser({
-          id: session.user.id,
-          email: session.user.email!,
-          name: session.user.user_metadata?.name ?? 'User',
-        });
+        const profile = await profileService.getProfile(session.user.id);
+        if (profile) {
+          setCurrentUser(profile);
+        } else {
+           setCurrentUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.name ?? 'User',
+            role: 'user'
+          });
+        }
+      } else {
+        setCurrentUser(null);
       }
     });
 
@@ -256,19 +304,42 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [currentUser]);
 
   // NOTE: MVP-only auth. Replace with real backend auth before production.
-  const login = (name: string, email: string) => {
+  const login = async (email: string, password: string, name?: string) => {
+    // Simple hashing
+    const hashPassword = async (pwd: string) => {
+      const msgBuffer = new TextEncoder().encode(pwd);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    };
+
+    const hashedPassword = await hashPassword(password);
     let user = users.find(u => u.email === email);
 
-    if (!user) {
-      // Split name for legacy fields
-      const nameParts = name.split(' ');
+    if (user) {
+      // Check password if it exists
+      if (user.passwordHash && user.passwordHash !== hashedPassword) {
+        // Simple error handling for now - ideally throw error or return status
+        throw new Error('Invalid password');
+      }
+      // If no password hash (legacy user), update it to claim account
+      if (!user.passwordHash) {
+        const updatedUser = { ...user, passwordHash: hashedPassword };
+        const userId = user.id;
+        setUsers(prev => prev.map(u => u.id === userId ? updatedUser : u));
+        user = updatedUser;
+      }
+    } else {
+      // Create new user
+      const displayName = name || email.split('@')[0];
+      const nameParts = displayName.split(' ');
       const firstName = nameParts[0];
       const lastName = nameParts.slice(1).join(' ') || '';
 
-      user = {
+      const newUser: User = {
         id: crypto.randomUUID(),
-        name,
+        name: displayName,
         email,
+        passwordHash: hashedPassword,
         role: 'user',
         // Default legacy fields
         firstName,
@@ -279,14 +350,15 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         profileViews: 0,
         type: 'organizer' 
       };
-      setUsers(prev => [...prev, user]);
+      user = newUser;
+      setUsers(prev => [...prev, newUser]);
     }
 
     setCurrentUser(user);
   };
 
   // Step 3.1 — Add Supabase Login Function (Parallel)
-  const loginWithSupabase = async (email: string) => {
+  const loginWithSupabase = async (email: string, name?: string) => {
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -300,6 +372,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       email,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: name ? { name } : undefined,
       },
     });
 
@@ -309,17 +382,44 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setCurrentUser(null);
   };
 
-  const updateUserProfile = (data: Partial<User>) => {
+  const updateUserProfile = async (data: Partial<User>) => {
     if (!currentUser) return;
-    const updatedUser = { ...currentUser, ...data };
-    setCurrentUser(updatedUser);
+
+    const updates: Partial<User> = { ...data };
+
+    // Legacy mapping: if firstName/lastName provided, update name
+    if (data.firstName || data.lastName) {
+      const currentFirst = currentUser.name ? currentUser.name.split(' ')[0] : '';
+      const currentLast = currentUser.name ? currentUser.name.split(' ').slice(1).join(' ') : '';
+      
+      const first = data.firstName !== undefined ? data.firstName : currentFirst;
+      const last = data.lastName !== undefined ? data.lastName : currentLast;
+      updates.name = `${first} ${last}`.trim();
+    }
+
+    try {
+      const updatedProfile = await profileService.updateProfile(currentUser.id, updates);
+      if (updatedProfile) {
+        // Merge with local legacy fields to keep them in session if we can't persist them yet
+        // But prefer the source of truth from DB for persisted fields
+        setCurrentUser({ 
+          ...currentUser, 
+          ...data, // Optimistic update for non-persisted fields (bio, location)
+          ...updatedProfile // DB result overrides
+        });
+      }
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      // alert('Failed to update profile'); // Optional: show UI feedback
+    }
   };
 
-  const assignScorer = (matchId: string, userId: string) => {
+  const assignScorer = async (matchId: string, userId: string) => {
     // Only admin can assign
     if (currentUser?.role !== 'admin') return;
 
@@ -334,16 +434,23 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       assignedAt: new Date().toISOString()
     };
 
-    const updatedScorers = [...matchScorers, newAssignment];
-    setMatchScorers(updatedScorers);
-    localStorage.setItem('scoreheroes_match_scorers', JSON.stringify(updatedScorers));
+    try {
+      const createdScorer = await scorerService.assignScorer(newAssignment);
+      setMatchScorers(prev => [...prev, createdScorer]);
+    } catch (error) {
+      console.error('Failed to assign scorer:', error);
+    }
   };
 
-  const removeScorer = (matchId: string, userId: string) => {
+  const removeScorer = async (matchId: string, userId: string) => {
     if (currentUser?.role !== 'admin') return;
-    const updatedScorers = matchScorers.filter(ms => !(ms.matchId === matchId && ms.userId === userId));
-    setMatchScorers(updatedScorers);
-    localStorage.setItem('scoreheroes_match_scorers', JSON.stringify(updatedScorers));
+    
+    try {
+      await scorerService.removeScorer(matchId, userId);
+      setMatchScorers(prev => prev.filter(ms => !(ms.matchId === matchId && ms.userId === userId)));
+    } catch (error) {
+      console.error('Failed to remove scorer:', error);
+    }
   };
 
   const getMatchScorers = (matchId: string) => {
@@ -380,10 +487,6 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [gameProfiles, currentUser]);
 
   useEffect(() => {
-    localStorage.setItem('scoreheroes_matches', JSON.stringify(matches));
-  }, [matches]);
-
-  useEffect(() => {
     localStorage.setItem('feedItems', JSON.stringify(feedItems));
   }, [feedItems]);
 
@@ -394,14 +497,6 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   useEffect(() => {
     localStorage.setItem('certificates', JSON.stringify(certificates));
   }, [certificates]);
-
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem('currentUser');
-    }
-  }, [currentUser]);
 
   useEffect(() => {
     localStorage.setItem('scoreheroes_followed_teams', JSON.stringify(followedTeams));
@@ -437,21 +532,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     localStorage.setItem('scoreheroes_preferences', JSON.stringify(preferences));
   }, [preferences]);
 
-  useEffect(() => {
-    localStorage.setItem('scoreheroes_players', JSON.stringify(players));
-  }, [players]);
-
-  useEffect(() => {
-    localStorage.setItem('scoreheroes_teams', JSON.stringify(teams));
-  }, [teams]);
-
-  useEffect(() => {
-    localStorage.setItem('scoreheroes_tournaments', JSON.stringify(tournaments));
-  }, [tournaments]);
-
-  useEffect(() => {
-    localStorage.setItem('scoreheroes_users', JSON.stringify(users));
-  }, [users]);
+  // Storage effects removed
 
   useEffect(() => {
     localStorage.setItem('scoreheroes_match_scorers', JSON.stringify(matchScorers));
@@ -479,14 +560,27 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setPreferences(prev => ({ ...prev, ...prefs }));
   };
 
-  const updateMatches = () => { console.log('updateMatches called'); };
+  const updateMatches = () => { refreshData(); };
 
-  const addMatch = (match: Match) => {
-    setMatches(prev => [match, ...prev]);
+  const addMatch = async (match: Match) => {
+    try {
+      const newMatch = await matchService.createMatch(match);
+      setMatches(prev => [newMatch, ...prev]);
+    } catch (error) {
+      console.error('Failed to create match:', error);
+      // Fallback: Add to local state anyway for offline/demo feel if DB fails? 
+      // No, let's enforce DB success.
+      alert('Failed to create match. Please try again.');
+    }
   };
 
-  const updateMatch = (matchId: string, updates: Partial<Match>) => {
-    setMatches(prev => prev.map(m => m.id === matchId ? { ...m, ...updates } : m));
+  const updateMatch = async (matchId: string, updates: Partial<Match>) => {
+    try {
+      await matchService.updateMatch(matchId, updates);
+      setMatches(prev => prev.map(m => m.id === matchId ? { ...m, ...updates } : m));
+    } catch (error) {
+      console.error('Failed to update match:', error);
+    }
   };
 
   const maybeNotify = (payload: {
@@ -522,100 +616,151 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   };
 
-  const startMatch = (matchId: string) => {
-    setMatches(prev => prev.map(m => {
-        if (m.id !== matchId) return m;
-        // Only allow Draft -> Live transition
-        if (m.status !== 'draft') return m;
-        const isMatchFollowed = followedMatches.includes(m.id);
-        const involvesFollowed = isMatchFollowed || followedTeams.includes(m.homeParticipant.id) || followedTeams.includes(m.awayParticipant.id);
-        if (involvesFollowed) {
-          const title = `${m.homeParticipant.name} vs ${m.awayParticipant.name} is about to start`;
-          const body = `Starts at ${new Date(m.date).toLocaleString()} • ${m.location}`;
-          maybeNotify({
-            type: 'match_start',
-            title,
-            body,
-            key: `match_start_${m.id}`,
-            relatedMatchId: m.id
-          });
-        }
-        
-        return { 
-            ...m, 
-            status: 'live' as const,
-            // Initialize actualStartTime if needed
-            actualStartTime: new Date().toISOString()
-        };
-    }));
-  };
+  const startMatch = async (matchId: string, initialData?: { strikerId: string; nonStrikerId: string; bowlerId: string }) => {
+    const match = matches.find(m => m.id === matchId);
+    if (!match) return;
+    
+    // Only allow Draft -> Live transition
+    if (match.status !== 'draft') return;
 
-  const scoreMatch = (matchId: string, runs: number, isWicket: boolean) => {
-    setMatches(prevMatches => {
-      return prevMatches.map(m => {
-        if (m.id !== matchId) return m;
-
-        const updatedMatch = { ...m };
-        // Default to home team if not set
-        if (!updatedMatch.currentBattingTeamId) {
-          updatedMatch.currentBattingTeamId = updatedMatch.homeParticipant.id;
-        }
-
-        const isHome = updatedMatch.currentBattingTeamId === updatedMatch.homeParticipant.id;
-        const participant = isHome ? { ...updatedMatch.homeParticipant } : { ...updatedMatch.awayParticipant };
-
-        // Update stats
-        participant.score = (participant.score || 0) + runs;
-        participant.balls = (participant.balls || 0) + 1;
-        if (isWicket) {
-          participant.wickets = (participant.wickets || 0) + 1;
-        }
-
-        // Save back to match
-        if (isHome) {
-          updatedMatch.homeParticipant = participant;
-        } else {
-          updatedMatch.awayParticipant = participant;
-        }
-
-        // Add event
-        const over = Math.floor((participant.balls - 1) / 6);
-        const ballInOver = (participant.balls - 1) % 6 + 1;
-        
-        let desc = `Over ${over}.${ballInOver} - ${runs} runs`;
-        if (isWicket) desc = `Over ${over}.${ballInOver} - WICKET!`;
-        if (runs === 4) desc = `Over ${over}.${ballInOver} - FOUR!`;
-        if (runs === 6) desc = `Over ${over}.${ballInOver} - SIX!`;
-
-        const newEvent: ScoreEvent = {
-          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          timestamp: new Date().toISOString(),
-          points: runs,
-          description: desc,
-          type: isWicket ? 'wicket' : 'run',
-          teamId: participant.id
-        };
-
-        updatedMatch.events = [newEvent, ...(updatedMatch.events || [])];
-        
-        // Also update global feed
-        const newFeedItem: FeedItem = {
-          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          type: 'match_update',
-          title: `${participant.name}: ${desc}`,
-          publishedAt: new Date().toISOString(),
-          relatedEntityId: matchId,
-          content: `${updatedMatch.homeParticipant.name} vs ${updatedMatch.awayParticipant.name}`,
-          visibility: 'public'
-        };
-        setFeedItems(prev => [newFeedItem, ...prev]);
-
-        return updatedMatch;
+    const isMatchFollowed = followedMatches.includes(match.id);
+    const involvesFollowed = isMatchFollowed || followedTeams.includes(match.homeParticipant.id) || followedTeams.includes(match.awayParticipant.id);
+    
+    if (involvesFollowed) {
+      const title = `${match.homeParticipant.name} vs ${match.awayParticipant.name} is about to start`;
+      const body = `Starts at ${new Date(match.date).toLocaleString()} • ${match.location}`;
+      maybeNotify({
+        type: 'match_start',
+        title,
+        body,
+        key: `match_start_${match.id}`,
+        relatedMatchId: match.id
       });
-    });
+    }
+    
+    const updates: Partial<Match> = { 
+        status: 'live' as const,
+        actualStartTime: new Date().toISOString()
+    };
+
+    if (initialData) {
+        updates.liveState = {
+            strikerId: initialData.strikerId,
+            nonStrikerId: initialData.nonStrikerId,
+            bowlerId: initialData.bowlerId,
+            currentOver: 0,
+            ballsInCurrentOver: 0
+        };
+        // Also ensure currentBattingTeamId is set based on Toss if not already
+        if (!match.currentBattingTeamId && match.toss) {
+            updates.currentBattingTeamId = match.toss.decision === 'BAT' 
+                ? match.toss.winnerTeamId 
+                : (match.toss.winnerTeamId === match.homeParticipant.id ? match.awayParticipant.id : match.homeParticipant.id);
+        }
+    }
+
+    try {
+      await matchService.updateMatch(matchId, updates);
+      setMatches(prev => prev.map(m => m.id === matchId ? { ...m, ...updates } : m));
+    } catch (error) {
+      console.error('Failed to start match:', error);
+    }
   };
 
-  const endMatch = (matchId: string) => {
+  const scoreMatch = async (matchId: string, eventOrRuns: number | Partial<ScoreEvent>, isWicketLegacy?: boolean) => {
+    const match = matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    let newEvent: ScoreEvent;
+
+    // Handle Legacy vs New Signature
+    if (typeof eventOrRuns === 'number') {
+      const runs = eventOrRuns;
+      const isWicket = isWicketLegacy || false;
+      
+      // Determine context (simplified for legacy calls)
+      const battingTeamId = match.currentBattingTeamId || match.homeParticipant.id;
+      
+      const over = Math.floor((match.homeParticipant.id === battingTeamId ? match.homeParticipant.balls || 0 : match.awayParticipant.balls || 0) / 6);
+      const ballInOver = ((match.homeParticipant.id === battingTeamId ? match.homeParticipant.balls || 0 : match.awayParticipant.balls || 0) % 6) + 1;
+      
+      let desc = `Over ${over}.${ballInOver} - ${runs} runs`;
+      if (isWicket) desc = `Over ${over}.${ballInOver} - WICKET!`;
+      if (runs === 4) desc = `Over ${over}.${ballInOver} - FOUR!`;
+      if (runs === 6) desc = `Over ${over}.${ballInOver} - SIX!`;
+
+      newEvent = {
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date().toISOString(),
+        points: runs,
+        description: desc,
+        type: isWicket ? 'wicket' : 'delivery',
+        teamId: battingTeamId,
+        runsScored: runs, // Assume all runs are off bat for legacy
+        isWicket: isWicket
+      };
+    } else {
+      // Detailed Event
+      newEvent = {
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date().toISOString(),
+        description: 'Ball bowled', // Default
+        points: 0, // Default
+        type: 'delivery', // Default
+        ...eventOrRuns
+      } as ScoreEvent;
+      
+      // Calculate points if not provided but runs/extras are
+      if (newEvent.points === 0) {
+          newEvent.points = (newEvent.runsScored || 0) + (newEvent.extras?.runs || 0);
+      }
+      if (!newEvent.description) {
+         if (newEvent.isWicket) newEvent.description = "Wicket";
+         else newEvent.description = `${newEvent.points} runs`;
+      }
+    }
+
+    // Apply Logic via Engine
+    const updatedMatch = scoreEngine.applyEvent(match, newEvent);
+
+    // Also update global feed
+    let subjectTeamName = '';
+    if (newEvent.teamId) {
+        subjectTeamName = newEvent.teamId === updatedMatch.homeParticipant.id ? updatedMatch.homeParticipant.name : updatedMatch.awayParticipant.name;
+    } else {
+        subjectTeamName = updatedMatch.currentBattingTeamId === updatedMatch.homeParticipant.id ? updatedMatch.homeParticipant.name : updatedMatch.awayParticipant.name;
+    }
+
+    const feedItem: FeedItem = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: 'match_update',
+      title: `${subjectTeamName}: ${newEvent.description}`,
+      publishedAt: new Date().toISOString(),
+      relatedEntityId: matchId,
+      content: newEvent.description,
+      visibility: 'public'
+    };
+
+    try {
+      await matchService.updateMatch(matchId, {
+        homeParticipant: updatedMatch.homeParticipant,
+        awayParticipant: updatedMatch.awayParticipant,
+        events: updatedMatch.events,
+        currentBattingTeamId: updatedMatch.currentBattingTeamId,
+        liveState: updatedMatch.liveState
+      });
+
+      // Persist feed item
+      const createdFeedItem = await feedService.createFeedItem(feedItem);
+
+      setMatches(prevMatches => prevMatches.map(m => m.id === matchId ? updatedMatch : m));
+      setFeedItems(prev => [createdFeedItem, ...prev]);
+    } catch (error) {
+      console.error('Failed to score match:', error);
+    }
+  };
+
+  const endMatch = async (matchId: string) => {
     const match = matches.find(m => m.id === matchId);
     if (!match || match.status === 'completed') return;
 
@@ -649,45 +794,76 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const teamAPlayers = teamA?.members ?? [];
     const teamBPlayers = teamB?.members ?? [];
 
-    // Step 1.6: Deterministic zero-state stats
-    const homeStats: PlayerStats[] = teamAPlayers.map(m => ({
-      playerId: m.playerId,
-      runs: 0,
-      balls: 0,
-      wickets: 0,
-      catches: 0
-    }));
+    // Step 1.6: Use actual stats from the match
+    const homeMatchStats = match.homeParticipant.players || [];
+    const awayMatchStats = match.awayParticipant.players || [];
 
-    const awayStats: PlayerStats[] = teamBPlayers.map(m => ({
-      playerId: m.playerId,
-      runs: 0,
-      balls: 0,
-      wickets: 0,
-      catches: 0
-    }));
+    // Helper to map stats
+    const mapStats = (teamPlayers: any[], matchStats: PlayerStats[]) => {
+        return teamPlayers.map(m => {
+            const stat = matchStats.find(s => s.playerId === m.playerId);
+            return {
+                playerId: m.playerId,
+                runs: stat?.runs || 0,
+                balls: stat?.balls || 0,
+                wickets: stat?.wickets || 0,
+                catches: stat?.catches || 0,
+                ballsBowled: stat?.ballsBowled || 0,
+                runsConceded: stat?.runsConceded || 0,
+                runouts: stat?.runouts || 0,
+                // Football
+                goals: stat?.goals || 0,
+                assists: stat?.assists || 0,
+                yellowCards: stat?.yellowCards || 0,
+                redCards: stat?.redCards || 0
+            };
+        });
+    };
 
+    const homeStats = mapStats(teamAPlayers, homeMatchStats);
+    const awayStats = mapStats(teamBPlayers, awayMatchStats);
     const allStats = [...homeStats, ...awayStats];
 
     // 2. Generate Achievements (Will be empty for zero stats, but logic preserved)
     const newAchievements: Achievement[] = [];
     
-    // Player of the Match (Highest Impact: Runs + Wickets*20)
+    // Player of the Match (Highest Impact)
     if (allStats.length > 0) {
       const topScorer = allStats.reduce((prev, current) => {
-          const prevImpact = prev.runs + (prev.wickets * 20);
-          const currentImpact = current.runs + (current.wickets * 20);
+          let prevImpact = 0;
+          let currentImpact = 0;
+
+          if (match.sportId === 's3') {
+             // Football: Goal=20, Assist=10
+             prevImpact = (prev.goals || 0) * 20 + (prev.assists || 0) * 10;
+             currentImpact = (current.goals || 0) * 20 + (current.assists || 0) * 10;
+          } else {
+             // Cricket: Runs + Wickets*20
+             prevImpact = (prev.runs || 0) + ((prev.wickets || 0) * 20);
+             currentImpact = (current.runs || 0) + ((current.wickets || 0) * 20);
+          }
           return (prevImpact > currentImpact) ? prev : current;
       });
 
-      const impact = topScorer.runs + (topScorer.wickets * 20);
+      let impact = 0;
+      if (match.sportId === 's3') {
+         impact = (topScorer.goals || 0) * 20 + (topScorer.assists || 0) * 10;
+      } else {
+         impact = (topScorer.runs || 0) + ((topScorer.wickets || 0) * 20);
+      }
 
-      // Only award POTM if impact is significant (>= 20 points, e.g. 20 runs or 1 wicket)
+      // Only award POTM if impact is significant (>= 20 points)
       if (impact >= 20) {
         const player = players.find(p => p.id === topScorer.playerId);
         if (player) {
           const desc = [];
-          if (topScorer.runs > 0) desc.push(`${topScorer.runs} runs`);
-          if (topScorer.wickets > 0) desc.push(`${topScorer.wickets} wickets`);
+          if (match.sportId === 's3') {
+              if ((topScorer.goals || 0) > 0) desc.push(`${topScorer.goals} goals`);
+              if ((topScorer.assists || 0) > 0) desc.push(`${topScorer.assists} assists`);
+          } else {
+              if ((topScorer.runs || 0) > 0) desc.push(`${topScorer.runs} runs`);
+              if ((topScorer.wickets || 0) > 0) desc.push(`${topScorer.wickets} wickets`);
+          }
           
           newAchievements.push({
                 id: Date.now().toString() + '_potm',
@@ -702,51 +878,78 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       }
     }
 
-    // Centuries, Half Centuries & Five Wickets
+    // Sport-Specific Achievements
     allStats.forEach(stat => {
         // Use real players state
         const player = players.find(p => p.id === stat.playerId);
         if (!player) return;
 
-        // Prevent duplicate awards for same performance (e.g. 100 includes 50)
-        // Rule: If Century, don't award Half Century.
-        if (stat.runs >= 100) {
-            newAchievements.push({
-                id: Date.now().toString() + '_' + stat.playerId + '_100',
-                type: 'century',
-                title: 'Century',
-                playerId: stat.playerId,
-                matchId: match.id,
-                date: new Date().toISOString(),
-                description: `Scored ${stat.runs} runs`
-            });
-        } else if (stat.runs >= 50) {
-            newAchievements.push({
-                id: Date.now().toString() + '_' + stat.playerId + '_50',
-                type: 'half_century',
-                title: 'Half Century',
-                playerId: stat.playerId,
-                matchId: match.id,
-                date: new Date().toISOString(),
-                description: `Scored ${stat.runs} runs`
-            });
-        }
+        if (match.sportId === 's3') {
+            // Football: Hat-Trick
+            if ((stat.goals || 0) >= 3) {
+                 newAchievements.push({
+                    id: Date.now().toString() + '_' + stat.playerId + '_hattrick',
+                    type: 'hat_trick',
+                    title: 'Hat-Trick',
+                    playerId: stat.playerId,
+                    matchId: match.id,
+                    date: new Date().toISOString(),
+                    description: `Scored ${stat.goals} goals`
+                });
+            }
+        } else {
+            // Cricket: Centuries, 50s, 5W
+            // Prevent duplicate awards for same performance (e.g. 100 includes 50)
+            // Rule: If Century, don't award Half Century.
+            if ((stat.runs || 0) >= 100) {
+                newAchievements.push({
+                    id: Date.now().toString() + '_' + stat.playerId + '_100',
+                    type: 'century',
+                    title: 'Century',
+                    playerId: stat.playerId,
+                    matchId: match.id,
+                    date: new Date().toISOString(),
+                    description: `Scored ${stat.runs} runs`
+                });
+            } else if ((stat.runs || 0) >= 50) {
+                newAchievements.push({
+                    id: Date.now().toString() + '_' + stat.playerId + '_50',
+                    type: 'half_century',
+                    title: 'Half Century',
+                    playerId: stat.playerId,
+                    matchId: match.id,
+                    date: new Date().toISOString(),
+                    description: `Scored ${stat.runs} runs`
+                });
+            }
 
-        if (stat.wickets >= 5) {
-          newAchievements.push({
-              id: Date.now().toString() + '_' + stat.playerId + '_5w',
-              type: 'five_wickets',
-              title: 'Five Wickets',
-              playerId: stat.playerId,
-              matchId: match.id,
-              date: new Date().toISOString(),
-              description: `Taken ${stat.wickets} wickets`
-          });
+            if ((stat.wickets || 0) >= 5) {
+              newAchievements.push({
+                  id: Date.now().toString() + '_' + stat.playerId + '_5w',
+                  type: 'five_wickets',
+                  title: 'Five Wickets',
+                  playerId: stat.playerId,
+                  matchId: match.id,
+                  date: new Date().toISOString(),
+                  description: `Taken ${stat.wickets} wickets`
+              });
+            }
         }
     });
     
+    // Persist Achievements
+    const savedAchievements: Achievement[] = [];
     if (newAchievements.length > 0) {
-      setAchievements(prev => [...newAchievements, ...prev]);
+      try {
+        const results = await Promise.all(newAchievements.map(a => achievementService.createAchievement(a)));
+        savedAchievements.push(...results);
+        setAchievements(prev => [...results, ...prev]);
+      } catch (error) {
+        console.error('Failed to save achievements:', error);
+        // Fallback for UI continuity
+        savedAchievements.push(...newAchievements);
+        setAchievements(prev => [...newAchievements, ...prev]);
+      }
     }
 
     // 3. Generate Certificates
@@ -779,7 +982,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     });
 
     // Achievement Certificates
-    newAchievements.forEach(ach => {
+    savedAchievements.forEach(ach => {
         const isHome = homeStats.some(s => s.playerId === ach.playerId);
         const teamName = isHome ? match.homeParticipant.name : match.awayParticipant.name;
 
@@ -803,11 +1006,17 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     });
 
     if (newCertificates.length > 0) {
-      setCertificates(prev => [...newCertificates, ...prev]);
+      try {
+        const results = await Promise.all(newCertificates.map(c => certificateService.createCertificate(c)));
+        setCertificates(prev => [...results, ...prev]);
+      } catch (error) {
+        console.error('Failed to save certificates:', error);
+        setCertificates(prev => [...newCertificates, ...prev]);
+      }
     }
 
     // 4. Update Match Status
-    updateMatch(match.id, { 
+    await updateMatch(match.id, { 
       status: 'completed',
       winnerId,
       homeParticipant: { ...match.homeParticipant, result: homeResult, players: homeStats },
@@ -825,7 +1034,14 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       content: `${match.homeParticipant.name} ${homeScore}/${match.homeParticipant.wickets || 0} vs ${match.awayParticipant.name} ${awayScore}/${match.awayParticipant.wickets || 0}. Winner: ${winnerId === match.homeParticipant.id ? match.homeParticipant.name : (winnerId === match.awayParticipant.id ? match.awayParticipant.name : 'Draw')}`,
       visibility: 'public'
     };
-    setFeedItems(prev => [feedItem, ...prev]);
+    
+    try {
+      const createdFeedItem = await feedService.createFeedItem(feedItem);
+      setFeedItems(prev => [createdFeedItem, ...prev]);
+    } catch (error) {
+      console.error('Failed to create feed item:', error);
+      setFeedItems(prev => [feedItem, ...prev]);
+    }
     
     maybeNotify({
       type: 'match_result',
@@ -836,9 +1052,9 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     });
   };
 
-  const updatePlayers = () => { console.log('updatePlayers called'); };
-  const updateTeams = () => { console.log('updateTeams called'); };
-  const updateFeed = () => { console.log('updateFeed called'); };
+  const updatePlayers = () => { refreshData(); };
+  const updateTeams = () => { refreshData(); };
+  const updateFeed = () => { refreshData(); };
 
   useEffect(() => {
     followedTournaments.forEach(tid => {
@@ -874,62 +1090,126 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     });
   }, [followedTournaments, tournaments]);
 
-  const addPlayer = (player: Player) => {
-    setPlayers(prev => [player, ...prev]);
+  const addPlayer = async (player: Player) => {
+    try {
+      const newPlayer = await playerService.createPlayer(player);
+      setPlayers(prev => [newPlayer, ...prev]);
+    } catch (error) {
+      console.error('Failed to create player:', error);
+      alert('Failed to create player.');
+    }
   };
 
-  const addTournament = (tournament: Tournament) => {
-    setTournaments(prev => [tournament, ...prev]);
+  const addTournament = async (tournament: Tournament) => {
+    try {
+      await tournamentService.createTournament(tournament);
+      refreshData();
+    } catch (error) {
+      console.error('Failed to create tournament:', error);
+      alert('Failed to create tournament.');
+    }
   };
 
-  const updateTournament = (tournament: Tournament) => {
-    setTournaments(prev => prev.map(t => t.id === tournament.id ? tournament : t));
+  const updateTournament = async (tournament: Tournament) => {
+    try {
+      await tournamentService.updateTournament(tournament.id, tournament);
+      refreshData();
+    } catch (error) {
+      console.error('Failed to update tournament:', error);
+    }
   };
 
-  const addTeamToTournament = (tournamentId: string, teamId: string) => {
-    setTournaments(prev => prev.map(t => {
-      if (t.id === tournamentId) {
-        const currentTeams = t.teams || [];
-        if (currentTeams.includes(teamId)) return t;
-        return { ...t, teams: [...currentTeams, teamId] };
+  const startTournament = async (id: string) => {
+    try {
+      // Use the Cricheroes Integration Service
+      const tournamentTeams = teams.filter(t => 
+        tournaments.find(tour => tour.id === id)?.teams?.includes(t.id)
+      );
+      
+      const result = await cricheroesIntegrationService.startTournament(id, tournamentTeams, { scheduleMode: 'AUTO' });
+      
+      if (result.success) {
+        // Refresh local state
+        const updatedList = await tournamentService.getAllTournaments();
+        setTournaments(updatedList);
+        
+        // Refresh matches if generated
+        if (result.matchesGenerated && result.matchesGenerated > 0) {
+            const allMatches = await matchService.getAllMatches();
+            setMatches(allMatches);
+        }
+        
+        maybeNotify({
+            type: 'tournament_event',
+            title: 'Tournament Started',
+            body: result.message,
+            key: `tour_start_${id}`,
+            relatedTournamentId: id
+        });
+      } else {
+        console.error(result.message);
       }
-      return t;
-    }));
+    } catch (error) {
+      console.error('Failed to start tournament:', error);
+    }
   };
 
-  const removeTeamFromTournament = (tournamentId: string, teamId: string) => {
-    setTournaments(prev => prev.map(t => {
-      if (t.id === tournamentId) {
-        return { ...t, teams: (t.teams || []).filter(id => id !== teamId) };
+  const addTeamToTournament = async (tournamentId: string, teamId: string) => {
+    try {
+      await tournamentService.addTeam(tournamentId, teamId);
+      refreshData();
+    } catch (error) {
+      console.error('Failed to add team to tournament:', error);
+    }
+  };
+
+  const removeTeamFromTournament = async (tournamentId: string, teamId: string) => {
+    try {
+      await tournamentService.removeTeam(tournamentId, teamId);
+      refreshData();
+    } catch (error) {
+      console.error('Failed to remove team from tournament:', error);
+    }
+  };
+
+  const updateTournamentStructure = async (tournamentId: string, structure: any) => {
+    try {
+      await tournamentService.updateTournament(tournamentId, { structure });
+      refreshData();
+    } catch (error) {
+      console.error('Failed to update tournament structure:', error);
+    }
+  };
+
+  const updateTournamentScheduleMode = async (tournamentId: string, scheduleMode: 'AUTO' | 'MANUAL' | 'LATER') => {
+    try {
+      // @ts-ignore - scheduleMode might be missing in strict types but supported in DB/runtime
+      await tournamentService.updateTournament(tournamentId, { scheduleMode });
+      refreshData();
+    } catch (error) {
+      console.error('Failed to update tournament schedule mode:', error);
+    }
+  };
+
+  const addTeam = async (team: Team) => {
+    try {
+      const newTeam = await teamService.createTeam(team);
+      if (newTeam) {
+        setTeams(prev => [newTeam, ...prev]);
       }
-      return t;
-    }));
+    } catch (error) {
+      console.error('Failed to create team:', error);
+      alert('Failed to create team.');
+    }
   };
 
-  const updateTournamentStructure = (tournamentId: string, structure: any) => {
-    setTournaments(prev => prev.map(t => {
-      if (t.id === tournamentId) {
-        return { ...t, structure };
-      }
-      return t;
-    }));
-  };
-
-  const updateTournamentScheduleMode = (tournamentId: string, scheduleMode: 'AUTO' | 'MANUAL' | 'LATER') => {
-    setTournaments(prev => prev.map(t => {
-      if (t.id === tournamentId) {
-        return { ...t, scheduleMode };
-      }
-      return t;
-    }));
-  };
-
-  const addTeam = (team: Team) => {
-    setTeams(prev => [team, ...prev]);
-  };
-
-  const addTeamMember = (teamId: string, member: { playerId: string; role: 'captain' | 'vice-captain' | 'member'; joinedAt: string }) => {
-    setTeams(prev => prev.map(t => t.id === teamId ? { ...t, members: [...t.members, member] } : t));
+  const addTeamMember = async (teamId: string, member: { playerId: string; role: 'captain' | 'vice-captain' | 'member'; joinedAt: string }) => {
+    try {
+      await teamService.addMember(teamId, member);
+      setTeams(prev => prev.map(t => t.id === teamId ? { ...t, members: [...t.members, member] } : t));
+    } catch (error) {
+      console.error('Failed to add team member:', error);
+    }
   };
 
   return (

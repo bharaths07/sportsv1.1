@@ -12,6 +12,7 @@ const HighlightCard: React.FC<HighlightCardProps> = ({ highlight }) => {
       <img
         src={highlight.thumbnailUrl}
         alt={highlight.title}
+        loading="lazy"
         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
       />
       <div className="absolute inset-0 bg-black/20" />
@@ -47,6 +48,7 @@ const PhotoCard: React.FC<PhotoCardProps> = ({ photo }) => {
       <img
         src={photo.url}
         alt={photo.caption || 'Player photo'}
+        loading="lazy"
         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
       />
       {photo.caption && (

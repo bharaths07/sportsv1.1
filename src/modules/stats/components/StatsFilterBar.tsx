@@ -1,5 +1,6 @@
 import React from 'react';
 import { StatsFilters, StatFormat, TimeRange } from '../hooks/useStats';
+import { Select } from '../../../components/ui/Select';
 
 interface StatsFilterBarProps {
   filters: StatsFilters;
@@ -12,95 +13,56 @@ export const StatsFilterBar: React.FC<StatsFilterBarProps> = ({ filters, onFilte
   };
 
   return (
-    <div style={{
-      position: 'sticky',
-      top: 0,
-      zIndex: 20,
-      backgroundColor: 'white',
-      borderBottom: '1px solid #e2e8f0',
-      padding: '16px 24px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '16px',
-      flexWrap: 'wrap',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-    }}>
+    <div className="sticky top-0 z-20 bg-white border-b border-slate-200 px-4 py-4 flex flex-wrap items-center gap-4 shadow-sm mb-8">
       {/* Sport Filter */}
-      <select 
-        value={filters.sportId}
-        onChange={(e) => updateFilter('sportId', e.target.value)}
-        style={{
-          padding: '8px 12px',
-          borderRadius: '8px',
-          border: '1px solid #cbd5e1',
-          backgroundColor: '#f8fafc',
-          fontSize: '14px',
-          fontWeight: 600,
-          color: '#334155',
-          cursor: 'pointer'
-        }}
-      >
-        <option value="s1">Cricket</option>
-        <option value="s2">Football (Coming Soon)</option>
-      </select>
+      <div className="w-full sm:w-48">
+        <Select
+          value={filters.sportId}
+          onChange={(e) => updateFilter('sportId', e.target.value)}
+          options={[
+            { value: 's1', label: 'Cricket' },
+            { value: 's3', label: 'Football' }
+          ]}
+        />
+      </div>
 
       {/* Format Filter */}
-      <select 
-        value={filters.format}
-        onChange={(e) => updateFilter('format', e.target.value as StatFormat)}
-        style={{
-          padding: '8px 12px',
-          borderRadius: '8px',
-          border: '1px solid #cbd5e1',
-          backgroundColor: '#f8fafc',
-          fontSize: '14px',
-          fontWeight: 600,
-          color: '#334155',
-          cursor: 'pointer'
-        }}
-      >
-        <option value="all">All Formats</option>
-        <option value="t20">T20</option>
-        <option value="odi">ODI</option>
-        <option value="test">Test</option>
-      </select>
+      {filters.sportId !== 's3' && (
+        <div className="w-full sm:w-48">
+          <Select
+            value={filters.format}
+            onChange={(e) => updateFilter('format', e.target.value as StatFormat)}
+            options={[
+              { value: 'all', label: 'All Formats' },
+              { value: 't20', label: 'T20' },
+              { value: 'odi', label: 'ODI' },
+              { value: 'test', label: 'Test' }
+            ]}
+          />
+        </div>
+      )}
 
       {/* Time Range Filter */}
-      <select 
-        value={filters.timeRange}
-        onChange={(e) => updateFilter('timeRange', e.target.value as TimeRange)}
-        style={{
-          padding: '8px 12px',
-          borderRadius: '8px',
-          border: '1px solid #cbd5e1',
-          backgroundColor: '#f8fafc',
-          fontSize: '14px',
-          fontWeight: 600,
-          color: '#334155',
-          cursor: 'pointer'
-        }}
-      >
-        <option value="all_time">All Time</option>
-        <option value="last_12_months">Last 12 Months</option>
-      </select>
+      <div className="w-full sm:w-48">
+        <Select
+          value={filters.timeRange}
+          onChange={(e) => updateFilter('timeRange', e.target.value as TimeRange)}
+          options={[
+            { value: 'all_time', label: 'All Time' },
+            { value: 'last_12_months', label: 'Last 12 Months' }
+          ]}
+        />
+      </div>
 
       {/* Qualification Toggle */}
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        fontSize: '14px',
-        color: '#475569',
-        cursor: 'pointer',
-        marginLeft: 'auto'
-      }}>
+      <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer ml-auto select-none">
         <input 
           type="checkbox" 
           checked={filters.minQualification}
           onChange={(e) => updateFilter('minQualification', e.target.checked)}
-          style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+          className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
         />
-        Min. Qualification
+        <span>Min Qualification</span>
       </label>
     </div>
   );

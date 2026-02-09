@@ -1,4 +1,5 @@
 import React from 'react';
+import { Avatar } from '../../../components/ui/Avatar';
 import { CurrentTeam, PastTeam } from '../../../domain/player';
 
 // --- Current Team Card ---
@@ -15,13 +16,12 @@ export const CurrentTeamCard: React.FC<CurrentTeamCardProps> = ({ team }) => {
       </div>
       <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         {/* Logo */}
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-2xl">
-          {team.logoUrl ? (
-            <img src={team.logoUrl} alt={team.teamName} className="h-full w-full object-cover" />
-          ) : (
-            '🛡️'
-          )}
-        </div>
+        <Avatar
+          src={team.logoUrl}
+          alt={team.teamName}
+          fallback="🛡️"
+          className="h-14 w-14 shrink-0 bg-slate-100 text-2xl"
+        />
 
         {/* Details */}
         <div>
@@ -52,13 +52,12 @@ export const PastTeamCard: React.FC<PastTeamCardProps> = ({ team }) => {
   return (
     <div className="flex items-center gap-3 border-b border-slate-100 py-3">
       {/* Logo (Smaller) */}
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-50 text-lg">
-        {team.logoUrl ? (
-          <img src={team.logoUrl} alt={team.teamName} className="h-full w-full object-cover" />
-        ) : (
-          <span className="opacity-50">🛡️</span>
-        )}
-      </div>
+      <Avatar
+        src={team.logoUrl}
+        alt={team.teamName}
+        fallback={<span className="opacity-50">🛡️</span>}
+        className="h-10 w-10 shrink-0 border border-slate-200 bg-slate-50 text-lg"
+      />
 
       {/* Details */}
       <div className="flex-1">

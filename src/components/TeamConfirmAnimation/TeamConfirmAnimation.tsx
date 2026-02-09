@@ -122,11 +122,11 @@ export const TeamConfirmAnimation: React.FC<TeamConfirmAnimationProps> = ({
               className={styles.teamAvatar}
               style={{ backgroundColor: teamA.color || getColor(teamA.name) }}
             >
-              {teamA.logoUrl ? (
-                <img src={teamA.logoUrl} alt={teamA.name} className="h-full w-full object-cover" />
-              ) : (
-                <span>{getInitials(teamA.name)}</span>
-              )}
+              <Avatar
+                src={teamA.logoUrl}
+                fallback={getInitials(teamA.name)}
+                className="h-full w-full bg-transparent text-inherit"
+              />
             </div>
           </div>
 
@@ -139,11 +139,11 @@ export const TeamConfirmAnimation: React.FC<TeamConfirmAnimationProps> = ({
               className={styles.teamAvatar}
               style={{ backgroundColor: teamB.color || getColor(teamB.name) }}
             >
-              {teamB.logoUrl ? (
-                <img src={teamB.logoUrl} alt={teamB.name} className="h-full w-full object-cover" />
-              ) : (
-                <span>{getInitials(teamB.name)}</span>
-              )}
+              <Avatar
+                src={teamB.logoUrl}
+                fallback={getInitials(teamB.name)}
+                className="h-full w-full bg-transparent text-inherit"
+              />
             </div>
           </div>
         </div>

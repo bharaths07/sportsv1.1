@@ -50,6 +50,19 @@ export interface FieldingStat {
   totalDismissals: number;
 }
 
+export interface FootballStat {
+  playerId: string;
+  matches: number;
+  goals: number;
+  assists: number;
+  minutesPlayed: number;
+  yellowCards: number;
+  redCards: number;
+  goalsPerMatch: number;
+  cleanSheets: number;
+  hatTricks: number;
+}
+
 export interface TeamStat {
   teamId: string;
   matches: number;
@@ -99,10 +112,11 @@ export const useStats = (filters: StatsFilters) => {
   }, [matches, filters]);
 
   // Aggregation
-  const { battingStats, bowlingStats, fieldingStats, teamStats } = useMemo(() => {
+  const { battingStats, bowlingStats, fieldingStats, footballStats, teamStats } = useMemo(() => {
     const battingMap = new Map<string, BattingStat>();
     const bowlingMap = new Map<string, BowlingStat>();
     const fieldingMap = new Map<string, FieldingStat>();
+    const footballMap = new Map<string, FootballStat>();
     const teamMap = new Map<string, TeamStat>();
 
     // Helper to get or init
@@ -114,6 +128,9 @@ export const useStats = (filters: StatsFilters) => {
     };
     const getFielding = (pid: string) => fieldingMap.get(pid) || {
       playerId: pid, matches: 0, catches: 0, runouts: 0, stumpings: 0, totalDismissals: 0
+    };
+    const getFootball = (pid: string) => footballMap.get(pid) || {
+      playerId: pid, matches: 0, goals: 0, assists: 0, minutesPlayed: 0, yellowCards: 0, redCards: 0, goalsPerMatch: 0, cleanSheets: 0, hatTricks: 0
     };
     const getTeam = (tid: string) => teamMap.get(tid) || {
       teamId: tid, matches: 0, wins: 0, losses: 0, draws: 0, winPercentage: 0, totalRunsScored: 0, totalRunsConceded: 0, avgRunsScored: 0, avgRunsConceded: 0
@@ -134,7 +151,7 @@ export const useStats = (filters: StatsFilters) => {
             else if (m.winnerId) t.losses += 1;
             else t.draws += 1; // Tie or Draw
 
-            // Runs
+            // Runs (or Goals)
             t.totalRunsScored += p.score || 0;
             // Runs Conceded (Opponent score)
             const opponent = participants.find(op => op.id !== p.id);
@@ -150,43 +167,45 @@ export const useStats = (filters: StatsFilters) => {
       participants.forEach(p => {
         if (p.players) {
             p.players.forEach(ps => {
-                // Batting
-                if (ps.balls > 0 || ps.runs > 0) { // Assume batted if faced balls or scored runs (even 0 balls if runout without facing?)
+                // Batting (Cricket)
+                if ((ps.balls || 0) > 0 || (ps.runs || 0) > 0) { // Assume batted if faced balls or scored runs (even 0 balls if runout without facing?)
                     const b = getBatting(ps.playerId);
                     b.matches += 1; // Note: This might overcount matches if player bowled but didn't bat. 
                                     // But usually aggregated independently. 
                                     // For simplicity, we increment matches in each domain if they appeared in the list.
                     b.innings += 1;
-                    b.runs += ps.runs;
-                    b.balls += ps.balls;
-                    if (ps.runs > b.highestScore) b.highestScore = ps.runs;
-                    if (ps.runs >= 100) b.hundreds += 1;
-                    else if (ps.runs >= 50) b.fifties += 1;
+                    b.runs += ps.runs || 0;
+                    b.balls += ps.balls || 0;
+                    if ((ps.runs || 0) > b.highestScore) b.highestScore = ps.runs || 0;
+                    if ((ps.runs || 0) >= 100) b.hundreds += 1;
+                    else if ((ps.runs || 0) >= 50) b.fifties += 1;
                     battingMap.set(ps.playerId, b);
                 }
 
-                // Bowling
+                // Bowling (Cricket)
                 if (ps.ballsBowled && ps.ballsBowled > 0) {
                     const bo = getBowling(ps.playerId);
                     bo.matches += 1;
                     bo.innings += 1;
                     bo.balls += ps.ballsBowled;
-                    bo.wickets += ps.wickets;
+                    bo.wickets += ps.wickets || 0;
                     bo.runsConceded += ps.runsConceded || 0;
                     
                     // Best Bowling
-                    if (ps.wickets > bo.bestBowlingWickets || (ps.wickets === bo.bestBowlingWickets && (ps.runsConceded || 0) < bo.bestBowlingRuns)) {
-                        bo.bestBowlingWickets = ps.wickets;
-                        bo.bestBowlingRuns = ps.runsConceded || 0;
+                    const wkts = ps.wickets || 0;
+                    const runs = ps.runsConceded || 0;
+                    if (wkts > bo.bestBowlingWickets || (wkts === bo.bestBowlingWickets && runs < bo.bestBowlingRuns)) {
+                        bo.bestBowlingWickets = wkts;
+                        bo.bestBowlingRuns = runs;
                     }
 
-                    if (ps.wickets >= 5) bo.fiveWickets += 1;
-                    else if (ps.wickets >= 3) bo.threeWickets += 1;
+                    if (wkts >= 5) bo.fiveWickets += 1;
+                    else if (wkts >= 3) bo.threeWickets += 1;
 
                     bowlingMap.set(ps.playerId, bo);
                 }
 
-                // Fielding
+                // Fielding (Cricket)
                 if ((ps.catches && ps.catches > 0) || (ps.runouts && ps.runouts > 0)) {
                     const f = getFielding(ps.playerId);
                     f.matches += 1; // Again, approx match count logic
@@ -194,6 +213,33 @@ export const useStats = (filters: StatsFilters) => {
                     f.runouts += ps.runouts || 0;
                     f.totalDismissals += (ps.catches || 0) + (ps.runouts || 0);
                     fieldingMap.set(ps.playerId, f);
+                }
+
+                // Football
+                if (filters.sportId === 's3' || (ps.goals || 0) > 0 || (ps.assists || 0) > 0 || (ps.minutesPlayed || 0) > 0) {
+                  // Only process if we have football data or we are in football mode (to show 0 stats)
+                  if ((ps.goals !== undefined) || (ps.assists !== undefined) || (ps.minutesPlayed !== undefined)) {
+                    const f = getFootball(ps.playerId);
+                    f.matches += 1;
+                    f.goals += ps.goals || 0;
+                    f.assists += ps.assists || 0;
+                    f.minutesPlayed += ps.minutesPlayed || 0;
+                    f.yellowCards += ps.yellowCards || 0;
+                    f.redCards += ps.redCards || 0;
+
+                    // Clean Sheets
+                    const opponent = participants.find(op => op.id !== p.id);
+                    if (opponent && (opponent.score || 0) === 0) {
+                        f.cleanSheets += 1;
+                    }
+
+                    // Hat Tricks
+                    if ((ps.goals || 0) >= 3) {
+                        f.hatTricks += 1;
+                    }
+
+                    footballMap.set(ps.playerId, f);
+                  }
                 }
             });
         }
@@ -224,6 +270,11 @@ export const useStats = (filters: StatsFilters) => {
         return b;
     });
 
+    const footballList = Array.from(footballMap.values()).map(f => {
+      f.goalsPerMatch = f.matches > 0 ? parseFloat((f.goals / f.matches).toFixed(2)) : 0;
+      return f;
+    });
+
     const teamList = Array.from(teamMap.values()).map(t => {
         t.winPercentage = t.matches > 0 ? parseFloat(((t.wins / t.matches) * 100).toFixed(1)) : 0;
         t.avgRunsScored = t.matches > 0 ? parseFloat((t.totalRunsScored / t.matches).toFixed(1)) : 0;
@@ -237,15 +288,17 @@ export const useStats = (filters: StatsFilters) => {
         battingStats: battingList,
         bowlingStats: bowlingList,
         fieldingStats: fieldingList,
+        footballStats: footballList,
         teamStats: teamList
     };
 
-  }, [filteredMatches]);
+  }, [filteredMatches, filters.sportId]);
 
   return {
     battingStats,
     bowlingStats,
     fieldingStats,
+    footballStats,
     teamStats
   };
 };

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Tournament } from '../../../domain/tournament';
+import { Avatar } from '../../../components/ui/Avatar';
 
 interface TournamentHeaderProps {
   tournament: Tournament;
@@ -28,10 +29,11 @@ export const TournamentHeader: React.FC<TournamentHeaderProps> = ({ tournament }
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
               backgroundColor: '#1e293b'
             }}>
-              <img 
+              <Avatar 
                 src={tournament.bannerUrl} 
                 alt={tournament.name} 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                fallback={tournament.name.charAt(0)}
+                className="w-full h-full rounded-none"
               />
             </div>
             
@@ -59,10 +61,11 @@ export const TournamentHeader: React.FC<TournamentHeaderProps> = ({ tournament }
               width: '48px', height: '48px', borderRadius: '8px', overflow: 'hidden', 
               backgroundColor: '#1e293b'
             }}>
-              <img 
+              <Avatar 
                 src="https://placehold.co/100x100/4f46e5/ffffff?text=WL" 
                 alt="Next" 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                fallback="WL"
+                className="w-full h-full rounded-none"
               />
             </div>
           </div>

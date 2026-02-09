@@ -2,11 +2,12 @@ import React from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Share2, QrCode, SlidersHorizontal, Trophy, Award, ChevronLeft } from 'lucide-react';
 import { MatchCard } from '../match/components/MatchCard';
-import { StatsCard, BattingSummaryCard, BowlingSummaryCard, FieldingSummaryCard } from './components/StatsCards';
+import { StatsCard, BattingSummaryCard, BowlingSummaryCard, FieldingSummaryCard, FootballSummaryCard } from './components/StatsCards';
 import { TrophiesTab, BadgesTab } from './components/AchievementCards';
 import { CurrentTeamCard, PastTeamCard, TeamsTab } from './components/TeamCards';
 import { MediaTabs } from './components/MediaTabs';
 import { useGlobalState } from '../../app/AppProviders';
+import { Avatar } from '../../components/ui/Avatar';
 
 type Tab = 'matches' | 'stats' | 'trophies' | 'teams' | 'highlights' | 'photos' | 'badges';
 
@@ -76,15 +77,13 @@ export const GameProfileScreen = () => {
               <div className="flex w-full flex-col items-start sm:flex-row sm:items-center sm:space-x-6">
                 {/* Avatar */}
                 <div className="relative mb-4 sm:mb-0">
-                  <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-white/20 shadow-xl sm:h-28 sm:w-28 lg:h-32 lg:w-32">
-                    <img 
-                      src={player.cricketAvatarUrl || player.avatarUrl} 
-                      alt={`${player.firstName} ${player.lastName}`}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
+                  <Avatar 
+                    src={player.cricketAvatarUrl || player.avatarUrl} 
+                    fallback={`${player.firstName[0]}${player.lastName[0]}`}
+                    className="h-24 w-24 border-4 border-white/20 shadow-xl sm:h-28 sm:w-28 lg:h-32 lg:w-32 text-3xl font-bold bg-white/10 text-white"
+                  />
                   {isOwner && (
-                    <button className="absolute bottom-0 right-0 rounded-full bg-gray-900/80 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+                    <button className="absolute bottom-0 right-0 rounded-full bg-gray-900/80 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm z-10">
                       EDIT
                     </button>
                   )}
@@ -208,6 +207,7 @@ export const GameProfileScreen = () => {
               <BattingSummaryCard stats={player.stats.batting} />
               <BowlingSummaryCard stats={player.stats.bowling} />
               <FieldingSummaryCard stats={player.stats.fielding} />
+              <FootballSummaryCard stats={player.stats.football} />
             </div>
           </div>
         )}

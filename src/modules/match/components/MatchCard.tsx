@@ -1,97 +1,151 @@
 import React from 'react';
-import { Match, MatchParticipant } from '../../../domain/match';
+import { Match } from '../../../domain/match';
+import { useNavigate } from 'react-router-dom';
+import { useGlobalState } from '../../../app/AppProviders';
+import { Card } from '../../../components/ui/Card';
+import { MapPin, Calendar, Clock } from 'lucide-react';
 
-interface MatchCardProps {
+interface Props {
   match: Match;
+  isFollowed?: boolean;
+  className?: string;
+  showTournamentContext?: boolean;
 }
 
-const TOURNAMENT_NAMES: Record<string, string> = {
-  'hasiruvalli-premier-league': 'HASIRUVALLI PANCHAYATH PREMIER LEAGUE',
-  'gully-cricket-championship': 'GULLY CRICKET CHAMPIONSHIP',
-  't20-wc-2026': 'T20 WORLD CUP 2026',
-  'ipl-2026': 'IPL 2026',
-};
+export const MatchCard: React.FC<Props> = ({ match, isFollowed, className = '', showTournamentContext = true }) => {
+  const navigate = useNavigate();
+  const { toggleFollowMatch, tournaments } = useGlobalState();
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: '2-digit',
-  }).format(date).replace(/ /g, '-');
-};
+  const isLive = match.status === 'live';
+  const isFinished = match.status === 'completed' || match.status === 'locked' || match.status === 'cancelled';
+  const isUpcoming = match.status === 'draft' || match.status === 'scheduled' || match.status === 'created';
 
-const formatScore = (p: MatchParticipant) => {
-  if (p.score === undefined) return '-';
-  const wickets = p.wickets !== undefined ? `/${p.wickets}` : '/0';
-  const overs = p.overs !== undefined ? `(${p.overs.toFixed(1)} Ov)` : '';
-  return `${p.score}${wickets} ${overs}`;
-};
+  const date = new Date(match.date);
+  const timeText = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const dateText = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
 
-const getResultText = (match: Match) => {
-  if (match.status !== 'completed' || !match.winnerId) return '';
-  
-  const winner = match.homeParticipant.id === match.winnerId ? match.homeParticipant : match.awayParticipant;
-  
-  if (match.id === 'm_prompt_1' || match.id === 'm_prompt_2') {
-     const wicketsLeft = 10 - (winner.wickets || 0);
-     return `${winner.name} won by ${wicketsLeft} wickets`;
-  }
-  
-  return `${winner.name} won`;
-};
+  // Resolve Tournament Name
+  const tournament = tournaments.find(t => t.id === match.tournamentId);
+  const tournamentName = tournament ? tournament.name : "Friendly Match";
+  const isFootball = match.sportId === 's3';
 
-export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
-  const leagueName = match.tournamentId ? (TOURNAMENT_NAMES[match.tournamentId] || match.tournamentId) : 'Unknown League';
-  const dateStr = formatDate(match.date);
-  
-  const isHomeWinner = match.winnerId === match.homeParticipant.id;
-  const isAwayWinner = match.winnerId === match.awayParticipant.id;
+  const formatScore = (p: any) => {
+    if (p.score === undefined) return '-';
+    if (isFootball) return `${p.score}`;
+    return p.wickets !== undefined ? `${p.score}/${p.wickets}` : `${p.score}/0`;
+  };
+
+  const formatOvers = (p: any) => {
+    if (isFootball) return null;
+    return p.overs !== undefined ? `${p.overs} ov` : '0.0 ov';
+  };
 
   return (
-    <div className="mb-4 rounded-xl border border-slate-100 bg-white p-4 shadow-sm md:p-5">
-      {/* 1. Meta Row */}
-      <div className="mb-3 text-xs leading-relaxed text-slate-500">
-        {match.status === 'completed' && (
-          <span className="float-right ml-2 rounded-full bg-slate-800 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
-            Result
-          </span>
-        )}
-        <div className="mb-0.5 font-bold text-slate-700">
-          {match.stage}, {leagueName}
-        </div>
+    <Card 
+      onClick={() => navigate(`/match/${match.id}`)}
+      hoverable
+      className={`relative overflow-hidden flex flex-col ${className}`}
+    >
+      {/* Header: Status & Tournament */}
+      <div className="flex justify-between items-start mb-4">
         <div>
-          {dateStr} | {match.homeParticipant.overs || 0} Ov. | {match.location}
+          {showTournamentContext && (
+            <div className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-1">
+              {tournamentName} {match.stage && <span className="text-text-secondary">• {match.stage}</span>}
+            </div>
+          )}
+          {isLive && (
+            <span className="badge badge-live animate-pulse flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
+              LIVE
+            </span>
+          )}
+          {isFinished && (
+            <span className="badge badge-finished">
+              FINISHED
+            </span>
+          )}
+          {isUpcoming && (
+            <span className="badge badge-upcoming">
+              UPCOMING
+            </span>
+          )}
+        </div>
+        
+        {/* Follow Button (Optional) */}
+        {/* <button onClick={(e) => { e.stopPropagation(); toggleFollowMatch(match.id); }}>...</button> */}
+      </div>
+
+      {/* Teams & Scores */}
+      <div className="flex-1 space-y-3">
+        {/* Home Team */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-text-secondary border border-border">
+              {match.homeParticipant.name.charAt(0)}
+            </div>
+            <span className={`font-semibold ${match.winnerId === match.homeParticipant.id ? 'text-text-primary' : 'text-text-secondary'}`}>
+              {match.homeParticipant.name}
+            </span>
+          </div>
+          <div className="text-right">
+            <div className="font-bold text-text-primary">
+              {formatScore(match.homeParticipant)}
+            </div>
+            {!isFootball && (
+              <div className="text-xs text-text-muted">
+                {formatOvers(match.homeParticipant)}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Away Team */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-text-secondary border border-border">
+              {match.awayParticipant.name.charAt(0)}
+            </div>
+            <span className={`font-semibold ${match.winnerId === match.awayParticipant.id ? 'text-text-primary' : 'text-text-secondary'}`}>
+              {match.awayParticipant.name}
+            </span>
+          </div>
+          <div className="text-right">
+            <div className="font-bold text-text-primary">
+              {formatScore(match.awayParticipant)}
+            </div>
+            {!isFootball && (
+              <div className="text-xs text-text-muted">
+                {formatOvers(match.awayParticipant)}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* 2. Teams & Scores */}
-      <div className="mb-3">
-        {/* Team A */}
-        <div className={`mb-2 flex items-center justify-between text-sm ${isHomeWinner ? 'font-bold text-slate-900' : 'text-slate-900'}`}>
-          <span className="uppercase">{match.homeParticipant.name}</span>
-          <span>{formatScore(match.homeParticipant)}</span>
+      {/* Footer: Result / Context */}
+      <div className="mt-4 pt-3 border-t border-border text-xs text-text-muted flex items-center gap-4">
+        <div className="flex items-center gap-1">
+          <Calendar size={14} className="text-text-muted" />
+          <span>{dateText}</span>
         </div>
-        {/* Team B */}
-        <div className={`flex items-center justify-between text-sm ${isAwayWinner ? 'font-bold text-slate-900' : 'text-slate-900'}`}>
-          <span className="uppercase">{match.awayParticipant.name}</span>
-          <span>{formatScore(match.awayParticipant)}</span>
+        <div className="flex items-center gap-1">
+          <Clock size={14} className="text-text-muted" />
+          <span>{timeText}</span>
         </div>
+        {match.location && (
+          <div className="flex items-center gap-1 ml-auto">
+            <MapPin size={14} className="text-text-muted" />
+            <span className="truncate max-w-[100px]">{match.location}</span>
+          </div>
+        )}
       </div>
-
-      {/* 3. Result Text */}
-      <div className="mb-4 border-b border-slate-100 pb-4 text-[13px] text-slate-500">
-        {getResultText(match)}
-      </div>
-
-      {/* 4. Actions Row */}
-      <div className="flex justify-between">
-        <button className="flex-1 rounded py-2 text-center text-[13px] font-semibold text-sky-500 transition-colors hover:bg-slate-50">Insights</button>
-        <div className="my-1 w-px bg-slate-200"></div>
-        <button className="flex-1 rounded py-2 text-center text-[13px] font-semibold text-sky-500 transition-colors hover:bg-slate-50">Table</button>
-        <div className="my-1 w-px bg-slate-200"></div>
-        <button className="flex-1 rounded py-2 text-center text-[13px] font-semibold text-sky-500 transition-colors hover:bg-slate-50">Leaderboard</button>
-      </div>
-    </div>
+      
+      {isFinished && match.winnerId && (
+        <div className="mt-2 text-xs font-medium text-blue-600">
+          {match.winnerId === match.homeParticipant.id ? match.homeParticipant.name : match.awayParticipant.name} won
+        </div>
+      )}
+    </Card>
   );
 };

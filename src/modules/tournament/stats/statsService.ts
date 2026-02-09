@@ -51,7 +51,13 @@ export const calculateTournamentStats = (
         battingSr: 0,
         bowlingAvg: 0,
         economy: 0,
-        mvpPoints: 0
+        mvpPoints: 0,
+        goals: 0,
+        assists: 0,
+        yellowCards: 0,
+        redCards: 0,
+        cleanSheets: 0,
+        hatTricks: 0
       });
     }
     return statsMap.get(playerId)!;
@@ -70,8 +76,37 @@ export const calculateTournamentStats = (
         const stats = getStats(pStats.playerId, participant.id);
         stats.matches += 1;
 
-        // Batting
-        if (pStats.runs > 0 || pStats.balls > 0) {
+        if (match.sportId === 's3') {
+           // Football Stats
+           stats.goals += (pStats.goals || 0);
+           stats.assists += (pStats.assists || 0);
+           stats.yellowCards += (pStats.yellowCards || 0);
+           stats.redCards += (pStats.redCards || 0);
+           
+           // Clean Sheets (Team conceded 0 goals)
+           const isHome = participant.id === match.homeParticipant.id;
+           const opponentScore = isHome ? match.awayParticipant.score : match.homeParticipant.score;
+           if (opponentScore === 0) {
+             stats.cleanSheets += 1;
+           }
+
+           // Hat-Tricks (3+ goals in a match)
+           if ((pStats.goals || 0) >= 3) {
+             stats.hatTricks += 1;
+           }
+           
+           // MVP Calc for Football
+           // Goal: 20pts, Assist: 10pts, Yellow: -5, Red: -20
+           const mvp = ((pStats.goals || 0) * 20) + 
+                       ((pStats.assists || 0) * 10) + 
+                       ((pStats.yellowCards || 0) * -5) + 
+                       ((pStats.redCards || 0) * -20);
+           
+           stats.mvpPoints += mvp;
+
+        } else {
+            // Cricket Batting
+            if (pStats.runs > 0 || pStats.balls > 0) {
           stats.innings += 1;
           stats.runs += pStats.runs;
           stats.ballsFaced += pStats.balls;
@@ -123,6 +158,15 @@ export const calculateTournamentStats = (
         stats.runOuts += (pStats.runouts || 0);
         // Stumpings not yet in PlayerStats interface, assume 0 or check events
         // stats.stumpings += ...
+        
+        // Calculate MVP (Cricket)
+        // Runs: 1pt, Wicket: 20pts, Catch: 10pts, RO: 10pts
+        stats.mvpPoints += (pStats.runs || 0) + 
+                           ((pStats.wickets || 0) * 20) + 
+                           ((pStats.catches || 0) * 10) + 
+                           ((pStats.runouts || 0) * 10);
+      } // End else (Cricket)
+
       });
     });
   });
@@ -142,11 +186,6 @@ export const calculateTournamentStats = (
     // Economy
     const trueOvers = s.ballsBowled / 6;
     s.economy = trueOvers > 0 ? s.runsConceded / trueOvers : 0;
-
-    // MVP Points (Core Memory Rule)
-    // Formula (Runs*1 + Wkts*25 + FieldActions*10)
-    const fieldActions = s.catches + s.runOuts + s.stumpings;
-    s.mvpPoints = (s.runs * 1) + (s.wickets * 25) + (fieldActions * 10);
 
     return s;
   });
@@ -177,6 +216,16 @@ export const sortLeaderboard = (
         const ptsB = b.catches + b.runOuts + b.stumpings;
         if (ptsB !== ptsA) return ptsB - ptsA;
         return b.catches - a.catches;
+      });
+    case 'GOALS':
+      return sorted.sort((a, b) => {
+        if (b.goals !== a.goals) return b.goals - a.goals;
+        return b.assists - a.assists;
+      });
+    case 'ASSISTS':
+      return sorted.sort((a, b) => {
+        if (b.assists !== a.assists) return b.assists - a.assists;
+        return b.goals - a.goals;
       });
     case 'MVP':
       return sorted.sort((a, b) => b.mvpPoints - a.mvpPoints);

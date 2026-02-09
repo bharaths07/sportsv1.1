@@ -14,6 +14,7 @@ import { SelectGameScreen } from '../modules/createMatch/SelectGameScreen';
 import { TeamSelectionScreen } from '../modules/createMatch/TeamSelectionScreen';
 import { TossScreen } from '../modules/createMatch/TossScreen';
 import { SquadSelectionScreen } from '../modules/createMatch/SquadSelectionScreen';
+import { SelectOpenersScreen } from '../modules/createMatch/SelectOpenersScreen';
 import { AddPlayerOptionsScreen } from '../modules/createMatch/AddPlayerOptionsScreen';
 import { MyCertificatesScreen } from '../modules/certificates/MyCertificatesScreen';
 import { TournamentScreen } from '../modules/tournament/TournamentScreen';
@@ -41,6 +42,13 @@ import { SearchResultsScreen } from '../modules/search/SearchResultsScreen';
 
 import { LoginScreen } from '../modules/auth/LoginScreen';
 import { AuthCallbackScreen } from '../modules/auth/AuthCallbackScreen';
+
+import { VenuesScreen } from '../modules/system/VenuesScreen';
+import { OfficialsScreen } from '../modules/system/OfficialsScreen';
+import { MyTeamsScreen } from '../modules/team/MyTeamsScreen';
+import { MyMatchesScreen } from '../modules/match/MyMatchesScreen';
+import { SavedMatchesScreen } from '../modules/match/SavedMatchesScreen';
+import { SavedTournamentsScreen } from '../modules/tournament/SavedTournamentsScreen';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -74,10 +82,10 @@ export const AppRoutes: React.FC = () => {
         {/* Fallback for legacy or other sports */}
         <Route path="/profile/game/:sport" element={<GameProfileScreen />} />
 
-        <Route path="/my-teams" element={<PlaceholderScreen />} />
-        <Route path="/my-matches" element={<PlaceholderScreen />} />
-        <Route path="/saved-matches" element={<PlaceholderScreen />} />
-        <Route path="/saved-tournaments" element={<PlaceholderScreen />} />
+        <Route path="/my-teams" element={<MyTeamsScreen />} />
+        <Route path="/my-matches" element={<MyMatchesScreen />} />
+        <Route path="/saved-matches" element={<SavedMatchesScreen />} />
+        <Route path="/saved-tournaments" element={<SavedTournamentsScreen />} />
         
         {/* Management (Rule 4) */}
         <Route path="/start-match" element={<SelectGameScreen />} />
@@ -86,12 +94,13 @@ export const AppRoutes: React.FC = () => {
         <Route path="/start-match/setup" element={<CreateMatchScreen />} />
         <Route path="/start-match/toss" element={<TossScreen />} />
         <Route path="/start-match/squads" element={<SquadSelectionScreen />} />
+        <Route path="/start-match/openers" element={<SelectOpenersScreen />} />
         <Route path="/start-match/add-player" element={<AddPlayerOptionsScreen />} />
         <Route path="/create-match" element={<CreateMatchScreen />} />
         <Route path="/tournament/create" element={<CreateTournamentScreen />} />
-        <Route path="/manage-matches" element={<PlaceholderScreen />} />
-        <Route path="/venues" element={<PlaceholderScreen />} />
-        <Route path="/officials" element={<PlaceholderScreen />} />
+        <Route path="/manage-matches" element={<MyMatchesScreen />} />
+        <Route path="/venues" element={<VenuesScreen />} />
+        <Route path="/officials" element={<OfficialsScreen />} />
         
         {/* System (Rule 4) */}
         <Route path="/notifications" element={<NotificationsScreen />} />
@@ -109,7 +118,6 @@ export const AppRoutes: React.FC = () => {
         <Route path="/tournament/:tournamentId/teams" element={<TournamentTeamsScreen />} />
         <Route path="/tournament/:id/structure" element={<TournamentStructureScreen />} />
         <Route path="/tournament/:id/schedule" element={<TournamentScheduleScreen />} />
-        <Route path="/tournament/:id/schedule/auto" element={<TournamentAutoScheduleScreen />} />
         <Route path="/certificates" element={<MyCertificatesScreen />} />
         
         {/* Social & Creative Tools */}

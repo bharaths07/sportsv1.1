@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
+import { Avatar } from '../../components/ui/Avatar';
 
 export const MyProfileDetailsScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -18,14 +19,14 @@ export const MyProfileDetailsScreen: React.FC = () => {
     views: 0,
     bio: ''
   } : {
-    name: `${currentUser.firstName} ${currentUser.lastName}`,
+    name: currentUser.name || `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || 'User',
     location: currentUser.location || 'Location not set',
-    memberSince: currentUser.memberSince, // "Since 2022"
+    memberSince: currentUser.memberSince || new Date().getFullYear().toString(),
     avatarUrl: currentUser.avatarUrl,
-    initial: currentUser.firstName.charAt(0),
-    followers: currentUser.followersCount,
-    views: currentUser.profileViews,
-    bio: currentUser.bio
+    initial: (currentUser.name || currentUser.firstName || 'U').charAt(0),
+    followers: currentUser.followersCount || 0,
+    views: currentUser.profileViews || 0,
+    bio: currentUser.bio || ''
   };
 
   const handleCtaClick = () => {
@@ -74,22 +75,12 @@ export const MyProfileDetailsScreen: React.FC = () => {
             marginRight: '16px',
             position: 'relative'
           }}>
-            <div style={{ 
-              width: '100px', height: '100px', 
-              borderRadius: '50%', 
-              backgroundColor: '#f1f5f9',
-              border: '4px solid white',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              overflow: 'hidden',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '32px', color: '#64748b', fontWeight: 700
-            }}>
-              {userData.avatarUrl ? (
-                <img src={userData.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                userData.initial
-              )}
-            </div>
+            <Avatar 
+              src={userData.avatarUrl}
+              fallback={userData.initial}
+              className="w-[100px] h-[100px] border-4 border-white shadow-md text-3xl bg-slate-100 text-slate-500 font-bold"
+            />
+            
             {/* Edit Overlay on Avatar */}
             {!isGuest && (
               <div 
@@ -98,8 +89,11 @@ export const MyProfileDetailsScreen: React.FC = () => {
                   position: 'absolute', bottom: '0', left: '0', right: '0',
                   backgroundColor: 'rgba(0,0,0,0.6)',
                   color: 'white', fontSize: '10px', textAlign: 'center',
-                  padding: '2px 0', cursor: 'pointer'
+                  padding: '2px 0', cursor: 'pointer',
+                  borderBottomLeftRadius: '9999px', borderBottomRightRadius: '9999px',
+                  overflow: 'hidden' // Ensure it respects the border radius if Avatar didn't have it (Avatar is rounded-full)
                 }}
+                className="rounded-b-full" // Tailwind utility for cleaner rounding
               >
                 Edit
               </div>

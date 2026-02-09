@@ -39,6 +39,14 @@ export interface TournamentPlayerStats {
   
   // MVP
   mvpPoints: number;
+
+  // Football
+  goals: number;
+  assists: number;
+  yellowCards: number;
+  redCards: number;
+  cleanSheets: number;
+  hatTricks: number;
 }
 
-export type LeaderboardCategory = 'BAT' | 'BOWL' | 'FIELD' | 'MVP';
+export type LeaderboardCategory = 'BAT' | 'BOWL' | 'FIELD' | 'MVP' | 'GOALS' | 'ASSISTS';

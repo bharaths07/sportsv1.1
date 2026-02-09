@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useGlobalState } from '../../../app/AppProviders';
 import { BowlingStat } from '../hooks/useStats';
+import { EmptyState } from '../../../components/EmptyState';
+import { BarChart2 } from 'lucide-react';
 
 interface BowlingStatsTableProps {
   stats: BowlingStat[];
@@ -47,66 +49,56 @@ export const BowlingStatsTable: React.FC<BowlingStatsTableProps> = ({ stats, min
     return player ? `${player.firstName} ${player.lastName}` : 'Unknown Player';
   };
 
-  const thStyle = {
-    padding: '12px 16px',
-    textAlign: 'left' as const,
-    borderBottom: '1px solid #e2e8f0',
-    fontSize: '13px',
-    fontWeight: 600,
-    color: '#64748b',
-    cursor: 'pointer',
-    userSelect: 'none' as const
-  };
-
-  const tdStyle = {
-    padding: '12px 16px',
-    borderBottom: '1px solid #f1f5f9',
-    fontSize: '14px',
-    color: '#334155'
-  };
+  if (sortedStats.length === 0) {
+    return (
+      <EmptyState 
+        icon={<BarChart2 size={48} />}
+        message="No bowling stats available"
+        description="Try changing the filters or ensure matches have been scored."
+      />
+    );
+  }
 
   return (
-    <div style={{ overflowX: 'auto', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
+    <div className="overflow-x-auto bg-white rounded-xl shadow-sm">
+      <table className="w-full min-w-[800px]">
         <thead>
-          <tr style={{ backgroundColor: '#f8fafc' }}>
-            <th style={thStyle}>Player</th>
-            <th style={{...thStyle, textAlign: 'center'}} onClick={() => handleSort('matches')}>Mat</th>
-            <th style={{...thStyle, textAlign: 'center'}}>Overs</th>
-            <th style={{...thStyle, textAlign: 'center', color: sortField === 'wickets' ? '#0f172a' : '#64748b'}} onClick={() => handleSort('wickets')}>Wkts</th>
-            <th style={{...thStyle, textAlign: 'center'}} onClick={() => handleSort('average')}>Avg</th>
-            <th style={{...thStyle, textAlign: 'center'}} onClick={() => handleSort('economy')}>Eco</th>
-            <th style={{...thStyle, textAlign: 'center'}} onClick={() => handleSort('bestBowlingWickets')}>BBI</th>
-            <th style={{...thStyle, textAlign: 'center'}}>3W</th>
-            <th style={{...thStyle, textAlign: 'center'}}>5W</th>
+          <tr className="bg-slate-50 border-b border-slate-200">
+            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none">Player</th>
+            <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none" onClick={() => handleSort('matches')}>Mat</th>
+            <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none">Overs</th>
+            <th 
+              className={`px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider cursor-pointer select-none ${sortField === 'wickets' ? 'text-slate-900' : 'text-slate-500'}`} 
+              onClick={() => handleSort('wickets')}
+            >
+              Wkts
+            </th>
+            <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none" onClick={() => handleSort('average')}>Avg</th>
+            <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none" onClick={() => handleSort('economy')}>Eco</th>
+            <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none" onClick={() => handleSort('bestBowlingWickets')}>BBI</th>
+            <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none">3W</th>
+            <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none">5W</th>
           </tr>
         </thead>
-        <tbody>
-          {sortedStats.length === 0 ? (
-            <tr>
-              <td colSpan={9} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>
-                No bowling stats available.
-              </td>
-            </tr>
-          ) : (
-            sortedStats.map((stat, index) => (
-              <tr key={stat.playerId} style={{ backgroundColor: index % 2 === 0 ? 'white' : '#fcfcfc' }}>
-                <td style={tdStyle}>
-                  <Link to={`/player/${stat.playerId}`} style={{ textDecoration: 'none', color: '#0f172a', fontWeight: 600 }}>
+        <tbody className="divide-y divide-slate-100">
+          {sortedStats.map((stat, index) => (
+            <tr key={stat.playerId} className="hover:bg-slate-50 transition-colors">
+                <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                  <Link to={`/player/${stat.playerId}`} className="hover:text-blue-600 transition-colors">
                     {getPlayerName(stat.playerId)}
                   </Link>
                 </td>
-                <td style={{...tdStyle, textAlign: 'center'}}>{stat.matches}</td>
-                <td style={{...tdStyle, textAlign: 'center'}}>{stat.overs}</td>
-                <td style={{...tdStyle, textAlign: 'center', fontWeight: 700}}>{stat.wickets}</td>
-                <td style={{...tdStyle, textAlign: 'center'}}>{stat.average}</td>
-                <td style={{...tdStyle, textAlign: 'center'}}>{stat.economy}</td>
-                <td style={{...tdStyle, textAlign: 'center'}}>{stat.bestBowlingWickets}/{stat.bestBowlingRuns}</td>
-                <td style={{...tdStyle, textAlign: 'center'}}>{stat.threeWickets}</td>
-                <td style={{...tdStyle, textAlign: 'center'}}>{stat.fiveWickets}</td>
+                <td className="px-4 py-3 text-sm text-center text-slate-600">{stat.matches}</td>
+                <td className="px-4 py-3 text-sm text-center text-slate-600">{stat.overs}</td>
+                <td className="px-4 py-3 text-sm text-center font-bold text-slate-900">{stat.wickets}</td>
+                <td className="px-4 py-3 text-sm text-center text-slate-600">{stat.average.toFixed(2)}</td>
+                <td className="px-4 py-3 text-sm text-center text-slate-600">{stat.economy.toFixed(2)}</td>
+                <td className="px-4 py-3 text-sm text-center text-slate-600">{stat.bestBowlingWickets}/{stat.bestBowlingRuns}</td>
+                <td className="px-4 py-3 text-sm text-center text-slate-600">{stat.threeWickets}</td>
+                <td className="px-4 py-3 text-sm text-center text-slate-600">{stat.fiveWickets}</td>
               </tr>
             ))
-          )}
+          }
         </tbody>
       </table>
     </div>

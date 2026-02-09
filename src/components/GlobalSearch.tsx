@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search, Clock, X } from 'lucide-react';
 import { useGlobalState } from '../app/AppProviders';
 import { useSearchLogic } from '../hooks/useSearchLogic';
-import './GlobalSearch.css';
+import { Input } from './ui/Input';
 
 interface GlobalSearchProps {
   isOpen: boolean;
@@ -155,12 +156,17 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
   if (!isOpen) return null;
 
   return (
-    <div className="global-search-overlay" onClick={handleClose}>
-      <div className="global-search-container" onClick={e => e.stopPropagation()}>
-        <div className="global-search-header">
-          <div className="search-input-wrapper">
-            <span className="search-icon">🔍</span>
-            <input
+    <div 
+      className="fixed inset-0 z-[2000] flex items-start justify-center pt-20 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={handleClose}
+    >
+      <div 
+        className="w-[600px] max-w-[90vw] bg-bg-base border border-border rounded-lg shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-top-4 duration-200"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center px-5 py-4 border-b border-border gap-3 bg-bg-surface-1">
+          <div className="flex-1 flex items-center relative">
+            <Input
               ref={inputRef}
               type="text"
               placeholder="Search teams, matches, or tournaments..."
@@ -168,62 +174,77 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
               onChange={e => setSearchTerm(e.target.value)}
               onKeyDown={handleKeyDown}
               autoComplete="off"
+              startIcon={Search}
+              className="border-none bg-transparent focus:ring-0 text-lg shadow-none px-0 py-0 h-auto placeholder:text-text-muted"
+              containerClassName="flex-1"
             />
             {searchTerm && (
-              <button className="clear-button" onClick={() => { setSearchTerm(''); inputRef.current?.focus(); }}>
-                ✕
+              <button 
+                className="absolute right-0 text-text-secondary hover:text-text-primary p-1 rounded-full hover:bg-bg-surface-2 transition-colors"
+                onClick={() => { setSearchTerm(''); inputRef.current?.focus(); }}
+              >
+                <X size={16} />
               </button>
             )}
           </div>
-          <button className="close-button-text" onClick={handleClose}>Cancel</button>
+          <button 
+            className="text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-bg-surface-2 px-2 py-1 rounded transition-colors"
+            onClick={handleClose}
+          >
+            Cancel
+          </button>
         </div>
 
-        <div className="global-search-results">
+        <div className="max-h-[60vh] overflow-y-auto">
           {searchTerm.length < 2 ? (
             // EMPTY STATE / RECENT SEARCHES
-            <div className="search-empty-state">
+            <div className="p-2">
               {recentSearches.length > 0 ? (
-                <div className="recent-searches-section">
-                   <div className="section-header">
+                <div className="py-2">
+                   <div className="flex items-center justify-between px-3 py-2 text-xs font-semibold text-text-muted uppercase tracking-wider">
                      <span>Recent Searches</span>
-                     <button onClick={clearHistory} className="clear-history-btn">Clear</button>
+                     <button onClick={clearHistory} className="text-primary hover:text-primary-dark hover:underline">Clear</button>
                    </div>
-                   <div className="recent-list">
+                   <div className="space-y-0.5">
                      {recentSearches.map(item => (
-                       <div key={item.id} className="recent-item" onClick={() => handleNavigate(item.path, item)}>
-                         <span className="recent-icon">🕒</span>
-                         <div className="recent-info">
-                           <span className="recent-name">{item.name}</span>
-                           <span className="recent-meta">{item.label} • {item.subtitle}</span>
+                       <div 
+                        key={item.id} 
+                        className="flex items-center gap-3 px-3 py-3 rounded-md cursor-pointer hover:bg-bg-surface-2 transition-colors"
+                        onClick={() => handleNavigate(item.path, item)}
+                      >
+                         <Clock className="w-4 h-4 text-text-muted shrink-0" />
+                         <div className="flex-1 min-w-0">
+                           <span className="block font-medium text-text-primary truncate">{item.name}</span>
+                           <span className="block text-xs text-text-secondary truncate">{item.label} • {item.subtitle}</span>
                          </div>
                        </div>
                      ))}
                    </div>
                 </div>
               ) : (
-                <div className="placeholder-message">
+                <div className="p-8 text-center text-text-muted text-sm">
                   Start typing to find matches, teams, and tournaments.
                 </div>
               )}
             </div>
           ) : (
             // RESULTS LIST
-            <div className="results-list">
+            <div className="p-2 space-y-2">
               {flatResults.length === 0 ? (
-                <div className="no-results">
+                <div className="p-8 text-center text-text-muted">
                   No results found for "{searchTerm}"
                 </div>
               ) : (
                 <>
                   {results.matches.length > 0 && (
-                    <div className="result-group">
-                      <div className="group-label">Matches</div>
+                    <div className="py-1">
+                      <div className="px-3 py-2 text-xs font-semibold text-text-muted bg-bg-surface-1/50 backdrop-blur sticky top-0">Matches</div>
                       {results.matches.map((m, idx) => {
                          const globalIdx = idx; // matches are first
                          return (
                             <div 
                               key={m.id} 
-                              className={`result-item ${activeIndex === globalIdx ? 'active' : ''}`}
+                              className={`flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition-colors ${activeIndex === globalIdx ? 'bg-bg-surface-2' : 'hover:bg-bg-surface-2'}`}
                               onClick={() => handleNavigate(`/match/${m.id}`, {
                                 id: m.id,
                                 name: `${m.homeParticipant.name} vs ${m.awayParticipant.name}`,
@@ -234,12 +255,14 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
                               })}
                               onMouseEnter={() => setActiveIndex(globalIdx)}
                             >
-                              <div className="item-main">
-                                <span className="item-name">{m.homeParticipant.name} vs {m.awayParticipant.name}</span>
-                                <span className="item-status status-badge">{m.status}</span>
-                              </div>
-                              <div className="item-sub">
-                                {m.tournamentId} • {new Date(m.date).toLocaleDateString()}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-text-primary truncate">{m.homeParticipant.name} vs {m.awayParticipant.name}</span>
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">{m.status}</span>
+                                </div>
+                                <span className="block text-xs text-text-secondary truncate">
+                                  {m.tournamentId} • {new Date(m.date).toLocaleDateString()}
+                                </span>
                               </div>
                             </div>
                          );
@@ -248,14 +271,14 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
                   )}
 
                   {results.teams.length > 0 && (
-                    <div className="result-group">
-                      <div className="group-label">Teams</div>
+                    <div className="py-1">
+                      <div className="px-3 py-2 text-xs font-semibold text-text-muted bg-bg-surface-1/50 backdrop-blur sticky top-0">Teams</div>
                       {results.teams.map((t, idx) => {
                         const globalIdx = results.matches.length + idx;
                         return (
                           <div 
                             key={t.id} 
-                            className={`result-item ${activeIndex === globalIdx ? 'active' : ''}`}
+                            className={`flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition-colors ${activeIndex === globalIdx ? 'bg-bg-surface-2' : 'hover:bg-bg-surface-2'}`}
                             onClick={() => handleNavigate(`/team/${t.id}`, {
                                 id: t.id,
                                 name: t.name,
@@ -266,8 +289,8 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
                               })}
                             onMouseEnter={() => setActiveIndex(globalIdx)}
                           >
-                            <div className="item-main">
-                              <span className="item-name">{t.name}</span>
+                            <div className="flex-1 min-w-0">
+                              <span className="block font-medium text-text-primary truncate">{t.name}</span>
                             </div>
                           </div>
                         );
@@ -276,14 +299,14 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
                   )}
 
                   {results.tournaments.length > 0 && (
-                    <div className="result-group">
-                      <div className="group-label">Tournaments</div>
+                    <div className="py-1">
+                      <div className="px-3 py-2 text-xs font-semibold text-text-muted bg-bg-surface-1/50 backdrop-blur sticky top-0">Tournaments</div>
                       {results.tournaments.map((t, idx) => {
                         const globalIdx = results.matches.length + results.teams.length + idx;
                         return (
                           <div 
                             key={t.id} 
-                            className={`result-item ${activeIndex === globalIdx ? 'active' : ''}`}
+                            className={`flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition-colors ${activeIndex === globalIdx ? 'bg-bg-surface-2' : 'hover:bg-bg-surface-2'}`}
                             onClick={() => handleNavigate(`/tournament/${t.id}`, {
                                 id: t.id,
                                 name: t.name,
@@ -294,12 +317,14 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
                               })}
                             onMouseEnter={() => setActiveIndex(globalIdx)}
                           >
-                            <div className="item-main">
-                              <span className="item-name">{t.name}</span>
-                              <span className="item-status">{t.status}</span>
-                            </div>
-                            <div className="item-sub">
-                              {t.organizer}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-text-primary truncate">{t.name}</span>
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700">{t.status}</span>
+                              </div>
+                              <span className="block text-xs text-text-secondary truncate">
+                                {t.organizer}
+                              </span>
                             </div>
                           </div>
                         );

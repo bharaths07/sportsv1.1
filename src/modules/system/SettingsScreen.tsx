@@ -1,5 +1,12 @@
 import React from 'react';
 import { useGlobalState } from '../../app/AppProviders';
+import { PageContainer } from '../../components/layout/PageContainer';
+import { PageHeader } from '../../components/layout/PageHeader';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Avatar } from '../../components/ui/Avatar';
+import { stringToColor } from '../../utils/colors';
+import { Bell, Shield, Trophy, User } from 'lucide-react';
 
 export const SettingsScreen: React.FC = () => {
   const {
@@ -12,263 +19,200 @@ export const SettingsScreen: React.FC = () => {
     toggleFollowTeam,
     toggleFollowTournament,
     notificationsEnabled,
-    matchStartEnabled,
-    matchResultEnabled,
-    tournamentNotificationsEnabled,
     setNotificationsEnabled,
-    setMatchStartEnabled,
-    setMatchResultEnabled,
-    setTournamentNotificationsEnabled,
-    preferences,
-    updatePreferences
   } = useGlobalState();
 
-  const requestPermission = async () => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      try {
-        await Notification.requestPermission();
-      } catch {}
-    }
-  };
-
-  const getTeamName = (id: string) => teams.find(t => t.id === id)?.name || 'Unknown Team';
-  const getTournamentName = (id: string) => tournaments.find(t => t.id === id)?.name || 'Unknown Tournament';
+  const getTeam = (id: string) => teams.find(t => t.id === id);
+  const getTournament = (id: string) => tournaments.find(t => t.id === id);
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', fontFamily: 'sans-serif' }}>
-      <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px', color: '#111' }}>Settings</h1>
+    <PageContainer>
+      <PageHeader title="Settings" description="Manage your account and preferences" />
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className="space-y-6 max-w-3xl mx-auto">
         
         {/* 1. ACCOUNT */}
-        <section style={{ backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0f0f0', fontWeight: '600', fontSize: '16px', color: '#333' }}>
-            Account
+        <Card className="overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
+            <User className="w-4 h-4 text-blue-600" />
+            <h3 className="font-semibold text-slate-900">Account</h3>
           </div>
-          <div style={{ padding: '20px' }}>
+          <div className="p-6">
             {currentUser ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div>
-                  <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>Name</div>
-                  <div style={{ fontSize: '16px', fontWeight: '500' }}>{currentUser.firstName} {currentUser.lastName}</div>
+              <div className="flex flex-col md:flex-row gap-6 items-start">
+                <div className="flex-shrink-0">
+                  <Avatar 
+                    src={currentUser.avatarUrl} 
+                    alt={currentUser.name} 
+                    fallback={currentUser.name}
+                    className={`w-20 h-20 text-2xl ${stringToColor(currentUser.name || '')}`}
+                  />
                 </div>
-                <div>
-                  <div style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>Email</div>
-                  <div style={{ fontSize: '16px', fontWeight: '500' }}>{currentUser.email}</div>
-                </div>
-                <div style={{ paddingTop: '16px', borderTop: '1px solid #eee', display: 'flex', gap: '12px' }}>
-                  <button 
-                    onClick={() => alert('Change password functionality would go here')}
-                    style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #ddd', backgroundColor: 'white', cursor: 'pointer', fontSize: '14px' }}
-                  >
-                    Change password
-                  </button>
-                  <button 
-                    onClick={logout}
-                    style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #ffcccc', backgroundColor: '#fff5f5', color: '#cc0000', cursor: 'pointer', fontSize: '14px' }}
-                  >
-                    Logout
-                  </button>
+                <div className="flex-1 space-y-6 w-full">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-sm font-medium text-slate-500 mb-1 block">Name</label>
+                      <div className="text-base font-medium text-slate-900">{currentUser.firstName} {currentUser.lastName}</div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-500 mb-1 block">Email</label>
+                      <div className="text-base font-medium text-slate-900">{currentUser.email}</div>
+                    </div>
+                  </div>
+                  <div className="pt-6 border-t border-slate-100 flex flex-wrap gap-3">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => alert('Change password functionality would go here')}
+                    >
+                      Change password
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={logout}
+                    >
+                      Logout
+                    </Button>
+                  </div>
                 </div>
               </div>
             ) : (
-              <div style={{ textAlign: 'center', color: '#666', padding: '20px 0' }}>
-                <p style={{ marginBottom: '16px' }}>Sign in to manage your account and sync settings.</p>
-                <button 
-                   onClick={() => window.location.href = '/login'} // Assuming a login route exists or will exist
-                   style={{ padding: '10px 20px', borderRadius: '6px', backgroundColor: '#007bff', color: 'white', border: 'none', cursor: 'pointer', fontWeight: '500' }}
-                >
+              <div className="text-center py-8">
+                <p className="text-slate-600 mb-4">Sign in to manage your account and sync settings.</p>
+                <Button onClick={() => window.location.href = '/login'}>
                   Sign In
-                </button>
+                </Button>
               </div>
             )}
           </div>
-        </section>
+        </Card>
 
-        {/* 2. FOLLOWING (Most Important) */}
-        <section style={{ backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0f0f0', fontWeight: '600', fontSize: '16px', color: '#333' }}>
-            Following
+        {/* 2. FOLLOWING */}
+        <Card className="overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
+            <Shield className="w-4 h-4 text-blue-600" />
+            <h3 className="font-semibold text-slate-900">Following</h3>
           </div>
-          <div style={{ padding: '0' }}>
-            <div style={{ padding: '12px 20px', backgroundColor: '#f0f9ff', borderBottom: '1px solid #e0f2fe', color: '#0369a1', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '16px' }}>ℹ</span> Match follows are temporary and end automatically after completion.
+          
+          <div className="bg-blue-50 border-b border-blue-100 px-6 py-3 flex items-center gap-2 text-sm text-blue-700">
+            <span>ℹ</span> Match follows are temporary and end automatically after completion.
+          </div>
+
+          {followedTeams.length === 0 && followedTournaments.length === 0 ? (
+            <div className="p-8 text-center">
+              <div className="font-medium text-slate-900 mb-2">
+                You’re not following any teams or tournaments yet.
+              </div>
+              <div className="text-sm text-slate-500">
+                Follow teams or tournaments to personalize your experience.
+              </div>
             </div>
-            {followedTeams.length === 0 && followedTournaments.length === 0 ? (
-              <div style={{ padding: '32px 20px', textAlign: 'center' }}>
-                <div style={{ color: '#333', fontSize: '15px', fontWeight: '500', marginBottom: '8px' }}>
-                  You’re not following any teams or tournaments yet.
-                </div>
-                <div style={{ color: '#666', fontSize: '13px' }}>
-                  Follow teams or tournaments to personalize your experience.
-                </div>
-              </div>
-            ) : (
-              <>
-                <div style={{ padding: '16px 20px', backgroundColor: '#f9f9f9', fontSize: '13px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Teams You Follow
-                </div>
-                {followedTeams.length > 0 ? (
-                  <div>
-                    {[...followedTeams]
-                      .sort((a, b) => getTeamName(a).localeCompare(getTeamName(b)))
-                      .map(teamId => (
-                      <div key={teamId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid #eee' }}>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {/* Teams */}
+              {followedTeams.length > 0 && (
+                <>
+                  <div className="px-6 py-3 bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Teams You Follow
+                  </div>
+                  {[...followedTeams]
+                    .map(id => getTeam(id))
+                    .filter((t): t is NonNullable<typeof t> => !!t)
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map(team => (
+                    <div key={team.id} className="flex justify-between items-center px-6 py-4 hover:bg-slate-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <Avatar
+                          src={team.logoUrl}
+                          alt={team.name}
+                          fallback={team.name}
+                          className={`w-10 h-10 ${stringToColor(team.name)}`}
+                        />
                         <div>
-                          <span style={{ fontWeight: '500', display: 'block', marginBottom: '2px' }}>{getTeamName(teamId)}</span>
-                          <span style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Following</span>
+                          <span className="font-medium text-slate-900 block">{team.name}</span>
+                          <span className="text-xs text-slate-500 uppercase tracking-wide">Following</span>
                         </div>
-                        <button 
-                          onClick={() => toggleFollowTeam(teamId)}
-                          style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #ddd', backgroundColor: 'white', fontSize: '13px', cursor: 'pointer', color: '#d32f2f' }}
-                        >
-                          Unfollow
-                        </button>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                   <div style={{ padding: '12px 20px', color: '#999', fontSize: '13px', fontStyle: 'italic' }}>
-                    No teams followed.
-                   </div>
-                )}
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-slate-200"
+                        onClick={() => toggleFollowTeam(team.id)}
+                      >
+                        Unfollow
+                      </Button>
+                    </div>
+                  ))}
+                </>
+              )}
 
-                <div style={{ padding: '16px 20px', backgroundColor: '#f9f9f9', fontSize: '13px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', borderTop: '1px solid #eee' }}>
-                  Tournaments You Follow
-                </div>
-                {followedTournaments.length > 0 ? (
-                  <div>
-                    {[...followedTournaments]
-                      .sort((a, b) => getTournamentName(a).localeCompare(getTournamentName(b)))
-                      .map(tId => (
-                      <div key={tId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid #eee' }}>
-                         <div>
-                          <span style={{ fontWeight: '500', display: 'block', marginBottom: '2px' }}>{getTournamentName(tId)}</span>
-                          <span style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Following</span>
+              {/* Tournaments */}
+              {followedTournaments.length > 0 && (
+                <>
+                  <div className="px-6 py-3 bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Tournaments You Follow
+                  </div>
+                  {[...followedTournaments]
+                    .map(id => getTournament(id))
+                    .filter((t): t is NonNullable<typeof t> => !!t)
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map(tournament => (
+                    <div key={tournament.id} className="flex justify-between items-center px-6 py-4 hover:bg-slate-50 transition-colors">
+                       <div className="flex items-center gap-3">
+                        <Avatar
+                          src={tournament.logoUrl}
+                          alt={tournament.name}
+                          fallback={tournament.name}
+                          className={`w-10 h-10 ${stringToColor(tournament.name)}`}
+                        />
+                        <div>
+                          <span className="font-medium text-slate-900 block">{tournament.name}</span>
+                          <span className="text-xs text-slate-500 uppercase tracking-wide">Following</span>
                         </div>
-                        <button 
-                          onClick={() => toggleFollowTournament(tId)}
-                          style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #ddd', backgroundColor: 'white', fontSize: '13px', cursor: 'pointer', color: '#d32f2f' }}
-                        >
-                          Unfollow
-                        </button>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ padding: '12px 20px', color: '#999', fontSize: '13px', fontStyle: 'italic' }}>
-                    No tournaments followed.
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </section>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-slate-200"
+                        onClick={() => toggleFollowTournament(tournament.id)}
+                      >
+                        Unfollow
+                      </Button>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+        </Card>
 
         {/* 3. NOTIFICATIONS */}
-        <section style={{ backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0f0f0', fontWeight: '600', fontSize: '16px', color: '#333' }}>
-            Notifications
+        <Card className="overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
+            <Bell className="w-4 h-4 text-blue-600" />
+            <h3 className="font-semibold text-slate-900">Notifications</h3>
           </div>
-          <div style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div className="p-6">
+            <div className="flex justify-between items-center">
               <div>
-                <div style={{ fontWeight: '500', marginBottom: '4px' }}>Allow Notifications</div>
-                <div style={{ fontSize: '13px', color: '#666' }}>Enable or disable all app notifications</div>
+                <div className="font-medium text-slate-900 mb-1">Allow Notifications</div>
+                <div className="text-sm text-slate-500">Enable or disable all app notifications</div>
               </div>
-              <label className="switch" style={{ position: 'relative', display: 'inline-block', width: '40px', height: '24px' }}>
+              
+              {/* Toggle Switch */}
+              <label className="relative inline-flex items-center cursor-pointer">
                 <input 
                   type="checkbox" 
                   checked={notificationsEnabled} 
                   onChange={(e) => setNotificationsEnabled(e.target.checked)}
-                  style={{ opacity: 0, width: 0, height: 0 }}
+                  className="sr-only peer"
                 />
-                <span style={{ 
-                  position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, 
-                  backgroundColor: notificationsEnabled ? '#2196F3' : '#ccc', 
-                  borderRadius: '24px', transition: '.4s' 
-                }}>
-                  <span style={{ 
-                    position: 'absolute', content: '""', height: '16px', width: '16px', left: '4px', bottom: '4px', 
-                    backgroundColor: 'white', borderRadius: '50%', transition: '.4s',
-                    transform: notificationsEnabled ? 'translateX(16px)' : 'translateX(0)' 
-                  }} />
-                </span>
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
             </div>
-
-            <div style={{ opacity: notificationsEnabled ? 1 : 0.5, pointerEvents: notificationsEnabled ? 'auto' : 'none', transition: 'opacity 0.3s' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingLeft: '12px', borderLeft: '3px solid #eee' }}>
-                <span>Match start alerts</span>
-                <input type="checkbox" checked={matchStartEnabled} onChange={(e) => setMatchStartEnabled(e.target.checked)} style={{ transform: 'scale(1.2)' }} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingLeft: '12px', borderLeft: '3px solid #eee' }}>
-                <span>Match result alerts</span>
-                <input type="checkbox" checked={matchResultEnabled} onChange={(e) => setMatchResultEnabled(e.target.checked)} style={{ transform: 'scale(1.2)' }} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingLeft: '12px', borderLeft: '3px solid #eee' }}>
-                <span>Tournament updates</span>
-                <input type="checkbox" checked={tournamentNotificationsEnabled} onChange={(e) => setTournamentNotificationsEnabled(e.target.checked)} style={{ transform: 'scale(1.2)' }} />
-              </div>
-              
-              <button 
-                onClick={requestPermission} 
-                style={{ fontSize: '13px', color: '#2196F3', background: 'none', border: 'none', padding: 0, cursor: 'pointer', textDecoration: 'underline' }}
-              >
-                Ensure browser permission is granted
-              </button>
-            </div>
           </div>
-        </section>
-
-        {/* 4. PREFERENCES */}
-        <section style={{ backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0f0f0', fontWeight: '600', fontSize: '16px', color: '#333' }}>
-            Preferences
-          </div>
-          <div style={{ padding: '20px' }}>
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>Preferred Sport</div>
-              <select 
-                value={preferences.sport} 
-                onChange={(e) => updatePreferences({ sport: e.target.value })}
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '15px' }}
-              >
-                <option value="Cricket">Cricket</option>
-                <option value="Football">Football</option>
-              </select>
-            </div>
-            
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>Timezone</div>
-              <select 
-                value={preferences.timezone} 
-                onChange={(e) => updatePreferences({ timezone: e.target.value })}
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '15px' }}
-              >
-                <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
-                <option value="UTC">UTC</option>
-                <option value="America/New_York">America/New_York (EST)</option>
-                <option value="Europe/London">Europe/London (GMT)</option>
-              </select>
-            </div>
-
-            <div>
-              <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>Language</div>
-              <select 
-                value={preferences.language} 
-                onChange={(e) => updatePreferences({ language: e.target.value })}
-                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '15px' }}
-              >
-                <option value="English">English</option>
-                <option value="Hindi">Hindi</option>
-                <option value="Spanish">Spanish</option>
-              </select>
-            </div>
-          </div>
-        </section>
-
+        </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 };

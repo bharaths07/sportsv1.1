@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
 import { MatchSummaryTab } from './MatchSummaryTab';
 import { MatchInfoTab } from './MatchInfoTab';
@@ -7,121 +7,173 @@ import { MatchScorecardTab } from './MatchScorecardTab';
 import { MatchCommentaryTab } from './MatchCommentaryTab';
 import { MatchSquadsTab } from './MatchSquadsTab';
 import { ScorerAssignment } from './components/ScorerAssignment';
+import { PageContainer } from '../../components/layout/PageContainer';
+import { Button } from '../../components/ui/Button';
+import { Tabs } from '../../components/ui/Tabs';
+import { Avatar } from '../../components/ui/Avatar';
+import { ArrowLeft, Plus, Check, MoreVertical } from 'lucide-react';
 
 export const MatchSummaryScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const location = useLocation();
-  const { matches, followedMatches, toggleFollowMatch, currentUser } = useGlobalState();
-  const [activeTab, setActiveTab] = useState<'summary' | 'scorecard' | 'comms' | 'squads' | 'info' | 'settings'>('summary');
+  const { matches, teams, followedMatches, toggleFollowMatch, currentUser } = useGlobalState();
+  const [activeTab, setActiveTab] = useState('summary');
+  
   const match = matches.find(m => m.id === id);
   const isFollowed = match ? followedMatches.includes(match.id) : false;
 
+  // Resolve Team Logos
+  const homeTeam = match ? teams.find(t => t.id === match.homeParticipant.id) : undefined;
+  const awayTeam = match ? teams.find(t => t.id === match.awayParticipant.id) : undefined;
+
   // Navigation State Handling
   const navState = location.state as { returnPath?: string; tournamentId?: string; stage?: string } | null;
-  const backLink = navState?.returnPath || '/';
 
   if (!match) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
-        <h2>Match not found</h2>
-        <Link to="/" style={{ color: '#007bff' }}>Return Home</Link>
-      </div>
+      <PageContainer>
+        <div className="text-center py-12">
+          <h2 className="text-xl font-bold text-slate-900 mb-4">Match not found</h2>
+          <Button variant="primary" onClick={() => navigate('/')}>Return Home</Button>
+        </div>
+      </PageContainer>
     );
   }
 
   const isAdmin = currentUser?.role === 'admin';
-  const tabs = ['summary', 'scorecard', 'comms', 'squads', 'info'];
-  if (isAdmin) tabs.push('settings');
+  const tabOptions = [
+    { id: 'summary', label: 'Summary' },
+    { id: 'scorecard', label: 'Scorecard' },
+    { id: 'comms', label: 'Commentary' },
+    { id: 'squads', label: 'Squads' },
+    { id: 'info', label: 'Info' },
+  ];
+  
+  if (isAdmin) {
+    tabOptions.push({ id: 'settings', label: 'Settings' });
+  }
+
+  const handleBack = () => {
+    if (navState?.returnPath) {
+      navigate(navState.returnPath);
+    } else {
+      navigate(-1);
+    }
+  };
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Segoe UI, Arial, sans-serif' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Link to={backLink} style={{ textDecoration: 'none', color: '#666' }}>
-          ← {navState?.returnPath ? 'Back to Tournament' : 'Back'}
-        </Link>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-          {match.status !== 'completed' && match.status !== 'locked' && (
-            <>
-              <button
+    <PageContainer>
+      {/* Header Section */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <Button variant="ghost" size="sm" onClick={handleBack} className="text-slate-500 hover:text-slate-900 pl-0">
+            <ArrowLeft size={18} className="mr-1" />
+            {navState?.returnPath ? 'Back to Tournament' : 'Back'}
+          </Button>
+          
+          <div className="flex items-center gap-3">
+            {match.status !== 'completed' && match.status !== 'locked' && (
+              <Button 
+                variant={isFollowed ? "secondary" : "outline"}
+                size="sm"
                 onClick={() => toggleFollowMatch(match.id)}
-                style={{
-                  padding: '6px 16px',
-                  borderRadius: '100px',
-                  border: isFollowed ? '1px solid #2196F3' : '1px solid #e2e8f0',
-                  backgroundColor: isFollowed ? '#e3f2fd' : 'white',
-                  color: isFollowed ? '#1976D2' : '#64748b',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6
-                }}
+                className={isFollowed ? "bg-blue-50 text-blue-700 border-blue-200" : ""}
               >
-                {isFollowed ? (
-                  <>
-                    <span style={{ fontSize: '16px', lineHeight: 0 }}>•</span> Following
-                  </>
-                ) : (
-                  <>
-                    <span style={{ fontSize: '16px', lineHeight: 0 }}>+</span> Follow Match
-                  </>
-                )}
-              </button>
-              <div style={{ width: 1, height: 20, backgroundColor: '#e2e8f0' }}></div>
-            </>
-          )}
-          <div style={{ display: 'flex', gap: 24, alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: 0 }}>
-             {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab as any)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    borderBottom: activeTab === tab ? '3px solid #0f172a' : '3px solid transparent',
-                    padding: '8px 4px',
-                    cursor: 'pointer',
-                    fontWeight: activeTab === tab ? 700 : 500,
-                    color: activeTab === tab ? '#0f172a' : '#64748b',
-                    fontSize: '14px',
-                    textTransform: 'capitalize'
-                  }}
-                >
-                  {tab === 'comms' ? 'Commentary' : tab}
-                </button>
-             ))}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ backgroundColor: 'white', borderRadius: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.08)', border: '1px solid #eee', overflow: 'hidden' }}>
-        <div style={{ padding: 20, borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-              {match.homeParticipant.name.charAt(0)}
-            </div>
-            <div style={{ fontWeight: 800 }}>{match.homeParticipant.name}</div>
-            <div style={{ color: '#94a3b8' }}>vs</div>
-            <div style={{ fontWeight: 800 }}>{match.awayParticipant.name}</div>
-            <div style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-              {match.awayParticipant.name.charAt(0)}
-            </div>
-          </div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>
-            {navState?.stage || match.stage || (match.tournamentId ? match.tournamentId.replace(/-/g, ' ').toUpperCase() : 'Match Details')}
+                {isFollowed ? <Check size={16} className="mr-1.5" /> : <Plus size={16} className="mr-1.5" />}
+                {isFollowed ? 'Following' : 'Follow Match'}
+              </Button>
+            )}
+            {/* <Button variant="ghost" size="icon"><MoreVertical size={18} /></Button> */}
           </div>
         </div>
 
-        <div style={{ padding: 20 }}>
-          {activeTab === 'summary' && <MatchSummaryTab match={match} onTabChange={setActiveTab} />}
-                  {activeTab === 'scorecard' && <MatchScorecardTab match={match} />}
-                  {activeTab === 'comms' && <MatchCommentaryTab match={match} />}
-                  {activeTab === 'squads' && <MatchSquadsTab match={match} />}
-                  {activeTab === 'info' && <MatchInfoTab match={match} />}
-                  {activeTab === 'settings' && <ScorerAssignment matchId={match.id} />}
+        {/* Match Header Card */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-6">
+          <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+             <div className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                {navState?.stage || match.stage || (match.tournamentId ? match.tournamentId.replace(/-/g, ' ').toUpperCase() : 'Match Details')}
+             </div>
+             {match.status === 'live' && (
+               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-xs font-bold animate-pulse">
+                 <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
+                 LIVE
+               </div>
+             )}
+          </div>
+          
+          <div className="p-6">
+            <div className="flex items-center justify-between max-w-2xl mx-auto">
+              {/* Home Team */}
+              <div className="flex flex-col items-center gap-3 flex-1">
+                <Avatar
+                  src={homeTeam?.logoUrl}
+                  fallback={match.homeParticipant.name?.charAt(0) || '?'}
+                  className="w-16 h-16 rounded-xl bg-slate-100 text-xl font-bold text-slate-600 border border-slate-200"
+                />
+                <div className="text-center">
+                  <div className="font-bold text-lg text-slate-900 leading-tight">{match.homeParticipant.name || 'Unknown Team'}</div>
+                  {/* <div className="text-sm text-slate-500 mt-1">Home</div> */}
+                </div>
+              </div>
+
+              {/* VS / Score */}
+              <div className="flex flex-col items-center px-8">
+                 {(match.status === 'draft') ? (
+                   <div className="text-2xl font-bold text-slate-300 mb-1">VS</div>
+                 ) : (
+                   <div className="flex flex-col items-center">
+                     <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                       {match.sportId === 's3' ? (
+                         // Football Score
+                         <span>{match.homeParticipant.score || 0} - {match.awayParticipant.score || 0}</span>
+                       ) : (
+                         // Cricket Score (Simplified)
+                         <span>{match.homeParticipant.score || 0}/{match.homeParticipant.wickets || 0} - {match.awayParticipant.score || 0}/{match.awayParticipant.wickets || 0}</span>
+                       )}
+                     </div>
+                     <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">
+                       {match.status === 'live' ? 'Live' : 'Full Time'}
+                     </div>
+                   </div>
+                 )}
+              </div>
+
+              {/* Away Team */}
+              <div className="flex flex-col items-center gap-3 flex-1">
+                <Avatar
+                  src={awayTeam?.logoUrl}
+                  fallback={match.awayParticipant.name?.charAt(0) || '?'}
+                  className="w-16 h-16 rounded-xl bg-slate-100 text-xl font-bold text-slate-600 border border-slate-200"
+                />
+                <div className="text-center">
+                  <div className="font-bold text-lg text-slate-900 leading-tight">{match.awayParticipant.name || 'Unknown Team'}</div>
+                  {/* <div className="text-sm text-slate-500 mt-1">Away</div> */}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Tabs */}
+        <Tabs 
+          tabs={tabOptions} 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab} 
+          variant="underline"
+          className="mb-6"
+        />
       </div>
-    </div>
+
+      {/* Tab Content */}
+      <div className="min-h-[400px]">
+        {activeTab === 'summary' && <MatchSummaryTab match={match} onTabChange={setActiveTab} />}
+        {activeTab === 'scorecard' && <MatchScorecardTab match={match} />}
+        {activeTab === 'comms' && <MatchCommentaryTab match={match} />}
+        {activeTab === 'squads' && <MatchSquadsTab match={match} />}
+        {activeTab === 'info' && <MatchInfoTab match={match} />}
+        {activeTab === 'settings' && <ScorerAssignment matchId={match.id} />}
+      </div>
+    </PageContainer>
   );
 };

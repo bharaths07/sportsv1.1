@@ -1,76 +1,61 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Card } from './ui/Card';
+import { Button } from './ui/Button';
+import { Inbox } from 'lucide-react';
 
 interface EmptyStateProps {
   message: string;
+  description?: string;
   actionLabel?: string;
   actionLink?: string;
   onAction?: (e: React.MouseEvent) => void;
-  icon?: string;
+  icon?: React.ReactNode | string;
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({ 
   message, 
+  description,
   actionLabel, 
   actionLink, 
   onAction,
-  icon = '📭'
+  icon
 }) => {
-  return (
-    <div style={{ 
-      padding: '40px 20px', 
-      textAlign: 'center', 
-      backgroundColor: 'rgba(255,255,255,0.05)', 
-      borderRadius: '12px',
-      border: '1px dashed rgba(255,255,255,0.2)',
-      margin: '20px 0'
-    }}>
-      <div style={{ fontSize: '48px', marginBottom: '20px' }}>{icon}</div>
-      <p style={{ 
-        fontSize: '18px', 
-        color: 'var(--color-text-secondary)', 
-        marginBottom: (actionLabel && (actionLink || onAction)) ? '30px' : '0' 
-      }}>
-        {message}
-      </p>
-      
-      {actionLabel && actionLink && (
-        <Link 
-          to={actionLink}
-          style={{ 
-            display: 'inline-block',
-            backgroundColor: 'var(--color-neon-cyan)', 
-            color: '#000', 
-            padding: '12px 24px', 
-            borderRadius: '6px', 
-            textDecoration: 'none',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            transition: 'transform 0.2s'
-          }}
-        >
-          {actionLabel}
-        </Link>
-      )}
+  const renderIcon = () => {
+    if (!icon) return <Inbox size={48} className="text-text-muted opacity-50" />;
+    if (typeof icon === 'string') return <span className="text-5xl opacity-80">{icon}</span>;
+    return <div className="text-text-muted opacity-80">{icon}</div>;
+  };
 
-      {actionLabel && onAction && (
-        <button 
-          onClick={onAction}
-          style={{ 
-            backgroundColor: 'var(--color-neon-cyan)', 
-            color: '#000', 
-            padding: '12px 24px', 
-            borderRadius: '6px', 
-            border: 'none',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            transition: 'transform 0.2s'
-          }}
-        >
-          {actionLabel}
-        </button>
+  return (
+    <Card className="flex flex-col items-center justify-center text-center">
+      <div className="mb-4">
+        {renderIcon()}
+      </div>
+      <h3 className="text-lg font-medium text-text-primary mb-2">
+        {message}
+      </h3>
+      {description && (
+        <p className="text-sm text-text-secondary mb-6 max-w-sm">
+          {description}
+        </p>
       )}
-    </div>
+      
+      <div className="mt-2">
+        {actionLabel && actionLink && (
+          <Link to={actionLink}>
+            <Button variant="primary">
+              {actionLabel}
+            </Button>
+          </Link>
+        )}
+
+        {actionLabel && onAction && (
+          <Button onClick={onAction} variant="primary">
+            {actionLabel}
+          </Button>
+        )}
+      </div>
+    </Card>
   );
 };

@@ -1,6 +1,8 @@
 import React from 'react';
 import { useGlobalState } from '../../app/AppProviders';
 import { MatchListCard } from '../../components/MatchListCard';
+import { EmptyState } from '../../components/EmptyState';
+import { Radio } from 'lucide-react';
 
 export const LiveScreen: React.FC = () => {
   const { matches } = useGlobalState();
@@ -12,17 +14,11 @@ export const LiveScreen: React.FC = () => {
         {liveMatches.length > 0 ? (
           <MatchListCard title="Live Matches" matches={liveMatches} />
         ) : (
-          <div style={{ 
-            padding: '32px', 
-            textAlign: 'center', 
-            backgroundColor: '#f9f9f9', 
-            borderRadius: '16px',
-            border: '1px dashed #e0e0e0',
-            color: '#888'
-          }}>
-            <div style={{ fontSize: '24px', marginBottom: '8px' }}>📡</div>
-            <div style={{ fontWeight: '500' }}>No live matches at the moment</div>
-          </div>
+          <EmptyState 
+            icon={<Radio size={48} />}
+            message="No live matches at the moment"
+            description="Matches currently in progress will appear here."
+          />
         )}
       </section>
     </div>

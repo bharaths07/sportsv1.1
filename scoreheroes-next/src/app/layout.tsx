@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -26,11 +27,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn("min-h-screen bg-background font-sans antialiased", inter.variable)}>
-        <div className="relative flex min-h-screen flex-col">
-          <Header />
-          <div className="flex-1">{children}</div>
-          <Footer />
-        </div>
+        <AuthProvider>
+          <div className="relative flex min-h-screen flex-col">
+            <Header />
+            <div className="flex-1">{children}</div>
+            <Footer />
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );

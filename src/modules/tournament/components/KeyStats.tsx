@@ -1,4 +1,5 @@
 import React from 'react';
+import { Avatar } from '../../../../components/ui/Avatar';
 
 interface StatItem {
   id: string;
@@ -65,10 +66,11 @@ export const KeyStats: React.FC<KeyStatsProps> = ({ stats, variant = 'sidebar' }
             
             <div style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <img 
-                  src={stat.player.avatar} 
-                  alt={stat.player.name} 
-                  style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', backgroundColor: '#f1f5f9' }} 
+                <Avatar
+                  src={stat.player.avatar}
+                  alt={stat.player.name}
+                  fallback={stat.player.name.charAt(0)}
+                  className="w-12 h-12 rounded-full bg-slate-50"
                 />
                 <div>
                   <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>{stat.player.name}</div>

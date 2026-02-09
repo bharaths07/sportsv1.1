@@ -3,6 +3,9 @@ import { Heart, MessageCircle, Share2, MoreHorizontal, Image, Send } from 'lucid
 import { useGlobalState } from '../../app/AppProviders';
 import { FeedItem, FeedComment } from '../../domain/feed';
 import { formatRelativeTime } from '../../utils/dateUtils';
+import { Avatar } from '../../components/ui/Avatar';
+import { Input } from '../../components/ui/Input';
+import { Button } from '../../components/ui/Button';
 
 // Mock Data for Demo
 const MOCK_FEED: FeedItem[] = [
@@ -29,7 +32,7 @@ const MOCK_FEED: FeedItem[] = [
     content: 'Just scored my first century of the season! Feeling pumped! 🏏💪',
     authorId: 'u1',
     authorName: 'Virat Kohli',
-    authorAvatar: 'https://ui-avatars.com/api/?name=Virat+Kohli&background=random',
+    authorAvatar: undefined,
     authorType: 'user',
     media: [],
     likesCount: 5600,
@@ -106,28 +109,25 @@ export const SocialFeedScreen: React.FC = () => {
       {/* Create Post Input (Mock) */}
       <div className="bg-white p-4 mb-2 shadow-sm">
         <div className="flex gap-3">
-          <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
-             {currentUser?.avatarUrl ? (
-                <img src={currentUser.avatarUrl} alt="Me" className="w-full h-full object-cover" />
-             ) : (
-                <div className="w-full h-full flex items-center justify-center font-bold text-slate-500">
-                  {currentUser?.firstName?.[0] || 'Me'}
-                </div>
-             )}
-          </div>
+          <Avatar 
+             src={currentUser?.avatarUrl} 
+             fallback={currentUser?.firstName?.[0] || 'Me'}
+             className="w-10 h-10"
+          />
           <div className="flex-1">
-            <input 
+            <Input 
               type="text" 
               placeholder="What's happening on the field?" 
-              className="w-full bg-slate-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="rounded-full bg-slate-100 border-none focus:ring-2 focus:ring-violet-500"
+              containerClassName="mb-0"
             />
             <div className="flex justify-between items-center mt-3 px-1">
               <button className="text-slate-500 hover:text-violet-600 flex items-center gap-1 text-xs font-medium">
                 <Image className="w-4 h-4" /> Photo/Video
               </button>
-              <button className="bg-violet-600 text-white px-4 py-1.5 rounded-full text-xs font-bold hover:bg-violet-700 transition-colors">
+              <Button size="sm" className="rounded-full px-4 py-1.5 h-auto text-xs">
                 Post
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -141,10 +141,10 @@ export const SocialFeedScreen: React.FC = () => {
             {/* Post Header */}
             <div className="p-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img 
-                  src={item.authorAvatar || `https://ui-avatars.com/api/?name=${item.authorName}&background=random`} 
-                  alt={item.authorName} 
-                  className="w-10 h-10 rounded-full border border-slate-100"
+                <Avatar 
+                  src={item.authorAvatar} 
+                  fallback={item.authorName[0]}
+                  className="w-10 h-10 border border-slate-100"
                 />
                 <div>
                   <h3 className="font-semibold text-sm text-slate-900 leading-tight flex items-center gap-1">

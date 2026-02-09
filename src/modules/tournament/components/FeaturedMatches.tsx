@@ -1,4 +1,5 @@
 import React from 'react';
+import { Avatar } from '../../../../components/ui/Avatar';
 
 // Simple match interface for display
 export interface FeaturedMatch {
@@ -44,7 +45,12 @@ export const FeaturedMatches: React.FC<FeaturedMatchesProps> = ({ matches, onVie
           >
             {/* Team 1 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '30%' }}>
-              <img src={match.team1.flag} alt={match.team1.code} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+              <Avatar
+                src={match.team1.flag}
+                alt={match.team1.code}
+                fallback={match.team1.code.charAt(0)}
+                className="w-8 h-8 rounded-full"
+              />
               <div>
                 <div style={{ fontWeight: 600, color: '#0f172a' }}>{match.team1.code}</div>
                 {match.team1.score && (
@@ -68,7 +74,12 @@ export const FeaturedMatches: React.FC<FeaturedMatchesProps> = ({ matches, onVie
 
             {/* Team 2 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '30%', flexDirection: 'row-reverse', textAlign: 'right' }}>
-              <img src={match.team2.flag} alt={match.team2.code} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+              <Avatar
+                src={match.team2.flag}
+                alt={match.team2.code}
+                fallback={match.team2.code.charAt(0)}
+                className="w-8 h-8 rounded-full"
+              />
               <div>
                 <div style={{ fontWeight: 600, color: '#0f172a' }}>{match.team2.code}</div>
                 {match.team2.score && (

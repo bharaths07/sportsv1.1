@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGlobalState } from '../app/AppProviders';
+import { Modal } from './ui/Modal';
+import { Input } from './ui/Input';
+import { Button } from './ui/Button';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -7,133 +10,108 @@ interface LoginModalProps {
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
-  const { login, loginWithSupabase, currentUser } = useGlobalState();
+  const { login, currentUser } = useGlobalState();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [emailSent, setEmailSent] = useState(false);
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (currentUser) {
-      setEmailSent(false);
+      setLoading(false);
     }
   }, [currentUser]);
 
-  if (!isOpen || currentUser) return null;
+  // If already logged in, don't show, but also ensure parent controls visibility via isOpen
+  if (currentUser && isOpen) {
+    onClose();
+    return null;
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !email || emailSent) return;
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!email || !password) return;
     
+    setLoading(true);
+    setError('');
+
     try {
-      await loginWithSupabase(email);
-      setEmailSent(true);
-      alert('We sent you a login link. You only need to click it once.');
+      await login(email, password, name);
       onClose();
     } catch (error: any) {
-      alert(error.message || 'Failed to login');
+      setError(error.message || 'Failed to login');
+      setLoading(false);
     }
   };
 
+  const footer = (
+    <>
+      <Button 
+        variant="secondary" 
+        onClick={onClose}
+        disabled={loading}
+        className="flex-1"
+      >
+        Cancel
+      </Button>
+      <Button 
+        variant="primary" 
+        onClick={() => handleSubmit()}
+        disabled={loading || !email || !password}
+        isLoading={loading}
+        className="flex-1"
+      >
+        Sign In
+      </Button>
+    </>
+  );
+
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '8px',
-        padding: '24px',
-        width: '100%',
-        maxWidth: '400px',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-      }}>
-        <h2 style={{ marginTop: 0, marginBottom: '16px', fontSize: '1.25rem', fontWeight: 600 }}>
-          Login Required
-        </h2>
-        <p style={{ marginBottom: '24px', color: '#64748b' }}>
-          This is a demo login. No password required.
-        </p>
-
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>
-              Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                borderRadius: '6px',
-                border: '1px solid #e2e8f0',
-                fontSize: '1rem'
-              }}
-              required
-            />
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Login Required"
+      description="Please sign in to continue."
+      footer={footer}
+      size="sm"
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-100">
+            {error}
           </div>
+        )}
 
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.875rem', fontWeight: 500 }}>
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                borderRadius: '6px',
-                border: '1px solid #e2e8f0',
-                fontSize: '1rem'
-              }}
-              required
-            />
-          </div>
+        <Input
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Enter your email"
+          required
+        />
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: '1px solid #e2e8f0',
-                backgroundColor: 'white',
-                cursor: 'pointer'
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!name || !email || emailSent}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: 'none',
-                backgroundColor: (!name || !email || emailSent) ? '#94a3b8' : '#2563eb',
-                color: 'white',
-                cursor: (!name || !email || emailSent) ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {emailSent ? 'Email sent' : 'Continue'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <Input
+          label="Name (Optional)"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Your name"
+        />
+
+        <Input
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter your password"
+          required
+        />
+        
+        {/* Hidden submit button to enable Enter key submission */}
+        <button type="submit" className="hidden" />
+      </form>
+    </Modal>
   );
 };

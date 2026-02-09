@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Textarea } from '../../components/ui/Textarea';
+import { Avatar } from '../../components/ui/Avatar';
+import { ArrowLeft, Camera } from 'lucide-react';
 
 export const EditProfileScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -9,30 +14,41 @@ export const EditProfileScreen: React.FC = () => {
   // Guard: If no user, redirect to login or profile
   if (!currentUser) {
     // In a real app, might show a loading spinner or redirect
-    return <div style={{ padding: '20px' }}>Please log in to edit your profile.</div>;
+    return <div className="p-5 text-center text-text-secondary">Please log in to edit your profile.</div>;
   }
 
-  const [firstName, setFirstName] = useState(currentUser.firstName);
-  const [lastName, setLastName] = useState(currentUser.lastName);
+  const initialFirst = currentUser.firstName || (currentUser.name ? currentUser.name.split(' ')[0] : '');
+  const initialLast = currentUser.lastName || (currentUser.name ? currentUser.name.split(' ').slice(1).join(' ') : '');
+
+  const [firstName, setFirstName] = useState(initialFirst);
+  const [lastName, setLastName] = useState(initialLast);
   const [location, setLocation] = useState(currentUser.location || '');
   const [bio, setBio] = useState(currentUser.bio || '');
   const [avatarUrl, setAvatarUrl] = useState(currentUser.avatarUrl || '');
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!firstName.trim() || !lastName.trim()) {
       alert('Name is required');
       return;
     }
 
-    updateUserProfile({
-      firstName,
-      lastName,
-      location,
-      bio,
-      avatarUrl: avatarUrl || undefined // Don't save empty string
-    });
-
-    navigate(-1); // Go back
+    setIsSaving(true);
+    try {
+      await updateUserProfile({
+        firstName,
+        lastName,
+        location,
+        bio,
+        avatarUrl: avatarUrl || undefined // Don't save empty string
+      });
+      navigate(-1); // Go back
+    } catch (error) {
+      console.error("Failed to update profile", error);
+      alert("Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Mock Avatar Change
@@ -48,146 +64,94 @@ export const EditProfileScreen: React.FC = () => {
   };
 
   return (
-    <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="min-h-screen bg-bg-page flex flex-col">
       
       {/* Header */}
-      <div style={{ 
-        backgroundColor: 'white', 
-        padding: '16px 20px', 
-        borderBottom: '1px solid #e2e8f0',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        position: 'sticky', top: 0, zIndex: 10
-      }}>
-        <button 
+      <div className="sticky top-0 z-10 bg-white border-b border-border px-4 py-3 flex items-center justify-between">
+        <Button 
+          variant="ghost" 
+          size="sm"
           onClick={() => navigate(-1)}
-          style={{ 
-            border: 'none', background: 'none', 
-            fontSize: '16px', color: '#64748b', cursor: 'pointer',
-            padding: '0'
-          }}
+          className="text-text-secondary hover:text-text-primary -ml-2"
         >
+          <ArrowLeft size={18} className="mr-1" />
           Cancel
-        </button>
-        <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+        </Button>
+        <h1 className="text-lg font-bold text-text-primary">
           Edit Profile
         </h1>
-        <button 
+        <Button 
+          variant="ghost"
+          size="sm"
           onClick={handleSave}
-          style={{ 
-            border: 'none', background: 'none', 
-            fontSize: '16px', fontWeight: 600, color: '#2563eb', cursor: 'pointer',
-            padding: '0'
-          }}
+          disabled={isSaving}
+          className="text-primary font-semibold hover:bg-primary/5 hover:text-primary -mr-2"
         >
-          Save
-        </button>
+          {isSaving ? 'Saving...' : 'Save'}
+        </Button>
       </div>
 
-      <div style={{ padding: '24px 20px', flex: 1, overflowY: 'auto' }}>
+      <div className="flex-1 overflow-y-auto p-6 max-w-lg mx-auto w-full">
         
         {/* Avatar Section */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '32px' }}>
-          <div 
-            onClick={handleAvatarChange}
-            style={{ 
-              width: '100px', height: '100px', borderRadius: '50%', 
-              backgroundColor: '#e2e8f0', overflow: 'hidden',
-              marginBottom: '12px', cursor: 'pointer',
-              border: '4px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}
-          >
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <span style={{ fontSize: '36px', fontWeight: 700, color: '#94a3b8' }}>
-                {firstName[0]}{lastName[0]}
-              </span>
-            )}
+        <div className="flex flex-col items-center mb-8">
+          <div className="relative group cursor-pointer" onClick={handleAvatarChange}>
+            <Avatar 
+              src={avatarUrl} 
+              fallback={`${firstName[0] || ''}${lastName[0] || ''}`}
+              className="w-24 h-24 border-4 border-white shadow-sm"
+            />
+            <div className="absolute inset-0 bg-black/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Camera className="text-white drop-shadow-md" size={24} />
+            </div>
           </div>
-          <button 
+          <Button 
+            variant="ghost" 
+            size="sm"
             onClick={handleAvatarChange}
-            style={{ 
-              border: 'none', background: 'none', 
-              color: '#2563eb', fontWeight: 600, fontSize: '14px', cursor: 'pointer' 
-            }}
+            className="mt-3 text-primary"
           >
             Change Photo
-          </button>
+          </Button>
         </div>
 
         {/* Form Fields */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="space-y-5">
           
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>
-                First Name
-              </label>
-              <input 
-                type="text" 
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Input 
+                label="First Name"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                style={{ 
-                  width: '100%', padding: '12px', borderRadius: '8px', 
-                  border: '1px solid #cbd5e1', fontSize: '16px', color: '#0f172a',
-                  outline: 'none', boxSizing: 'border-box'
-                }}
+                placeholder="First Name"
               />
             </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>
-                Last Name
-              </label>
-              <input 
-                type="text" 
+            <div className="flex-1">
+              <Input 
+                label="Last Name"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                style={{ 
-                  width: '100%', padding: '12px', borderRadius: '8px', 
-                  border: '1px solid #cbd5e1', fontSize: '16px', color: '#0f172a',
-                  outline: 'none', boxSizing: 'border-box'
-                }}
+                placeholder="Last Name"
               />
             </div>
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>
-              Location
-            </label>
-            <input 
-              type="text" 
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="City, Country"
-              style={{ 
-                width: '100%', padding: '12px', borderRadius: '8px', 
-                border: '1px solid #cbd5e1', fontSize: '16px', color: '#0f172a',
-                outline: 'none', boxSizing: 'border-box'
-              }}
-            />
-          </div>
+          <Input 
+            label="Location"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="City, Country"
+          />
 
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>
-              Bio
-            </label>
-            <textarea 
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="Tell us about yourself..."
-              rows={4}
-              style={{ 
-                width: '100%', padding: '12px', borderRadius: '8px', 
-                border: '1px solid #cbd5e1', fontSize: '16px', color: '#0f172a',
-                outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit'
-              }}
-            />
-            <div style={{ textAlign: 'right', fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
-              {bio.length} characters
-            </div>
-          </div>
+          <Textarea 
+            label="Bio"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            placeholder="Tell us about yourself..."
+            rows={4}
+            helperText={`${bio.length} characters`}
+          />
 
         </div>
 

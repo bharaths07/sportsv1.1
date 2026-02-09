@@ -26,4 +26,5 @@ export interface Team {
   foundedYear?: number;
   lastMatchAt?: string;
   active: boolean;
+  location?: string;
 }

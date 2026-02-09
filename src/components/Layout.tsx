@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import { Avatar } from './ui/Avatar';
 import './Layout.css';
 
 const Layout: React.FC = () => {
@@ -13,89 +14,69 @@ const Layout: React.FC = () => {
 
   return (
     <div className="layout-container">
-      {/* 1. TOP BAR (Floating Glass) */}
+      {/* 1. TOP BAR */}
       <div className="top-bar">
         <div className="brand-section">
-          <Link to="/home" className="brand-logo">
-            SPORT<span style={{ color: 'var(--color-neon-orange)' }}>SYNC</span>
+          <Link to="/home" className="brand-logo" style={{ textDecoration: 'none', fontWeight: 800, fontSize: '20px', color: 'var(--text-primary)' }}>
+            SPORT<span style={{ color: 'var(--brand-accent)' }}>SYNC</span>
           </Link>
         </div>
 
-        <div className="nav-links">
-          <Link to="/home" className={`nav-link ${isActive('/home')}`}>Home</Link>
-          <Link to="/my-teams" className={`nav-link ${isActive('/my-teams')}`}>My Teams</Link>
-          <Link to="/start-match" className={`nav-link ${isActive('/start-match')}`}>Play</Link>
+        <div className="nav-links" style={{ display: 'flex', gap: 'var(--space-4)' }}>
+          <Link to="/home" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }} className={isActive('/home')}>Home</Link>
+          <Link to="/my-teams" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }} className={isActive('/my-teams')}>My Teams</Link>
+          <Link to="/start-match" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 500 }} className={isActive('/start-match')}>Play</Link>
         </div>
 
-        <div className="top-actions">
+        <div className="top-actions" style={{ display: 'flex', gap: 'var(--space-3)' }}>
           <div className="action-icon">SEARCH</div>
           <div className="action-icon">NOTIFICATIONS</div>
         </div>
       </div>
 
       <div className="body-container">
-        {/* 2. LEFT SIDEBAR (Floating Glass) */}
+        {/* 2. LEFT SIDEBAR */}
         <aside className="sidebar">
           
           {/* Profile Section */}
-          <Link to="/profile" style={{ textDecoration: 'none' }}>
-            <div className="profile-card">
-              <div className="profile-avatar">
-                {currentUser?.profilePhoto ? (
-                  <img 
-                    src={currentUser.profilePhoto} 
-                    alt="Profile" 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} 
-                  />
-                ) : (
-                  // Fallback initials or default
-                  currentUser ? currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2) : 'U'
-                )}
-              </div>
+          <Link to="/profile" style={{ textDecoration: 'none', display: 'block', marginBottom: 'var(--space-5)' }}>
+            <div className="profile-card" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+              <Avatar 
+                src={currentUser?.profilePhoto} 
+                alt="Profile"
+                fallback={currentUser ? currentUser.name.charAt(0) : 'G'}
+                className="w-10 h-10 rounded-full bg-slate-200"
+              />
               <div className="profile-info">
-                <h3>{currentUser ? currentUser.name : 'Guest'}</h3>
-                <p>{currentUser ? currentUser.type : 'Viewer'}</p>
+                <h3 style={{ fontSize: '14px', margin: 0, color: 'var(--text-primary)' }}>{currentUser ? currentUser.name : 'Guest'}</h3>
+                <p style={{ fontSize: '12px', margin: 0, color: 'var(--text-secondary)' }}>{currentUser ? currentUser.type : 'Viewer'}</p>
               </div>
             </div>
           </Link>
           
           {/* Primary Actions */}
-          <div className="sidebar-group">
-            <div className="group-title">QUICK ACTIONS</div>
-            <Link to="/tournament/create" className={`sidebar-link ${isActive('/tournament/create')}`}>
-              🏆 START TOURNAMENT / SERIES
+          <div className="sidebar-group" style={{ marginBottom: 'var(--space-5)' }}>
+            <div className="group-title" style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 'var(--space-2)', letterSpacing: '0.5px' }}>QUICK ACTIONS</div>
+            <Link to="/tournament/create" style={{ display: 'block', padding: '8px 0', color: 'var(--text-primary)', textDecoration: 'none', fontSize: '14px' }}>
+              🏆 Start Tournament
             </Link>
-            <Link to="/start-match" className={`sidebar-link ${isActive('/start-match')}`}>
+            <Link to="/start-match" style={{ display: 'block', padding: '8px 0', color: 'var(--text-primary)', textDecoration: 'none', fontSize: '14px' }}>
               Start Match
             </Link>
           </div>
 
           {/* Navigation Items */}
-          <div className="sidebar-group">
-            <div className="group-title">MAIN MENU</div>
-            <Link to="/home" className={`sidebar-link ${isActive('/home')}`}>
-              Home
-            </Link>
-            <Link to="/my-teams" className={`sidebar-link ${isActive('/my-teams')}`}>
-              My Teams
-            </Link>
-            <Link to="/leaderboard" className={`sidebar-link ${isActive('/leaderboard')}`}>
-              Leaderboard
-            </Link>
-            <Link to="/certificates" className={`sidebar-link ${isActive('/certificates')}`}>
-              Certificates
-            </Link>
-            <Link to="/news-feed" className={`sidebar-link ${isActive('/news-feed')}`}>
-              News Feed
-            </Link>
-          </div>
-
-          {/* Sports Section */}
-          <div className="sidebar-group">
-            <div className="group-title">SPORTS</div>
-            <div className="sidebar-link">Cricket</div>
-            <div className="sidebar-link">Kabaddi</div>
-            <div className="sidebar-link">Football</div>
+          <div className="sidebar-group" style={{ marginBottom: 'var(--space-5)' }}>
+            <div className="group-title" style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 'var(--space-2)', letterSpacing: '0.5px' }}>MAIN MENU</div>
+            {['Home', 'My Teams', 'Leaderboard', 'Certificates', 'News Feed'].map(item => (
+              <Link 
+                key={item}
+                to={`/${item.toLowerCase().replace(' ', '-')}`} 
+                style={{ display: 'block', padding: '8px 0', color: 'var(--text-primary)', textDecoration: 'none', fontSize: '14px' }}
+              >
+                {item}
+              </Link>
+            ))}
           </div>
 
         </aside>

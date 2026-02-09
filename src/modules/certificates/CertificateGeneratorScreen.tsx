@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Download, Share2, Type, Layout, Palette, Image as ImageIcon } from 'lucide-react';
+import { Input } from '../../components/ui/Input';
+import { Button } from '../../components/ui/Button';
 
 export const CertificateGeneratorScreen: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
@@ -35,58 +37,50 @@ export const CertificateGeneratorScreen: React.FC = () => {
             <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Select Template</label>
             <div className="grid grid-cols-2 gap-2">
               {['modern', 'classic', 'sporty', 'minimal'].map(t => (
-                <button
+                <Button
                   key={t}
+                  variant={selectedTemplate === t ? 'primary' : 'secondary'}
+                  size="sm"
                   onClick={() => setSelectedTemplate(t)}
-                  className={`p-2 rounded border text-sm capitalize ${selectedTemplate === t ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 hover:bg-slate-50'}`}
+                  className="capitalize"
                 >
                   {t}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
 
           {/* Form */}
           <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Recipient Name</label>
-              <input 
-                type="text" 
-                value={recipientName}
-                onChange={(e) => setRecipientName(e.target.value)}
-                className="w-full p-2 border border-slate-300 rounded text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Achievement</label>
-              <input 
-                type="text" 
-                value={achievement}
-                onChange={(e) => setAchievement(e.target.value)}
-                className="w-full p-2 border border-slate-300 rounded text-sm outline-none focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Date</label>
-              <input 
-                type="date" 
-                value={matchDate}
-                onChange={(e) => setMatchDate(e.target.value)}
-                className="w-full p-2 border border-slate-300 rounded text-sm outline-none focus:border-indigo-500"
-              />
-            </div>
+            <Input
+              label="Recipient Name"
+              value={recipientName}
+              onChange={(e) => setRecipientName(e.target.value)}
+            />
+            <Input
+              label="Achievement"
+              value={achievement}
+              onChange={(e) => setAchievement(e.target.value)}
+            />
+            <Input
+              label="Date"
+              type="date"
+              value={matchDate}
+              onChange={(e) => setMatchDate(e.target.value)}
+            />
           </div>
         </div>
 
         {/* Actions */}
         <div className="p-4 border-t border-slate-100 bg-slate-50">
-          <button 
+          <Button 
             onClick={handleDownload}
             disabled={isGenerating}
-            className="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold shadow-sm hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-70 flex items-center justify-center gap-2"
+            isLoading={isGenerating}
+            className="w-full gap-2"
           >
-            {isGenerating ? 'Generating...' : <><Download className="w-4 h-4" /> Download PDF</>}
-          </button>
+             {!isGenerating && <Download className="w-4 h-4" />} Download PDF
+          </Button>
         </div>
       </div>
 

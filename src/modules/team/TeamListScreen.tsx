@@ -1,10 +1,17 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Search, Users } from 'lucide-react';
 import { TeamType } from '../../domain/team';
 import { useGlobalState } from '../../app/AppProviders';
-import { FollowButton } from '../../components/FollowButton';
+import { PageContainer } from '../../components/layout/PageContainer';
+import { PageHeader } from '../../components/layout/PageHeader';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Select } from '../../components/ui/Select';
+import { Avatar } from '../../components/ui/Avatar';
+import { EmptyState } from '../../components/EmptyState';
 
-// Sport ID Mapping (aligning with mock data comments and user requirements)
+// Sport ID Mapping
 const SPORT_MAP: Record<string, string> = {
   's1': 'Cricket',
   's2': 'Football',
@@ -12,72 +19,28 @@ const SPORT_MAP: Record<string, string> = {
   's4': 'Badminton'
 };
 
-const TEAM_TYPES: { label: string; value: TeamType }[] = [
-  { label: 'Club', value: 'club' },
-  { label: 'Corporate', value: 'corporate' },
-  { label: 'Street', value: 'street' },
-  { label: 'School', value: 'school' }
-];
-
-type SortOption = 'active' | 'members' | 'newest' | 'alpha';
-
 export const TeamListScreen: React.FC = () => {
-  const { teams, followedTeams } = useGlobalState();
+  const { teams } = useGlobalState();
+  const navigate = useNavigate();
   
   // -- Filter States --
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedSport, setSelectedSport] = useState<string>('All');
-  const [selectedType, setSelectedType] = useState<TeamType | 'All'>('All');
-  const [sortBy, setSortBy] = useState<SortOption>('active');
-
-  // -- Debounce Search --
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [searchQuery]);
-
-  // -- Persist Filters (Basic implementation) --
-  useEffect(() => {
-    const savedFilters = localStorage.getItem('scoreheroes_team_filters');
-    if (savedFilters) {
-      try {
-        const parsed = JSON.parse(savedFilters);
-        if (parsed.sport) setSelectedSport(parsed.sport);
-        if (parsed.type) setSelectedType(parsed.type);
-        if (parsed.sort) setSortBy(parsed.sort);
-      } catch (e) {
-        console.error("Failed to parse filters", e);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('scoreheroes_team_filters', JSON.stringify({
-      sport: selectedSport,
-      type: selectedType,
-      sort: sortBy
-    }));
-  }, [selectedSport, selectedType, sortBy]);
+  const [selectedType, setSelectedType] = useState<string>('All');
+  const [sortBy, setSortBy] = useState<string>('active');
 
   // -- Filter & Sort Logic --
   const filteredAndSortedTeams = useMemo(() => {
     let result = [...teams];
 
     // 1. Search
-    if (debouncedSearch) {
-      const q = debouncedSearch.toLowerCase();
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
       result = result.filter(t => t.name.toLowerCase().includes(q));
     }
 
     // 2. Sport
     if (selectedSport !== 'All') {
-      // Find sport ID by name or just use the mapping if we stored ID
-      // For UI simplicity, let's map back or store ID. 
-      // Let's store the ID in state if possible, but the chips might be text.
-      // Let's iterate SPORT_MAP to find ID or match value.
       const sportId = Object.keys(SPORT_MAP).find(key => SPORT_MAP[key] === selectedSport);
       if (sportId) {
         result = result.filter(t => t.sportId === sportId);
@@ -95,277 +58,128 @@ export const TeamListScreen: React.FC = () => {
         case 'members':
           return b.members.length - a.members.length;
         case 'newest':
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
         case 'alpha':
           return a.name.localeCompare(b.name);
         case 'active':
         default:
-          const dateA = a.lastMatchAt ? new Date(a.lastMatchAt).getTime() : 0;
-          const dateB = b.lastMatchAt ? new Date(b.lastMatchAt).getTime() : 0;
-          return dateB - dateA;
+          // Mock "active" as recent creation or random for now
+           return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
       }
     });
 
     return result;
-  }, [debouncedSearch, selectedSport, selectedType, sortBy]);
+  }, [teams, searchQuery, selectedSport, selectedType, sortBy]);
 
-  // -- Helpers --
-  const clearFilters = () => {
-    setSearchQuery('');
-    setSelectedSport('All');
-    setSelectedType('All');
-    setSortBy('active');
-  };
-
-  const isRecent = (dateStr?: string) => {
-    if (!dateStr) return false;
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 30; // Active in last 30 days
-  };
-
-  const getInitials = (name: string) => name.substring(0, 2).toUpperCase();
+  const sportOptions = [{ value: 'All', label: 'All Sports' }, ...Object.values(SPORT_MAP).map(s => ({ value: s, label: s }))];
+  const typeOptions = [
+      { value: 'All', label: 'All Types' },
+      { value: 'club', label: 'Club' },
+      { value: 'corporate', label: 'Corporate' },
+      { value: 'street', label: 'Street' },
+      { value: 'school', label: 'School' }
+  ];
+  const sortOptions = [
+      { value: 'active', label: 'Recently Active' },
+      { value: 'members', label: 'Most Members' },
+      { value: 'newest', label: 'Newest First' },
+      { value: 'alpha', label: 'A-Z' }
+  ];
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
-      
-      {/* Sticky Filter Bar */}
-      <div style={{ 
-        position: 'sticky', 
-        top: 0, 
-        zIndex: 100, 
-        backgroundColor: 'white', 
-        borderBottom: '1px solid #e2e8f0',
-        padding: '12px 16px',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
-      }}>
-        {/* Row 1: Search & Sort */}
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px' }}>🔍</span>
-            <input 
-              type="text" 
-              placeholder="Search teams..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ 
-                width: '100%', 
-                padding: '10px 10px 10px 36px', 
-                borderRadius: '8px', 
-                border: '1px solid #cbd5e1',
-                fontSize: '14px',
-                outline: 'none',
-                boxSizing: 'border-box'
-              }}
-            />
-            {searchQuery && (
-              <button 
-                onClick={() => setSearchQuery('')}
-                style={{ 
-                  position: 'absolute', 
-                  right: '10px', 
-                  top: '50%', 
-                  transform: 'translateY(-50%)', 
-                  background: 'none', 
-                  border: 'none', 
-                  cursor: 'pointer',
-                  color: '#94a3b8'
-                }}
-              >✕</button>
-            )}
+    <PageContainer>
+      <PageHeader 
+        title="Teams" 
+        description="Find and join teams, or create your own."
+        actions={
+          <Button variant="primary" icon={<Plus size={18} />} onClick={() => navigate('/teams/create')}>
+            Create Team
+          </Button>
+        }
+      />
+
+      {/* Filters */}
+      <Card className="mb-8 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="relative">
+             <Input 
+                placeholder="Search teams..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                startIcon={<Search size={18} className="text-slate-400" />}
+                className="w-full"
+             />
           </div>
-          
-          <select 
-            value={sortBy} 
-            onChange={(e) => setSortBy(e.target.value as SortOption)}
+          <Select 
+            options={sportOptions}
+            value={selectedSport}
+            onChange={setSelectedSport}
+          />
+          <Select 
+            options={typeOptions}
+            value={selectedType}
+            onChange={setSelectedType}
+          />
+          <Select 
+            options={sortOptions}
+            value={sortBy}
+            onChange={setSortBy}
+          />
+        </div>
+      </Card>
+
+      {/* Team Grid */}
+      {filteredAndSortedTeams.length === 0 ? (
+          <EmptyState 
+            icon={<Users size={48} />}
+            message="No teams found"
+            description="Try adjusting your filters or search query to find what you're looking for."
+            actionLabel="Create New Team"
+            onAction={() => navigate('/teams/create')}
+          />
+      ) : (
+          <div 
             style={{ 
-              padding: '0 12px', 
-              borderRadius: '8px', 
-              border: '1px solid #cbd5e1',
-              backgroundColor: 'white',
-              fontSize: '14px',
-              color: '#475569',
-              cursor: 'pointer'
-            }}
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
+              gap: 'var(--space-4)', 
+            }} 
           >
-            <option value="active">Recently Active</option>
-            <option value="members">Most Members</option>
-            <option value="newest">Newest</option>
-            <option value="alpha">A-Z</option>
-          </select>
-        </div>
-
-        {/* Row 2: Chips (Horizontal Scroll) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {/* Sport Filter */}
-          <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
-            {['All', 'Cricket', 'Football', 'Kabaddi', 'Badminton'].map(sport => (
-              <button
-                key={sport}
-                onClick={() => setSelectedSport(sport)}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: '100px',
-                  border: selectedSport === sport ? '1px solid #3b82f6' : '1px solid #e2e8f0',
-                  backgroundColor: selectedSport === sport ? '#eff6ff' : 'white',
-                  color: selectedSport === sport ? '#1d4ed8' : '#64748b',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  whiteSpace: 'nowrap',
-                  cursor: 'pointer'
-                }}
-              >
-                {sport}
-              </button>
-            ))}
-          </div>
-          
-          {/* Type Filter */}
-          <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
-            <button
-              onClick={() => setSelectedType('All')}
-              style={{
-                padding: '4px 10px',
-                borderRadius: '6px',
-                border: selectedType === 'All' ? '1px solid #64748b' : '1px solid #e2e8f0',
-                backgroundColor: selectedType === 'All' ? '#f1f5f9' : 'white',
-                color: selectedType === 'All' ? '#0f172a' : '#64748b',
-                fontSize: '12px',
-                whiteSpace: 'nowrap',
-                cursor: 'pointer'
-              }}
-            >
-              All Types
-            </button>
-            {TEAM_TYPES.map(type => (
-              <button
-                key={type.value}
-                onClick={() => setSelectedType(type.value)}
-                style={{
-                  padding: '4px 10px',
-                  borderRadius: '6px',
-                  border: selectedType === type.value ? '1px solid #64748b' : '1px solid #e2e8f0',
-                  backgroundColor: selectedType === type.value ? '#f1f5f9' : 'white',
-                  color: selectedType === type.value ? '#0f172a' : '#64748b',
-                  fontSize: '12px',
-                  whiteSpace: 'nowrap',
-                  cursor: 'pointer'
-                }}
-              >
-                {type.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Results List */}
-      <div style={{ padding: '16px', maxWidth: '800px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
-            {filteredAndSortedTeams.length} Teams found
-          </div>
-          {(selectedSport !== 'All' || selectedType !== 'All' || searchQuery) && (
-            <button 
-              onClick={clearFilters}
-              style={{ fontSize: '13px', color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}
-            >
-              Clear Filters
-            </button>
-          )}
-        </div>
-
-        {filteredAndSortedTeams.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
-            <div style={{ fontSize: '16px', fontWeight: 600, color: '#475569' }}>No teams found</div>
-            <p style={{ fontSize: '14px' }}>Try adjusting your filters or search query.</p>
-            <button 
-              onClick={clearFilters}
-              style={{ 
-                marginTop: '16px', 
-                padding: '8px 16px', 
-                backgroundColor: 'white', 
-                border: '1px solid #cbd5e1', 
-                borderRadius: '6px',
-                color: '#475569',
-                cursor: 'pointer'
-              }}
-            >
-              Reset Filters
-            </button>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {filteredAndSortedTeams.map(team => {
-              const isFollowed = followedTeams.includes(team.id);
-              const recentlyActive = isRecent(team.lastMatchAt);
-              const sportName = SPORT_MAP[team.sportId] || 'Sport';
-              
-              return (
-                <div key={team.id} style={{ 
-                  backgroundColor: 'white',
-                  borderRadius: '12px',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                  border: isFollowed ? '1px solid #ffcdd2' : '1px solid white',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', padding: '16px' }}>
-                    
-                    {/* Left: Avatar */}
-                    <Link to={`/team/${team.id}`} style={{ textDecoration: 'none', display: 'block', marginRight: '16px' }}>
-                      <div style={{ 
-                        width: '56px', height: '56px', 
-                        borderRadius: '50%', 
-                        backgroundColor: '#f1f5f9', 
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontWeight: '800',
-                        color: '#475569',
-                        fontSize: '20px',
-                        border: recentlyActive ? '3px solid #dbeafe' : '3px solid transparent', // Subtle ring
-                        position: 'relative'
-                      }}>
-                        {getInitials(team.name)}
-                      </div>
-                    </Link>
-
-                    {/* Center: Info */}
-                    <Link to={`/team/${team.id}`} style={{ textDecoration: 'none', flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                        <span style={{ fontWeight: '700', fontSize: '16px', color: '#0f172a' }}>{team.name}</span>
-                        {isFollowed && (
-                          <span style={{ fontSize: '10px', color: '#dc2626', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '4px', padding: '1px 4px', fontWeight: 'bold' }}>
-                            FOLLOWING
-                          </span>
-                        )}
+              {filteredAndSortedTeams.map(team => (
+                  <Card key={team.id} className="p-6 flex flex-col hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => navigate(`/team/${team.id}`)}>
+                      <div className="flex items-start justify-between mb-4">
+                          <Avatar
+                              src={team.logoUrl}
+                              fallback={team.name.charAt(0)}
+                              className="w-16 h-16 rounded-xl bg-slate-100 text-2xl font-bold text-slate-600 border border-slate-200 group-hover:border-blue-200 group-hover:bg-blue-50 transition-colors"
+                          />
+                          {team.type && (
+                              <span className="px-2 py-1 rounded bg-slate-100 text-slate-600 text-xs font-bold uppercase">
+                                  {team.type}
+                              </span>
+                          )}
                       </div>
                       
-                      <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>{sportName}</span>
-                        <span>•</span>
-                        <span style={{ textTransform: 'capitalize' }}>{team.type}</span>
-                        <span>•</span>
-                        <span>{team.members.length} Members</span>
+                      <h3 className="text-lg font-bold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">
+                          {team.name}
+                      </h3>
+                      <div className="text-sm text-slate-500 mb-4">
+                          {SPORT_MAP[team.sportId] || 'Unknown Sport'} • {team.location || 'No Location'}
                       </div>
-                    </Link>
 
-                    {/* Right: Actions */}
-                    <div style={{ paddingLeft: '12px' }}>
-                       <FollowButton id={team.id} type="team" />
-                    </div>
-                  </div>
-                  
-                  {/* Optional Bottom Badge Strip (Visual flair from request) */}
-                  {/* <div style={{ height: '4px', width: '100%', background: 'linear-gradient(to right, #3b82f6, #8b5cf6)' }}></div> */}
-                </div>
-              );
-            })}
+                      <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center">
+                          <div className="flex items-center gap-1 text-sm text-slate-600 font-medium">
+                              <Users size={16} className="text-slate-400" />
+                              {team.members.length} Members
+                          </div>
+                          <Button variant="ghost" size="sm" className="text-blue-600 hover:bg-blue-50">
+                              View Profile
+                          </Button>
+                      </div>
+                  </Card>
+              ))}
           </div>
-        )}
-      </div>
-    </div>
+      )}
+    </PageContainer>
   );
 };

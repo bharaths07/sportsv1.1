@@ -2,6 +2,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  passwordHash?: string;
   role?: 'user' | 'admin';
   avatarUrl?: string;
   
@@ -15,4 +16,5 @@ export interface User {
   followingCount?: number;
   profileViews?: number;
   type?: 'user' | 'organizer' | 'admin';
+  plan?: 'free' | 'premium' | 'enterprise';
 }

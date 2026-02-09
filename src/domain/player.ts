@@ -24,6 +24,16 @@ export interface FieldingStats {
   stumpings: number;
 }
 
+export interface FootballStats {
+  matches: number;
+  goals: number;
+  assists: number;
+  yellowCards: number;
+  redCards: number;
+  cleanSheets: number;
+  hatTricks: number;
+}
+
 export interface PlayerStats {
   matchesPlayed: number;
   wins: number;
@@ -33,6 +43,7 @@ export interface PlayerStats {
   batting?: BattingStats;
   bowling?: BowlingStats;
   fielding?: FieldingStats;
+  football?: FootballStats;
   // Sport specific stats could be extended or stored in a flexible map
   customStats?: Record<string, number | string>;
 }

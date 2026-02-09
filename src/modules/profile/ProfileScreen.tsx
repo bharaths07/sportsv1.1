@@ -55,19 +55,11 @@ export const ProfileScreen: React.FC = () => {
         gap: '16px'
       }}>
         {/* Avatar */}
-        <div style={{ 
-          width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#e2e8f0',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '24px', fontWeight: 700, color: '#64748b',
-          border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          overflow: 'hidden'
-        }}>
-          {userData.avatarUrl ? (
-            <img src={userData.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            userData.initial
-          )}
-        </div>
+        <Avatar 
+          src={userData.avatarUrl}
+          fallback={userData.initial}
+          className="w-16 h-16 border-2 border-white shadow-sm text-2xl bg-slate-200 text-slate-500 font-bold"
+        />
 
         {/* Center Info */}
         <div style={{ flex: 1 }}>

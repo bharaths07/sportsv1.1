@@ -61,16 +61,11 @@ export const IconPerformances: React.FC<Props> = ({ performances, onGeneratePost
                          </div>
 
                          {/* Avatar */}
-                         <div style={{ 
-                             width: '48px', height: '48px', 
-                             borderRadius: '50%', 
-                             backgroundColor: '#f1f5f9',
-                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                             fontSize: '18px', fontWeight: 700, color: '#64748b',
-                             marginBottom: '12px'
-                         }}>
-                             {player?.firstName[0]}{player?.lastName[0]}
-                         </div>
+                         <Avatar
+                            src={player?.avatarUrl}
+                            fallback={`${player?.firstName?.[0] || ''}${player?.lastName?.[0] || ''}`}
+                            className="w-12 h-12 mb-3 bg-slate-100 text-slate-500 text-lg font-bold"
+                         />
 
                          {/* Name */}
                          <div style={{ 

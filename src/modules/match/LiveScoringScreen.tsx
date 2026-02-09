@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Play, StopCircle, Trophy, Activity, AlertCircle, ChevronLeft } from 'lucide-react';
 import { useGlobalState } from '../../app/AppProviders';
 import { useRequireAuth } from '../../hooks/useRequireAuth';
-import { LoadingButton } from '../../components/LoadingButton';
+import { PageContainer } from '../../components/layout/PageContainer';
+import { PageHeader } from '../../components/layout/PageHeader';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { FootballLiveScorer } from './components/FootballLiveScorer';
 
 export const LiveScoringScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,12 +20,22 @@ export const LiveScoringScreen: React.FC = () => {
   // Dev toggle for Viewer/Scorer mode verification
   const [isSimulatingViewer, setIsSimulatingViewer] = useState(false);
 
+  // Route Protection
+  useEffect(() => {
+    requireAuth(currentUser);
+  }, [currentUser, requireAuth]);
+
   if (!match) {
     return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h2>Match not found</h2>
-        <Link to="/" style={{ color: '#007bff' }}>Return Home</Link>
-      </div>
+      <PageContainer>
+        <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+          <AlertCircle className="w-12 h-12 text-red-500" />
+          <h2 className="text-xl font-bold text-slate-900">Match not found</h2>
+          <Button variant="outline" onClick={() => navigate('/')}>
+            Return Home
+          </Button>
+        </div>
+      </PageContainer>
     );
   }
 
@@ -28,64 +43,65 @@ export const LiveScoringScreen: React.FC = () => {
   const hasPermission = canScoreMatch(match.id);
   const canScore = !isSimulatingViewer && hasPermission;
 
-  // Route Protection
-  useEffect(() => {
-    requireAuth(currentUser);
-  }, [currentUser, requireAuth]);
-
   if (!canScore) {
-    if (!currentUser) {
-        // If not logged in, show access denied but provide login button or just let them view
-        // Actually, LiveScoring should probably redirect to Login if they try to access it directly?
-        // But maybe they just want to VIEW live score?
-        // The screen is "LiveScoringScreen", usually for scorers. Viewers use "MatchScreen" (Summary).
-        // If this route `/match/:id/live` is for scorers only:
-        // requireAuth(currentUser); // This would redirect immediately.
-        
-        // But wait, "Access Denied" below says "You are not assigned as a scorer".
-        // If not logged in, they are definitely not assigned.
-    }
-
     return (
-      <div className="p-8 text-center" style={{ padding: '40px', textAlign: 'center' }}>
-        <h2 className="text-xl font-bold text-red-600 mb-2" style={{ color: '#dc2626', fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>Access Denied</h2>
-        <p className="text-gray-600 mb-4" style={{ color: '#4b5563', marginBottom: '24px' }}>You are not assigned as a scorer for this match.</p>
-        
-        {!currentUser && (
-            <button 
-                onClick={() => requireAuth(null)}
-                style={{ 
-                    marginBottom: '16px', display: 'block', margin: '0 auto 16px',
-                    padding: '8px 16px', backgroundColor: '#2563eb', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer'
-                }}
-            >
-                Login to Score
-            </button>
-        )}
+      <PageContainer>
+        <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+            <ShieldIcon className="w-8 h-8 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900">Access Denied</h2>
+          <p className="text-slate-500 max-w-md text-center">
+            You are not assigned as a scorer for this match. Only official scorers can access this page.
+          </p>
+          
+          <div className="flex gap-3 mt-4">
+            {!currentUser && (
+                <Button onClick={() => requireAuth(null)}>
+                    Login to Score
+                </Button>
+            )}
+            <Button variant="outline" onClick={() => navigate(`/matches/${match.id}`)}>
+              Go to Match Summary
+            </Button>
+          </div>
+        </div>
+      </PageContainer>
+    );
+  }
 
-        <Link to={`/match/${match.id}`} className="text-blue-600 underline" style={{ color: '#2563eb', textDecoration: 'underline' }}>
-          Go to Match Summary
-        </Link>
-      </div>
+  // Football Scoring Interface
+  if (match.sportId === 's3') {
+    return (
+        <PageContainer>
+            <div className="max-w-md mx-auto space-y-4">
+               <PageHeader 
+                    title="Live Scoring" 
+                    subtitle="Football"
+                    backUrl={`/matches/${match.id}`}
+                />
+                <FootballLiveScorer 
+                    match={match} 
+                    onEndMatch={handleEndMatch}
+                    isEnding={isEnding}
+                />
+            </div>
+        </PageContainer>
     );
   }
 
   const battingTeamId = match.currentBattingTeamId || match.homeParticipant.id;
   const isHomeBatting = battingTeamId === match.homeParticipant.id;
   const battingParticipant = isHomeBatting ? match.homeParticipant : match.awayParticipant;
+  const bowlingParticipant = isHomeBatting ? match.awayParticipant : match.homeParticipant;
 
   const runs = battingParticipant.score || 0;
   const wickets = battingParticipant.wickets || 0;
   const balls = battingParticipant.balls || 0;
-  const overs = Math.floor(balls / 6);
+  const oversCount = Math.floor(balls / 6);
   const ballsInOver = balls % 6;
 
   const handleStartMatch = () => {
-    if (!canScore) {
-       // Friendly error (although UI shouldn't show button)
-       alert("Only the match creator can start the match.");
-       return;
-    }
     if (window.confirm('Start the match? This will enable scoring.')) {
         startMatch(match.id);
     }
@@ -97,180 +113,153 @@ export const LiveScoringScreen: React.FC = () => {
   };
 
   const handleEndMatch = () => {
-    if (isEnding) return; // Prevent double clicks
-    
-    if (window.confirm('Finish the game? This will create awards for everyone.')) {
-      setIsEnding(true);
-      endMatch(match.id);
-      // Navigate after a short delay to ensure state updates
-      setTimeout(() => {
-          navigate(`/match/${match.id}`); // Go to summary
-      }, 500);
+    if (isEnding) return;
+    if (window.confirm('Are you sure you want to end the match? This action cannot be undone.')) {
+        setIsEnding(true);
+        endMatch(match.id);
+        navigate(`/matches/${match.id}`);
     }
   };
 
-  const scoreBtnStyle = {
-    padding: '15px',
-    fontSize: '18px',
-    fontWeight: 'bold',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    backgroundColor: 'white',
-    cursor: 'pointer',
-    minHeight: '60px', // Touch target size
-    touchAction: 'manipulation' as 'manipulation' // Improve touch response
-  };
-
   return (
-    <div style={{ padding: '20px', width: '100%', maxWidth: '600px', margin: '0 auto', fontFamily: 'Arial, sans-serif', boxSizing: 'border-box' }}>
-
-      {/* 1. Match Header */}
-      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-        <div style={{ fontSize: '18px', color: '#555' }}>
-          {match.homeParticipant.name} vs {match.awayParticipant.name}
-        </div>
-        <div style={{ 
-          display: 'inline-block', 
-          backgroundColor: match.status === 'live' ? '#ff4444' : (match.status === 'draft' ? '#ff9800' : '#666'), 
-          color: 'white', 
-          padding: '4px 12px', 
-          borderRadius: '12px',
-          fontSize: '12px',
-          marginTop: '8px',
-          fontWeight: 'bold'
-        }}>
-          {match.status.toUpperCase()}
-        </div>
-      </div>
-
-      {/* 2. Big Score Display */}
-      <div style={{ 
-        textAlign: 'center', 
-        padding: '30px', 
-        backgroundColor: '#f8f9fa', 
-        borderRadius: '16px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-        marginBottom: '30px'
-      }}>
-        <div style={{ fontSize: '14px', color: '#888', marginBottom: '5px' }}>
-          Batting: {battingParticipant.name}
-        </div>
-        <div style={{ fontSize: '48px', fontWeight: 'bold', lineHeight: '1', color: '#333' }}>
-          {runs}/{wickets}
-        </div>
-        <div style={{ fontSize: '20px', color: '#666', marginTop: '10px' }}>
-          Overs: {overs}.{ballsInOver}
-        </div>
-      </div>
-
-      {/* 3. Scoring Controls */}
-      {match.status === 'draft' && canScore && (
-          <div style={{ marginBottom: '30px', textAlign: 'center' }}>
-              <LoadingButton 
-                onClick={handleStartMatch}
-                variant="primary"
-                style={{
-                    width: '100%',
-                    padding: '15px',
-                    fontSize: '18px'
-                }}
-              >
-                Start Match
-              </LoadingButton>
-              <p style={{ color: '#666', marginTop: '10px', fontSize: '14px' }}>
-                Teams can still be edited in this state.
-              </p>
-          </div>
-      )}
-
-      {match.status === 'live' && (
-        canScore ? (
-          <div style={{ marginBottom: '30px' }}>
-            <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#444' }}>Scoring Controls</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-              <button onClick={() => handleScore(0, false)} style={scoreBtnStyle}>0</button>
-              <button onClick={() => handleScore(1, false)} style={scoreBtnStyle}>1</button>
-              <button onClick={() => handleScore(2, false)} style={scoreBtnStyle}>2</button>
-              <button onClick={() => handleScore(3, false)} style={scoreBtnStyle}>3</button>
-              <button onClick={() => handleScore(4, false)} style={{...scoreBtnStyle, backgroundColor: '#e3f2fd', color: '#1565c0'}}>4</button>
-              <button onClick={() => handleScore(6, false)} style={{...scoreBtnStyle, backgroundColor: '#e8f5e9', color: '#2e7d32'}}>6</button>
+    <PageContainer>
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header with Back & Status */}
+        <div className="flex items-center justify-between">
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/matches/${match.id}`)} icon={<ChevronLeft className="w-4 h-4" />}>
+                Back to Summary
+            </Button>
+            <div className="flex items-center gap-2">
+                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
+                    match.status === 'live' ? 'bg-red-100 text-red-600 animate-pulse' : 
+                    match.status === 'completed' ? 'bg-slate-100 text-slate-600' : 'bg-blue-100 text-blue-600'
+                }`}>
+                    {match.status}
+                </span>
             </div>
-            <div style={{ marginTop: '10px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <button onClick={() => handleScore(0, true)} style={{...scoreBtnStyle, backgroundColor: '#ffebee', color: '#c62828'}}>WICKET</button>
-              <button onClick={() => handleScore(1, false)} style={{...scoreBtnStyle, backgroundColor: '#fff3e0', color: '#ef6c00'}}>WIDE/NB</button>
+        </div>
+
+        {/* Scoreboard Card */}
+        <Card className="bg-slate-900 text-white border-slate-800 p-6 md:p-8">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                {/* Batting Team */}
+                <div className="text-center md:text-left">
+                    <div className="text-slate-400 text-sm font-medium mb-1 flex items-center gap-2 justify-center md:justify-start">
+                        {battingParticipant.name} <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    </div>
+                    <div className="text-5xl md:text-6xl font-bold tracking-tight">
+                        {runs}<span className="text-slate-500">/</span>{wickets}
+                    </div>
+                    <div className="text-lg text-slate-400 mt-1 font-mono">
+                        {oversCount}.{ballsInOver} Overs
+                    </div>
+                </div>
+
+                {/* VS / Target */}
+                <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 font-bold border border-slate-700 mb-2">
+                        VS
+                    </div>
+                    <div className="text-slate-400 text-xs font-medium uppercase tracking-wider">
+                        {bowlingParticipant.name} Bowling
+                    </div>
+                </div>
             </div>
-          </div>
+        </Card>
+
+        {/* Controls */}
+        {match.status === 'live' ? (
+            <div className="space-y-6">
+                <Card className="p-6">
+                    <h3 className="text-sm font-bold text-slate-500 uppercase mb-4">Runs</h3>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                        {[0, 1, 2, 3, 4, 6].map(run => (
+                            <button
+                                key={run}
+                                onClick={() => handleScore(run, false)}
+                                className={`
+                                    h-16 rounded-xl font-bold text-2xl transition-all active:scale-95 shadow-sm border
+                                    ${run === 4 ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' : 
+                                      run === 6 ? 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100' :
+                                      'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}
+                                `}
+                            >
+                                {run}
+                            </button>
+                        ))}
+                    </div>
+
+                    <h3 className="text-sm font-bold text-slate-500 uppercase mt-6 mb-4">Extras & Wickets</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <button 
+                            onClick={() => handleScore(0, true)}
+                            className="h-14 rounded-xl font-bold text-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 active:scale-95 transition-all"
+                        >
+                            OUT (W)
+                        </button>
+                        <button 
+                            onClick={() => handleScore(1, false)} // Simple WD implementation for now
+                            className="h-14 rounded-xl font-bold text-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 active:scale-95 transition-all"
+                        >
+                            Wide (+1)
+                        </button>
+                        <button 
+                            onClick={() => handleScore(1, false)} // Simple NB implementation for now
+                            className="h-14 rounded-xl font-bold text-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 active:scale-95 transition-all"
+                        >
+                            No Ball (+1)
+                        </button>
+                        <button className="h-14 rounded-xl font-bold text-lg bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 active:scale-95 transition-all opacity-50 cursor-not-allowed">
+                            Undo
+                        </button>
+                    </div>
+                </Card>
+
+                <div className="flex justify-end">
+                    <Button 
+                        variant="danger" 
+                        size="lg" 
+                        onClick={handleEndMatch}
+                        isLoading={isEnding}
+                        icon={<StopCircle className="w-5 h-5" />}
+                    >
+                        End Match
+                    </Button>
+                </div>
+            </div>
+        ) : match.status === 'scheduled' || match.status === 'created' ? (
+            <Card className="p-8 text-center space-y-4">
+                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Play className="w-8 h-8 ml-1" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">Ready to start?</h3>
+                <p className="text-slate-500 max-w-md mx-auto">
+                    Starting the match will enable the scoring interface and notify followers that the match is live.
+                </p>
+                <div className="pt-4">
+                    <Button size="lg" onClick={handleStartMatch}>
+                        Start Match
+                    </Button>
+                </div>
+            </Card>
         ) : (
-          <div style={{ marginBottom: '30px', textAlign: 'center', padding: '20px', backgroundColor: '#f0f0f0', borderRadius: '8px' }}>
-            {currentUser ? (
-              <div style={{ color: '#666' }}>
-                 🔒 You are viewing this match. <br/>
-                 <span style={{ fontSize: '12px' }}>Only the organizer or scorer can score.</span>
-              </div>
-            ) : (
-              <LoadingButton 
-                onClick={() => setShowLoginModal(true)}
-                variant="secondary"
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: '4px'
-                }}
-              >
-                Login to Score
-              </LoadingButton>
-            )}
-          </div>
-        )
-      )}
-      
-      {(match.status === 'completed' || match.status === 'locked') && (
-          <div style={{ marginBottom: '30px', textAlign: 'center', padding: '20px', backgroundColor: '#e8f5e9', borderRadius: '8px', color: '#2e7d32' }}>
-              <h3>Match Completed</h3>
-              <p>Final scores are locked.</p>
-          </div>
-      )}
-
-      {/* 4. Match Actions */}
-      <div style={{ borderTop: '1px solid #eee', paddingTop: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h3 style={{ fontSize: '16px', margin: 0, color: '#444' }}>Match Actions</h3>
-          <div style={{ fontSize: '12px', color: '#888' }}>
-            Viewing as: <strong>{isSimulatingViewer ? 'Viewer' : (canScore ? 'Official' : 'Viewer')}</strong>
-          </div>
-        </div>
-
-        {canScore && match.status === 'live' && (
-          <button 
-            onClick={handleEndMatch}
-            disabled={isEnding}
-            style={{ 
-              width: '100%', 
-              padding: '15px', 
-              backgroundColor: isEnding ? '#ef9a9a' : '#d32f2f', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '8px', 
-              fontSize: '16px', 
-              fontWeight: 'bold',
-              cursor: isEnding ? 'not-allowed' : 'pointer' 
-            }}
-          >
-            {isEnding ? 'Ending Match...' : 'End Match'}
-          </button>
+            <Card className="p-8 text-center bg-slate-50 border-dashed">
+                <Trophy className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-slate-900">Match Completed</h3>
+                <p className="text-slate-500 mb-6">
+                    This match has ended. Final scores have been recorded.
+                </p>
+                <Button variant="outline" onClick={() => navigate(`/matches/${match.id}`)}>
+                    View Scorecard
+                </Button>
+            </Card>
         )}
-        
-        {/* Dev Toggle */}
-        <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#fafafa', borderRadius: '8px', fontSize: '12px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-            <input 
-              type="checkbox" 
-              checked={isSimulatingViewer} 
-              onChange={e => setIsSimulatingViewer(e.target.checked)} 
-            />
-            Preview as Guest
-          </label>
-        </div>
       </div>
-    </div>
+    </PageContainer>
   );
 };
+
+// Helper Icon
+const ShieldIcon = ({ className }: { className?: string }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BattingStats, BowlingStats, FieldingStats } from '../../../domain/player';
+import { BattingStats, BowlingStats, FieldingStats, FootballStats } from '../../../domain/player';
 
 interface StatsCardProps {
   title: string;
@@ -81,6 +81,23 @@ export const FieldingSummaryCard: React.FC<{ stats?: FieldingStats }> = ({ stats
         <StatItem label="Catches" value={stats.catches} />
         <StatItem label="Run Outs" value={stats.runOuts} />
         <StatItem label="Stumpings" value={stats.stumpings} />
+      </GridContainer>
+    </StatsCard>
+  );
+};
+
+export const FootballSummaryCard: React.FC<{ stats?: FootballStats }> = ({ stats }) => {
+  if (!stats) return null;
+  return (
+    <StatsCard title="Football Stats">
+      <GridContainer>
+        <StatItem label="Matches" value={stats.matches} />
+        <StatItem label="Goals" value={stats.goals} />
+        <StatItem label="Assists" value={stats.assists} />
+        <StatItem label="Yellow Cards" value={stats.yellowCards} />
+        <StatItem label="Red Cards" value={stats.redCards} />
+        <StatItem label="Clean Sheets" value={stats.cleanSheets} />
+        <StatItem label="Hat-Tricks" value={stats.hatTricks} />
       </GridContainer>
     </StatsCard>
   );

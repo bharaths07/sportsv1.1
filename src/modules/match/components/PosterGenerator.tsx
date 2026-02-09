@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { X, Download, Loader2 } from 'lucide-react';
 import { useGlobalState } from '../../../app/AppProviders';
 import { ImpactScore } from '../../../utils/cricketMetrics';
 import { generatePosterImage } from './PosterCanvasEngine';
@@ -20,7 +21,7 @@ export const PosterGenerator: React.FC<Props> = ({ data, match, onClose }) => {
         setLoading(true);
         setImageUrl(null);
         
-        const player = data.player ? players.find(p => p.id === data.player!.playerId) : undefined;
+        const player = data.player ? players.find(p => p.id === data.player.playerId) : undefined;
         
         // Prepare config
         const config: any = {
@@ -37,10 +38,12 @@ export const PosterGenerator: React.FC<Props> = ({ data, match, onClose }) => {
         };
 
         if (player && data.player) {
+            const fInitial = player.firstName?.[0] || '';
+            const lInitial = player.lastName?.[0] || '';
             config.player = {
                 firstName: player.firstName,
                 lastName: player.lastName,
-                initials: `${player.firstName[0]}${player.lastName[0]}`,
+                initials: `${fInitial}${lInitial}`,
                 teamColor: undefined
             };
             config.stats = data.player;
@@ -74,64 +77,45 @@ export const PosterGenerator: React.FC<Props> = ({ data, match, onClose }) => {
   };
 
   return (
-    <div style={{ 
-        position: 'fixed', inset: 0, zIndex: 9999, 
-        backgroundColor: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(8px)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
-    }}>
+    <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center">
         {/* Close Button */}
         <button 
             onClick={onClose}
-            style={{ 
-                position: 'absolute', top: '20px', right: '20px', 
-                background: 'rgba(255,255,255,0.1)', border: 'none', 
-                color: 'white', fontSize: '24px', cursor: 'pointer',
-                width: '40px', height: '40px', borderRadius: '50%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}
+            className="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
         >
-            ×
+            <X className="w-6 h-6" />
         </button>
 
         {loading && (
-            <div style={{ textAlign: 'center', color: 'white' }}>
-                <div style={{ fontSize: '40px', marginBottom: '20px', animation: 'spin 1s linear infinite' }}>⚙️</div>
-                <div style={{ fontSize: '18px', fontWeight: 600 }}>Generating Pro Poster...</div>
-                <div style={{ fontSize: '14px', opacity: 0.7, marginTop: '8px' }}>Using High-Fidelity Canvas Engine</div>
+            <div className="text-center text-white">
+                <Loader2 className="w-10 h-10 animate-spin mx-auto mb-5 text-blue-500" />
+                <div className="text-lg font-semibold">Generating Pro Poster...</div>
+                <div className="text-sm opacity-70 mt-2">Using High-Fidelity Canvas Engine</div>
             </div>
         )}
 
         {!loading && imageUrl && (
             <>
-                <div style={{ marginBottom: '20px', color: '#fff', fontSize: '14px', fontWeight: 500 }}>
+                <div className="mb-5 text-white text-sm font-medium">
                     Ready to Share
                 </div>
 
                 {/* Poster Preview */}
-                <div style={{ 
-                    boxShadow: '0 20px 50px rgba(0,0,0,0.5)', 
-                    maxHeight: '70vh', 
-                    maxWidth: '90vw',
-                    overflow: 'hidden',
-                    border: '1px solid rgba(255,255,255,0.1)'
-                }}>
-                    <img src={imageUrl} alt="Generated Poster" style={{ maxHeight: '100%', maxWidth: '100%', display: 'block' }} />
+                <div className="shadow-2xl max-h-[70vh] max-w-[90vw] overflow-hidden border border-white/10 rounded-lg bg-slate-900">
+                    <img src={imageUrl} alt="Generated Poster" className="max-h-full max-w-full block" />
                 </div>
 
                 {/* Actions */}
-                <div style={{ marginTop: '24px', display: 'flex', gap: '12px' }}>
+                <div className="mt-6 flex gap-3">
                     <button 
                         onClick={handleDownload}
-                        style={{ 
-                        padding: '12px 24px', borderRadius: '100px', border: 'none', 
-                        background: '#25D366', color: 'white', fontWeight: 700, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: '8px',
-                        boxShadow: '0 4px 12px rgba(37, 211, 102, 0.3)'
-                    }}>
-                        <span>⬇️</span> Download / Share
+                        className="px-6 py-3 rounded-full bg-green-500 text-white font-bold flex items-center gap-2 shadow-lg shadow-green-500/30 hover:bg-green-600 transition-colors"
+                    >
+                        <Download className="w-5 h-5" />
+                        Download / Share
                     </button>
                 </div>
-                <div style={{ marginTop: '12px', color: '#94a3b8', fontSize: '12px' }}>
+                <div className="mt-3 text-slate-400 text-xs">
                     High-Res (1080x1350) • Generated Locally
                 </div>
             </>

@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Upload, MapPin, Shield } from 'lucide-react';
+import { Upload, Shield } from 'lucide-react';
 import { useGlobalState } from '../../app/AppProviders';
 import { Team } from '../../domain/team';
+import { PageContainer } from '../../components/layout/PageContainer';
+import { PageHeader } from '../../components/layout/PageHeader';
+import { Card } from '../../components/ui/Card';
+import { Input } from '../../components/ui/Input';
+import { Textarea } from '../../components/ui/Textarea';
+import { Button } from '../../components/ui/Button';
+import { Avatar } from '../../components/ui/Avatar';
 
 export const CreateTeamScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +21,9 @@ export const CreateTeamScreen: React.FC = () => {
 
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
+  const [about, setAbout] = useState('');
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -26,6 +35,7 @@ export const CreateTeamScreen: React.FC = () => {
 
   const handleSubmit = () => {
     if (!name.trim() || !city.trim()) return;
+    setIsSubmitting(true);
 
     // Create new team object
     const newTeam: Team = {
@@ -36,7 +46,8 @@ export const CreateTeamScreen: React.FC = () => {
       active: true,
       members: [],
       createdAt: new Date().toISOString(),
-      institutionId: city.trim(), // Using institutionId for City based on user request "City *"
+      location: city.trim(),
+      about: about.trim(),
       logoUrl: logoUrl || undefined,
     };
 
@@ -44,95 +55,96 @@ export const CreateTeamScreen: React.FC = () => {
     addTeam(newTeam);
     
     // Logic for context
-    if (context === 'tournament' && tournamentId) {
-        addTeamToTournament(tournamentId, newTeam.id);
-        navigate(`/tournament/${tournamentId}/teams`);
-    } else {
-        navigate('/teams'); // Default back to list
-    }
+    setTimeout(() => {
+        if (context === 'tournament' && tournamentId) {
+            addTeamToTournament(tournamentId, newTeam.id);
+            navigate(`/tournament/${tournamentId}/teams`);
+        } else {
+            navigate('/teams'); // Default back to list
+        }
+    }, 500);
   };
 
   const isValid = name.trim().length > 0 && city.trim().length > 0;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="bg-white border-b border-slate-200 px-4 py-4 flex items-center gap-3 sticky top-0 z-20">
-        <button 
-          onClick={() => navigate(-1)}
-          className="p-2 -ml-2 rounded-full hover:bg-slate-100 transition-colors"
-        >
-          <ArrowLeft className="w-6 h-6 text-slate-700" />
-        </button>
-        <h1 className="text-lg font-bold text-slate-800">Create New Team</h1>
-      </header>
+    <PageContainer>
+      <PageHeader 
+        title="Create New Team" 
+        description="Add a new team to your collection"
+      />
 
-      <main className="flex-1 p-4 max-w-lg mx-auto w-full space-y-6">
-        
-        {/* Logo Upload */}
-        <div className="flex justify-center">
-            <div className="relative group">
-                <div className={`w-24 h-24 rounded-2xl flex items-center justify-center overflow-hidden border-2 
-                    ${logoUrl ? 'border-transparent' : 'border-dashed border-slate-300 bg-slate-100'}`}>
-                    {logoUrl ? (
-                        <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
-                    ) : (
-                        <Shield className="w-8 h-8 text-slate-400" />
-                    )}
-                    <input 
-                        type="file" 
-                        accept="image/*"
-                        onChange={handleFileSelect}
-                        className="absolute inset-0 opacity-0 cursor-pointer"
+      <div className="max-w-xl mx-auto space-y-6">
+        <Card className="p-8">
+            <div className="space-y-8">
+                {/* Logo Upload */}
+                <div className="flex flex-col items-center justify-center">
+                    <div className="relative group cursor-pointer">
+                        <div className="relative">
+                            <Avatar 
+                                src={logoUrl} 
+                                fallback={<Shield className="w-10 h-10 text-slate-300" />}
+                                className={`w-32 h-32 border-4 ${logoUrl ? 'border-blue-100' : 'border-dashed border-slate-200 bg-slate-50'}`}
+                            />
+                            <input 
+                                type="file" 
+                                accept="image/*"
+                                onChange={handleFileSelect}
+                                className="absolute inset-0 opacity-0 cursor-pointer z-20 w-full h-full"
+                            />
+                             {/* Overlay for hover */}
+                            <div className="absolute inset-0 bg-black/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                                <Upload className="w-6 h-6 text-white" />
+                            </div>
+                        </div>
+                        <div className="absolute bottom-1 right-1 bg-blue-600 rounded-full p-2 shadow-lg border-2 border-white z-30 pointer-events-none">
+                            <Upload className="w-4 h-4 text-white" />
+                        </div>
+                    </div>
+                    <span className="text-xs font-medium text-slate-500 mt-3">Upload Team Logo</span>
+                </div>
+
+                {/* Form Fields */}
+                <div className="space-y-5">
+                    <Input 
+                        label="Team Name"
+                        value={name}
+                        onChange={setName}
+                        placeholder="e.g. Royal Challengers"
+                        required
                     />
-                </div>
-                <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1.5 shadow-md border border-slate-100">
-                    <Upload className="w-4 h-4 text-teal-600" />
-                </div>
-            </div>
-        </div>
 
-        <div className="space-y-4">
-            <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 uppercase">Team Name *</label>
-                <input 
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Ex. Royal Challengers"
-                    className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 transition-colors font-semibold"
-                />
-            </div>
-
-            <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 uppercase">City *</label>
-                <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <input 
-                        type="text"
+                    <Input 
+                        label="City / Location"
                         value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        placeholder="Ex. Bangalore"
-                        className="w-full pl-10 p-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 transition-colors font-medium"
+                        onChange={setCity}
+                        placeholder="e.g. Bengaluru"
+                        required
+                    />
+
+                    <Textarea 
+                        label="About Team"
+                        value={about}
+                        onChange={setAbout}
+                        placeholder="Tell us about your team..."
+                        rows={4}
                     />
                 </div>
+
+                <div className="pt-4">
+                    <Button 
+                        onClick={handleSubmit} 
+                        disabled={!isValid || isSubmitting}
+                        isLoading={isSubmitting}
+                        className="w-full"
+                        size="lg"
+                    >
+                        Create Team
+                    </Button>
+                </div>
             </div>
-        </div>
-
-      </main>
-
-      <div className="p-4 bg-white border-t border-slate-200">
-         <button
-            disabled={!isValid}
-            onClick={handleSubmit}
-            className={`w-full py-3 rounded-xl font-bold transition-all
-                ${isValid 
-                    ? 'bg-teal-600 text-white shadow-lg active:scale-95' 
-                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'}
-            `}
-         >
-            Create Team
-         </button>
+        </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 };

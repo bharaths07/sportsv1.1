@@ -1,4 +1,4 @@
-export type AchievementType = 'player_of_the_match' | 'half_century' | 'century' | 'five_wickets';
+export type AchievementType = 'player_of_the_match' | 'half_century' | 'century' | 'five_wickets' | 'hat_trick' | 'clean_sheet';
 
 export interface Achievement {
   id: string;

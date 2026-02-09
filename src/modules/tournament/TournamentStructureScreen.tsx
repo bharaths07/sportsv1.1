@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trophy, Users, Shield } from 'lucide-react';
+import { Trophy, Users, Shield, ArrowRight } from 'lucide-react';
 import { useGlobalState } from '../../app/AppProviders';
+import { PageContainer } from '../../components/layout/PageContainer';
+import { PageHeader } from '../../components/layout/PageHeader';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
 
 type Format = 'LEAGUE' | 'KNOCKOUT' | 'GROUP_KNOCKOUT';
 
@@ -41,101 +46,104 @@ export const TournamentStructureScreen: React.FC = () => {
   if (!tournament) return <div>Tournament not found</div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 px-4 py-4 flex items-center gap-3 sticky top-0 z-20">
-        <button 
-          onClick={() => navigate(`/tournament/${id}/teams`)}
-          className="p-2 -ml-2 rounded-full hover:bg-slate-100 transition-colors"
-        >
-          <ArrowLeft className="w-6 h-6 text-slate-700" />
-        </button>
-        <div>
-          <h1 className="text-lg font-bold text-slate-800">Groups / Rounds</h1>
-          <p className="text-xs text-slate-500">Set up how teams will compete</p>
-        </div>
-      </header>
+    <PageContainer>
+      <PageHeader
+        title="Groups / Rounds"
+        description="Set up how teams will compete"
+        backUrl={`/tournament/${id}/teams`}
+        action={
+            <Button
+                onClick={handleSave}
+                disabled={!isFormValid()}
+                variant="primary"
+                className="gap-2"
+            >
+                <span>Save & Continue</span>
+                <ArrowRight className="w-4 h-4" />
+            </Button>
+        }
+      />
 
-      {/* Content */}
-      <main className="flex-1 p-4 pb-24 max-w-lg mx-auto w-full space-y-8">
+      <div className="max-w-2xl mx-auto space-y-8">
         
         {/* Section 1: Select Format */}
         <section className="space-y-4">
           <label className="text-sm font-bold text-slate-700 uppercase">Select format *</label>
           <div className="grid grid-cols-1 gap-3">
-            <button
+            <Card
               onClick={() => setFormat('LEAGUE')}
-              className={`p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4
+              className={`p-4 cursor-pointer transition-all flex items-center gap-4 border-2
                 ${format === 'LEAGUE' 
-                  ? 'border-teal-600 bg-teal-50' 
-                  : 'border-slate-200 bg-white hover:border-slate-300'}
+                  ? 'border-blue-600 bg-blue-50' 
+                  : 'border-transparent hover:border-slate-300'}
               `}
             >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center
-                ${format === 'LEAGUE' ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-500'}
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0
+                ${format === 'LEAGUE' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}
               `}>
                 <Trophy className="w-5 h-5" />
               </div>
               <div>
-                <h3 className={`font-bold ${format === 'LEAGUE' ? 'text-teal-900' : 'text-slate-800'}`}>League (Points Table)</h3>
+                <h3 className={`font-bold ${format === 'LEAGUE' ? 'text-blue-900' : 'text-slate-800'}`}>League (Points Table)</h3>
                 <p className="text-xs text-slate-500">All teams play each other. Top teams win.</p>
               </div>
-            </button>
+            </Card>
 
-            <button
+            <Card
               onClick={() => setFormat('KNOCKOUT')}
-              className={`p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4
+              className={`p-4 cursor-pointer transition-all flex items-center gap-4 border-2
                 ${format === 'KNOCKOUT' 
-                  ? 'border-teal-600 bg-teal-50' 
-                  : 'border-slate-200 bg-white hover:border-slate-300'}
+                  ? 'border-blue-600 bg-blue-50' 
+                  : 'border-transparent hover:border-slate-300'}
               `}
             >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center
-                ${format === 'KNOCKOUT' ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-500'}
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0
+                ${format === 'KNOCKOUT' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}
               `}>
                 <Shield className="w-5 h-5" />
               </div>
               <div>
-                <h3 className={`font-bold ${format === 'KNOCKOUT' ? 'text-teal-900' : 'text-slate-800'}`}>Knockout</h3>
+                <h3 className={`font-bold ${format === 'KNOCKOUT' ? 'text-blue-900' : 'text-slate-800'}`}>Knockout</h3>
                 <p className="text-xs text-slate-500">Lose and you're out. Last team standing wins.</p>
               </div>
-            </button>
+            </Card>
 
-            <button
+            <Card
               onClick={() => setFormat('GROUP_KNOCKOUT')}
-              className={`p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4
+              className={`p-4 cursor-pointer transition-all flex items-center gap-4 border-2
                 ${format === 'GROUP_KNOCKOUT' 
-                  ? 'border-teal-600 bg-teal-50' 
-                  : 'border-slate-200 bg-white hover:border-slate-300'}
+                  ? 'border-blue-600 bg-blue-50' 
+                  : 'border-transparent hover:border-slate-300'}
               `}
             >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center
-                ${format === 'GROUP_KNOCKOUT' ? 'bg-teal-100 text-teal-700' : 'bg-slate-100 text-slate-500'}
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0
+                ${format === 'GROUP_KNOCKOUT' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}
               `}>
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <h3 className={`font-bold ${format === 'GROUP_KNOCKOUT' ? 'text-teal-900' : 'text-slate-800'}`}>Group + Knockout</h3>
+                <h3 className={`font-bold ${format === 'GROUP_KNOCKOUT' ? 'text-blue-900' : 'text-slate-800'}`}>Group + Knockout</h3>
                 <p className="text-xs text-slate-500">Groups first, then top teams qualify for knockouts.</p>
               </div>
-            </button>
+            </Card>
           </div>
         </section>
 
         {/* Section 2: Structure Configuration */}
         {format && (
           <section className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+            <Card className="p-6 space-y-6">
               
               {format === 'LEAGUE' && (
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Rounds *</label>
-                  <input 
+                  <Input 
+                    label="Rounds *"
                     type="number" 
-                    min="1"
+                    min={1}
                     value={rounds}
                     onChange={(e) => setRounds(parseInt(e.target.value) || 0)}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold text-lg"
+                    placeholder="1"
+                    className="font-bold text-lg"
                   />
                   <p className="text-xs text-slate-500">Each team plays others {rounds} time(s).</p>
                 </div>
@@ -151,51 +159,33 @@ export const TournamentStructureScreen: React.FC = () => {
               {format === 'GROUP_KNOCKOUT' && (
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-700">Number of groups *</label>
-                    <input 
+                    <Input 
+                      label="Number of groups *"
                       type="number" 
-                      min="1"
+                      min={1}
                       value={groups}
                       onChange={(e) => setGroups(parseInt(e.target.value) || 0)}
-                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold text-lg"
+                      className="font-bold text-lg"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-700">Teams qualified per group *</label>
-                    <input 
+                     <Input 
+                      label="Teams qualified per group *"
                       type="number" 
-                      min="1"
+                      min={1}
                       value={qualifiedPerGroup}
                       onChange={(e) => setQualifiedPerGroup(parseInt(e.target.value) || 0)}
-                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 font-bold text-lg"
+                      className="font-bold text-lg"
                     />
                   </div>
                 </div>
               )}
 
-            </div>
+            </Card>
           </section>
         )}
 
-      </main>
-
-      {/* Footer CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4">
-        <div className="max-w-lg mx-auto">
-          <button
-            disabled={!isFormValid()}
-            onClick={handleSave}
-            className={`w-full py-3 rounded-xl font-bold text-center transition-all
-              ${isFormValid() 
-                ? 'bg-teal-600 text-white shadow-lg shadow-teal-600/20 active:scale-95' 
-                : 'bg-slate-100 text-slate-400 cursor-not-allowed'}
-            `}
-          >
-            Save & Continue
-          </button>
-        </div>
       </div>
-
-    </div>
+    </PageContainer>
   );
 };

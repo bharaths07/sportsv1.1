@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { Avatar } from '../../../components/ui/Avatar';
 
 interface Squad {
   id: string;
@@ -36,13 +37,12 @@ export const SquadList: React.FC<SquadListProps> = ({ squads, onTeamClick }) => 
               onClick={() => onTeamClick?.(squad.id)}
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '64px', cursor: 'pointer' }}
             >
-              <div style={{ 
-                width: '64px', height: '64px', borderRadius: '50%', overflow: 'hidden', 
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)', border: '2px solid white',
-                marginBottom: '8px'
-              }}>
-                <img src={squad.flag} alt={squad.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
+              <Avatar
+                src={squad.flag}
+                alt={squad.name}
+                fallback={squad.code.charAt(0)}
+                className="w-16 h-16 border-2 border-white shadow-sm mb-2"
+              />
               <div style={{ fontSize: '14px', fontWeight: 600, color: '#475569' }}>{squad.code}</div>
             </div>
           ))}

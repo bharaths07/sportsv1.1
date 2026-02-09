@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
+import { Avatar } from '../../components/ui/Avatar';
 
 interface SquadPlayer {
   id: string;
@@ -143,21 +144,12 @@ export const TournamentSquadsTab: React.FC<TournamentSquadsTabProps> = ({ initia
                   boxShadow: isSelected ? '0 4px 6px -1px rgba(59, 130, 246, 0.1)' : 'none'
                 }}
               >
-                {team.logo ? (
-                  <img 
-                    src={team.logo} 
-                    alt={team.name} 
-                    style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} 
-                  />
-                ) : (
-                  <div style={{ 
-                    width: '48px', height: '48px', borderRadius: '50%', 
-                    backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '20px'
-                  }}>
-                    🛡️
-                  </div>
-                )}
+                <Avatar
+                  src={team.logo}
+                  alt={team.name}
+                  fallback="🛡️"
+                  className="w-12 h-12 bg-slate-200 text-xl"
+                />
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px' }}>{team.name}</div>
                   <div style={{ fontSize: '12px', color: '#64748b' }}>{team.squadSize} Players</div>
@@ -187,21 +179,12 @@ export const TournamentSquadsTab: React.FC<TournamentSquadsTabProps> = ({ initia
           gap: '16px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            {selectedTeam.logo ? (
-              <img 
-                src={selectedTeam.logo} 
-                alt={selectedTeam.name} 
-                style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} 
-              />
-            ) : (
-              <div style={{ 
-                width: '64px', height: '64px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                backgroundColor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '24px'
-              }}>
-                🛡️
-              </div>
-            )}
+            <Avatar
+              src={selectedTeam.logo}
+              alt={selectedTeam.name}
+              fallback="🛡️"
+              className="w-16 h-16 border-2 border-white shadow-sm bg-slate-200 text-2xl"
+            />
             <div>
               <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>{selectedTeam.name}</h2>
               {selectedTeam.note && (
@@ -291,23 +274,12 @@ export const TournamentSquadsTab: React.FC<TournamentSquadsTabProps> = ({ initia
                         borderRadius: '8px',
                         border: '1px solid #f1f5f9'
                       }}>
-                        {player.avatarUrl ? (
-                          <img 
-                            src={player.avatarUrl} 
-                            alt={player.name}
-                            style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
-                          />
-                        ) : (
-                          <div style={{ 
-                            width: '32px', height: '32px', 
-                            backgroundColor: '#e2e8f0', 
-                            borderRadius: '50%', 
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '12px', fontWeight: 600, color: '#64748b'
-                          }}>
-                            {player.name.charAt(0)}
-                          </div>
-                        )}
+                        <Avatar
+                          src={player.avatarUrl}
+                          alt={player.name}
+                          fallback={player.name.charAt(0)}
+                          className="w-8 h-8 bg-slate-200 text-xs text-slate-500 font-semibold"
+                        />
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
                             {player.name}

@@ -3,8 +3,12 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
 import { Match } from '../../domain/match';
 import { Team } from '../../domain/team';
-import { ChevronLeft, Crown, Shield, Plus } from 'lucide-react';
+import { CheckCircle2, Crown, Shield, Plus, ArrowRight } from 'lucide-react';
 import { Player } from '../../domain/player';
+import { PageContainer } from '../../components/layout/PageContainer';
+import { PageHeader } from '../../components/layout/PageHeader';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 
 export const SquadSelectionScreen: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -17,11 +21,13 @@ export const SquadSelectionScreen: React.FC = () => {
   const [teamASquad, setTeamASquad] = useState<Set<string>>(new Set());
   const [teamACaptainId, setTeamACaptainId] = useState<string | undefined>();
   const [teamAWicketKeeperId, setTeamAWicketKeeperId] = useState<string | undefined>();
+  const [teamAGoalkeeperId, setTeamAGoalkeeperId] = useState<string | undefined>();
 
   // Team B State
   const [teamBSquad, setTeamBSquad] = useState<Set<string>>(new Set());
   const [teamBCaptainId, setTeamBCaptainId] = useState<string | undefined>();
   const [teamBWicketKeeperId, setTeamBWicketKeeperId] = useState<string | undefined>();
+  const [teamBGoalkeeperId, setTeamBGoalkeeperId] = useState<string | undefined>();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -39,16 +45,18 @@ export const SquadSelectionScreen: React.FC = () => {
         setTeamA(tA);
         setTeamB(tB);
 
-        // Pre-fill if already exists (optional, but good for editing if we supported it)
+        // Pre-fill if already exists
         if (foundMatch.homeParticipant.squad) {
              setTeamASquad(new Set(foundMatch.homeParticipant.squad.playerIds));
              setTeamACaptainId(foundMatch.homeParticipant.squad.captainId);
              setTeamAWicketKeeperId(foundMatch.homeParticipant.squad.wicketKeeperId);
+             setTeamAGoalkeeperId(foundMatch.homeParticipant.squad.goalkeeperId);
         }
         if (foundMatch.awayParticipant.squad) {
              setTeamBSquad(new Set(foundMatch.awayParticipant.squad.playerIds));
              setTeamBCaptainId(foundMatch.awayParticipant.squad.captainId);
              setTeamBWicketKeeperId(foundMatch.awayParticipant.squad.wicketKeeperId);
+             setTeamBGoalkeeperId(foundMatch.awayParticipant.squad.goalkeeperId);
         }
       }
     }
@@ -63,6 +71,7 @@ export const SquadSelectionScreen: React.FC = () => {
             newSet.delete(playerId);
             if (teamACaptainId === playerId) setTeamACaptainId(undefined);
             if (teamAWicketKeeperId === playerId) setTeamAWicketKeeperId(undefined);
+            if (teamAGoalkeeperId === playerId) setTeamAGoalkeeperId(undefined);
         } else {
             newSet.add(playerId);
         }
@@ -73,6 +82,7 @@ export const SquadSelectionScreen: React.FC = () => {
             newSet.delete(playerId);
             if (teamBCaptainId === playerId) setTeamBCaptainId(undefined);
             if (teamBWicketKeeperId === playerId) setTeamBWicketKeeperId(undefined);
+            if (teamBGoalkeeperId === playerId) setTeamBGoalkeeperId(undefined);
         } else {
             newSet.add(playerId);
         }
@@ -98,6 +108,15 @@ export const SquadSelectionScreen: React.FC = () => {
       }
   };
 
+  const setGoalkeeper = (teamId: string, playerId: string) => {
+      if (!match) return;
+      if (teamId === match.homeParticipant.id) {
+          setTeamAGoalkeeperId(prev => prev === playerId ? undefined : playerId);
+      } else {
+          setTeamBGoalkeeperId(prev => prev === playerId ? undefined : playerId);
+      }
+  };
+
   const handleConfirmSquads = () => {
       if (!match) return;
       setIsSubmitting(true);
@@ -109,7 +128,8 @@ export const SquadSelectionScreen: React.FC = () => {
               squad: {
                   playerIds: Array.from(teamASquad),
                   captainId: teamACaptainId,
-                  wicketKeeperId: teamAWicketKeeperId
+                  wicketKeeperId: teamAWicketKeeperId,
+                  goalkeeperId: teamAGoalkeeperId
               }
           },
           awayParticipant: {
@@ -117,19 +137,26 @@ export const SquadSelectionScreen: React.FC = () => {
               squad: {
                   playerIds: Array.from(teamBSquad),
                   captainId: teamBCaptainId,
-                  wicketKeeperId: teamBWicketKeeperId
+                  wicketKeeperId: teamBWicketKeeperId,
+                  goalkeeperId: teamBGoalkeeperId
               }
           }
       };
 
-      // In a real app we might call an API. Here we update global state.
       setTimeout(() => {
           updateMatch(match.id, {
             homeParticipant: updatedMatch.homeParticipant,
             awayParticipant: updatedMatch.awayParticipant
           });
           setIsSubmitting(false);
-          navigate(`/match/${match.id}/live`);
+          
+          if (match.sportId === 's3') {
+              // Football skips openers and goes to live scoring
+              navigate(`/match/${match.id}/live`);
+          } else {
+              // Cricket goes to openers selection
+              navigate(`/start-match/openers?matchId=${match.id}`);
+          }
       }, 500);
   };
 
@@ -137,33 +164,41 @@ export const SquadSelectionScreen: React.FC = () => {
       return <div className="p-4">Loading squads...</div>;
   }
 
-  const renderTeamSection = (team: Team, squad: Set<string>, captainId: string | undefined, wkId: string | undefined, isHome: boolean) => {
+  const isTeamAValid = teamASquad.size >= 7;
+  const isTeamBValid = teamBSquad.size >= 7;
+  const canConfirm = isTeamAValid && isTeamBValid;
+
+  const renderTeamSection = (team: Team, squad: Set<string>, captainId: string | undefined, wkId: string | undefined, gkId: string | undefined, isHome: boolean) => {
       // Resolve players
       const teamPlayers = team.members.map(m => {
           const p = players.find(pl => pl.id === m.playerId);
           return { ...m, details: p };
-      }).filter(m => m.details); // Only show if player details found
+      }).filter(m => m.details);
+
+      const isCricket = match.sportId === 's1';
+      const isFootball = match.sportId === 's3';
 
       return (
-          <div className="bg-white mb-6 shadow-sm border-b border-slate-200">
-              <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center sticky top-[60px] z-10">
+          <Card className="mb-6 overflow-hidden">
+              <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
                   <h2 className="font-bold text-slate-800">{team.name} <span className="font-normal text-slate-500 text-sm">— Squad</span></h2>
-                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${squad.size >= 7 ? 'bg-teal-100 text-teal-800' : 'bg-orange-100 text-orange-800'}`}>
-                      Selected: {squad.size} / 11
+                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${squad.size >= 7 ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}`}>
+                      Selected: {squad.size} / {isFootball ? '11' : '11'}
                   </span>
               </div>
-              <div>
+              <div className="divide-y divide-slate-100">
                   {teamPlayers.map(member => {
                       const isSelected = squad.has(member.playerId);
                       const isCaptain = captainId === member.playerId;
                       const isWK = wkId === member.playerId;
+                      const isGK = gkId === member.playerId;
                       const isInvited = member.details?.status === 'invited';
 
                       return (
-                          <div key={member.playerId} className={`flex items-center justify-between p-4 border-b border-slate-100 last:border-0 ${isSelected ? 'bg-white' : 'bg-slate-50/50'}`}>
-                              <div className="flex items-center gap-3 flex-1" onClick={() => togglePlayer(team.id, member.playerId)}>
-                                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isSelected ? 'bg-teal-600 border-teal-600' : 'border-slate-300 bg-white'}`}>
-                                      {isSelected && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                          <div key={member.playerId} className={`flex items-center justify-between p-4 transition-colors ${isSelected ? 'bg-white' : 'bg-slate-50/50 hover:bg-slate-50'}`}>
+                              <div className="flex items-center gap-3 flex-1 cursor-pointer" onClick={() => togglePlayer(team.id, member.playerId)}>
+                                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${isSelected ? 'bg-blue-600 border-blue-600' : 'border-slate-300 bg-white'}`}>
+                                      {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
                                   </div>
                                   <div>
                                       <div className={`font-medium flex items-center gap-2 ${isSelected ? 'text-slate-900' : 'text-slate-500'}`}>
@@ -178,18 +213,31 @@ export const SquadSelectionScreen: React.FC = () => {
                                   <div className="flex items-center gap-2">
                                       <button 
                                         onClick={() => setCaptain(team.id, member.playerId)}
-                                        className={`w-8 h-8 rounded-full flex items-center justify-center border text-xs font-bold transition-all ${isCaptain ? 'bg-yellow-100 border-yellow-400 text-yellow-700 shadow-sm' : 'border-slate-200 text-slate-300 hover:border-slate-300'}`}
+                                        className={`w-8 h-8 rounded-full flex items-center justify-center border text-xs font-bold transition-all ${isCaptain ? 'bg-amber-100 border-amber-400 text-amber-700 shadow-sm' : 'border-slate-200 text-slate-300 hover:border-slate-300'}`}
                                         title="Captain"
                                       >
-                                          C
+                                          <Crown className="w-4 h-4" />
                                       </button>
-                                      <button 
-                                        onClick={() => setWicketKeeper(team.id, member.playerId)}
-                                        className={`w-8 h-8 rounded-full flex items-center justify-center border text-xs font-bold transition-all ${isWK ? 'bg-blue-100 border-blue-400 text-blue-700 shadow-sm' : 'border-slate-200 text-slate-300 hover:border-slate-300'}`}
-                                        title="Wicket Keeper"
-                                      >
-                                          WK
-                                      </button>
+                                      
+                                      {isCricket && (
+                                        <button 
+                                            onClick={() => setWicketKeeper(team.id, member.playerId)}
+                                            className={`w-8 h-8 rounded-full flex items-center justify-center border text-xs font-bold transition-all ${isWK ? 'bg-blue-100 border-blue-400 text-blue-700 shadow-sm' : 'border-slate-200 text-slate-300 hover:border-slate-300'}`}
+                                            title="Wicket Keeper"
+                                        >
+                                            <Shield className="w-4 h-4" />
+                                        </button>
+                                      )}
+
+                                      {isFootball && (
+                                        <button 
+                                            onClick={() => setGoalkeeper(team.id, member.playerId)}
+                                            className={`w-8 h-8 rounded-full flex items-center justify-center border text-xs font-bold transition-all ${isGK ? 'bg-emerald-100 border-emerald-400 text-emerald-700 shadow-sm' : 'border-slate-200 text-slate-300 hover:border-slate-300'}`}
+                                            title="Goalkeeper"
+                                        >
+                                            <Shield className="w-4 h-4" />
+                                        </button>
+                                      )}
                                   </div>
                               )}
                           </div>
@@ -198,58 +246,45 @@ export const SquadSelectionScreen: React.FC = () => {
                   
                   <button 
                     onClick={() => navigate(`/start-match/add-player?teamId=${team.id}&matchId=${match?.id}`)}
-                    className="w-full py-4 text-teal-600 font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors"
+                    className="w-full py-4 text-blue-600 font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-50 transition-colors"
                   >
                       <Plus className="w-4 h-4" />
                       Add player
                   </button>
               </div>
-          </div>
+          </Card>
       );
   };
 
-  const isTeamAValid = teamASquad.size >= 7;
-  const isTeamBValid = teamBSquad.size >= 7;
-  const canConfirm = isTeamAValid && isTeamBValid;
-
   return (
-    <div className="min-h-screen bg-slate-100 pb-24">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-4 py-4 flex items-center sticky top-0 z-20 shadow-sm">
-        <button onClick={() => navigate(-1)} className="mr-3 p-1 rounded-full hover:bg-slate-100">
-          <ChevronLeft className="w-6 h-6 text-slate-700" />
-        </button>
-        <div>
-            <h1 className="text-lg font-bold text-slate-800 leading-tight">Select squads</h1>
-            <p className="text-xs text-slate-500">Select players who will play this match</p>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader 
+        title="Select squads" 
+        description="Select players who will play this match"
+        backUrl={`/start-match/toss?matchId=${match.id}`}
+        action={
+            <Button
+                onClick={handleConfirmSquads}
+                disabled={!canConfirm || isSubmitting}
+                variant="primary"
+                className="gap-2"
+            >
+                {isSubmitting ? 'Saving...' : 'Confirm Squads'}
+                <ArrowRight className="w-4 h-4" />
+            </Button>
+        }
+      />
 
-      <div className="pt-2">
-          {renderTeamSection(teamA, teamASquad, teamACaptainId, teamAWicketKeeperId, true)}
-          {renderTeamSection(teamB, teamBSquad, teamBCaptainId, teamBWicketKeeperId, false)}
-      </div>
-
-      {/* Footer CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-20">
-          <button
-            onClick={handleConfirmSquads}
-            disabled={!canConfirm || isSubmitting}
-            className={`
-                w-full py-4 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2
-                ${canConfirm && !isSubmitting
-                  ? 'bg-teal-600 text-white shadow-lg hover:bg-teal-700 active:scale-[0.98]' 
-                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'}
-            `}
-          >
-            {isSubmitting ? 'Saving squads...' : 'Confirm squads'}
-          </button>
+      <div className="space-y-6">
+          {renderTeamSection(teamA, teamASquad, teamACaptainId, teamAWicketKeeperId, teamAGoalkeeperId, true)}
+          {renderTeamSection(teamB, teamBSquad, teamBCaptainId, teamBWicketKeeperId, teamBGoalkeeperId, false)}
+          
           {!canConfirm && (
-              <p className="text-center text-xs text-slate-400 mt-2">
+              <p className="text-center text-xs text-slate-400">
                   Select at least 7 players for both teams to continue
               </p>
           )}
       </div>
-    </div>
+    </PageContainer>
   );
 };

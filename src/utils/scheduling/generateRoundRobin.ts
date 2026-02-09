@@ -7,7 +7,8 @@ const generateId = () => {
 
 export function generateRoundRobinMatches(
   teams: Team[],
-  tournamentId: string
+  tournamentId: string,
+  sportId: string = 's1'
 ): Match[] {
   const matches: Match[] = [];
 
@@ -16,7 +17,7 @@ export function generateRoundRobinMatches(
       matches.push({
         id: generateId(),
         tournamentId,
-        sportId: 's1', // Default sport
+        sportId, 
         date: new Date().toISOString(), // Default date
         status: 'scheduled',
         stage: 'League',

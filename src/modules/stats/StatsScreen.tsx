@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { StatsFilterBar } from './components/StatsFilterBar';
 import { BattingStatsTable } from './components/BattingStatsTable';
 import { BowlingStatsTable } from './components/BowlingStatsTable';
 import { FieldingStatsTable } from './components/FieldingStatsTable';
 import { TeamStatsTable } from './components/TeamStatsTable';
+import { FootballStatsTable } from './components/FootballStatsTable';
 import { useStats, StatsFilters } from './hooks/useStats';
+import { PageContainer } from '../../components/layout/PageContainer';
+import { PageHeader } from '../../components/layout/PageHeader';
+import { Tabs } from '../../components/ui/Tabs';
+import { Card } from '../../components/ui/Card';
 
-type TabType = 'batting' | 'bowling' | 'fielding' | 'teams';
+type TabType = 'batting' | 'bowling' | 'fielding' | 'teams' | 'football';
 
 export const StatsScreen: React.FC = () => {
   const [filters, setFilters] = useState<StatsFilters>({
@@ -16,85 +21,90 @@ export const StatsScreen: React.FC = () => {
     minQualification: false
   });
 
-  const [activeTab, setActiveTab] = useState<TabType>('batting');
+  const [activeTab, setActiveTab] = useState<string>('batting');
 
-  const { battingStats, bowlingStats, fieldingStats, teamStats } = useStats(filters);
+  const { battingStats, bowlingStats, fieldingStats, footballStats, teamStats } = useStats(filters);
 
-  const renderTabButton = (tab: TabType, label: string) => (
-    <button
-      onClick={() => setActiveTab(tab)}
-      style={{
-        padding: '16px 24px',
-        background: 'none',
-        border: 'none',
-        borderBottom: activeTab === tab ? '3px solid #3b82f6' : '3px solid transparent',
-        color: activeTab === tab ? '#0f172a' : '#64748b',
-        fontWeight: activeTab === tab ? '700' : '600',
-        cursor: 'pointer',
-        fontSize: '15px',
-        transition: 'all 0.2s',
-        whiteSpace: 'nowrap'
-      }}
-    >
-      {label}
-    </button>
-  );
+  const tabs = useMemo(() => {
+    if (filters.sportId === 's3') {
+      return [
+        { id: 'football', label: 'Player Stats' },
+        { id: 'teams', label: 'Team Standings' }
+      ];
+    }
+    return [
+      { id: 'batting', label: 'Batting' },
+      { id: 'bowling', label: 'Bowling' },
+      { id: 'fielding', label: 'Fielding' },
+      { id: 'teams', label: 'Teams' }
+    ];
+  }, [filters.sportId]);
+
+  // Reset active tab if not valid for current sport
+  useEffect(() => {
+    if (!tabs.find(t => t.id === activeTab)) {
+      setActiveTab(tabs[0].id);
+    }
+  }, [filters.sportId, tabs]);
 
   return (
-    <div style={{ paddingBottom: '80px', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
+    <PageContainer>
+      <PageHeader title="Statistics" description="Overview of performance and results" />
+
       {/* 1. Global Filter Bar (Sticky Top) */}
       <StatsFilterBar filters={filters} onFilterChange={setFilters} />
 
-      {/* 2. Stats Category Tabs (Sticky Below Filter Bar) */}
-      <div style={{
-        position: 'sticky',
-        top: '65px', // Approx height of filter bar
-        zIndex: 10,
-        backgroundColor: 'white',
-        borderBottom: '1px solid #e2e8f0',
-        padding: '0 24px',
-        display: 'flex',
-        gap: '8px',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
-      }}>
-        {renderTabButton('batting', 'Batting')}
-        {renderTabButton('bowling', 'Bowling')}
-        {renderTabButton('fielding', 'Fielding')}
-        {renderTabButton('teams', 'Teams')}
+      {/* 2. Stats Category Tabs */}
+      <div className="mb-8 sticky top-[88px] z-10 bg-slate-50/95 backdrop-blur-sm pt-2 -mx-4 px-4 border-b border-slate-200">
+        <Tabs 
+          tabs={tabs} 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab} 
+          variant="underline"
+        />
       </div>
 
-      {/* 3. Content Area */}
-      <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-            {activeTab === 'batting' && 'Batting Statistics'}
-            {activeTab === 'bowling' && 'Bowling Statistics'}
-            {activeTab === 'fielding' && 'Fielding Statistics'}
-            {activeTab === 'teams' && 'Team Standings'}
-          </h2>
-          <span style={{ fontSize: '13px', color: '#64748b' }}>
-            Showing {
-              activeTab === 'batting' ? battingStats.length :
-              activeTab === 'bowling' ? bowlingStats.length :
-              activeTab === 'fielding' ? fieldingStats.length :
-              teamStats.length
-            } records
-          </span>
-        </div>
+      <section>
+        {/* 3. Content Area */}
+        <Card className="p-0 overflow-hidden">
+          <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-white">
+            <h2 className="text-lg font-bold text-slate-900">
+              {activeTab === 'batting' && 'Batting Statistics'}
+              {activeTab === 'bowling' && 'Bowling Statistics'}
+              {activeTab === 'fielding' && 'Fielding Statistics'}
+              {activeTab === 'football' && 'Player Statistics'}
+              {activeTab === 'teams' && 'Team Standings'}
+            </h2>
+            <span className="text-sm text-slate-500 font-medium">
+              Showing {
+                activeTab === 'batting' ? battingStats.length :
+                activeTab === 'bowling' ? bowlingStats.length :
+                activeTab === 'fielding' ? fieldingStats.length :
+                activeTab === 'football' ? footballStats.length :
+                teamStats.length
+              } records
+            </span>
+          </div>
 
-        {activeTab === 'batting' && (
-          <BattingStatsTable stats={battingStats} minQualification={filters.minQualification} />
-        )}
-        {activeTab === 'bowling' && (
-          <BowlingStatsTable stats={bowlingStats} minQualification={filters.minQualification} />
-        )}
-        {activeTab === 'fielding' && (
-          <FieldingStatsTable stats={fieldingStats} minQualification={filters.minQualification} />
-        )}
-        {activeTab === 'teams' && (
-          <TeamStatsTable stats={teamStats} minQualification={filters.minQualification} />
-        )}
-      </div>
-    </div>
+          <div className="overflow-x-auto">
+            {activeTab === 'batting' && (
+              <BattingStatsTable stats={battingStats} minQualification={filters.minQualification} />
+            )}
+            {activeTab === 'bowling' && (
+              <BowlingStatsTable stats={bowlingStats} minQualification={filters.minQualification} />
+            )}
+            {activeTab === 'fielding' && (
+              <FieldingStatsTable stats={fieldingStats} minQualification={filters.minQualification} />
+            )}
+            {activeTab === 'football' && (
+              <FootballStatsTable stats={footballStats} minQualification={filters.minQualification} />
+            )}
+            {activeTab === 'teams' && (
+              <TeamStatsTable stats={teamStats} minQualification={filters.minQualification} sportId={filters.sportId} />
+            )}
+          </div>
+        </Card>
+      </section>
+    </PageContainer>
   );
 };

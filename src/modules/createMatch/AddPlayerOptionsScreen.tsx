@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, UserPlus, Phone, Link, Share2 } from 'lucide-react';
+import { UserPlus, Phone, Share2, Plus } from 'lucide-react';
 import { useGlobalState } from '../../app/AppProviders';
 import { Player } from '../../domain/player';
+import { PageContainer } from '../../components/layout/PageContainer';
+import { PageHeader } from '../../components/layout/PageHeader';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
 
 export const AddPlayerOptionsScreen: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -41,7 +46,7 @@ export const AddPlayerOptionsScreen: React.FC = () => {
           scoreAccumulated: 0
       },
       history: []
-    } as Player; // Cast to Player to satisfy optional fields if strict
+    } as Player;
 
     addPlayer(newPlayer);
     addTeamMember(teamId, {
@@ -101,93 +106,98 @@ export const AddPlayerOptionsScreen: React.FC = () => {
   if (!teamId || !matchId) return <div>Invalid parameters</div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <div className="bg-white border-b border-slate-200 px-4 py-4 flex items-center sticky top-0 z-10">
-        <button onClick={handleBack} className="mr-3 p-1 rounded-full hover:bg-slate-100">
-          <ChevronLeft className="w-6 h-6 text-slate-700" />
-        </button>
-        <h1 className="text-lg font-bold text-slate-800">Add player</h1>
-      </div>
+    <PageContainer>
+      <PageHeader 
+        title="Add Player" 
+        description="Invite players to join your team"
+        onBack={handleBack}
+      />
 
-      <div className="flex-1 p-4">
+      <div className="max-w-lg mx-auto">
         {view === 'options' ? (
           <div className="space-y-4">
-            <button 
+            <Card 
                 onClick={handleAddByContacts}
-                className="w-full bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4 hover:bg-slate-50 transition-colors"
+                className="p-6 cursor-pointer hover:border-blue-300 hover:shadow-md transition-all group"
             >
-                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                    <UserPlus className="w-6 h-6" />
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+                        <UserPlus className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                        <h3 className="font-bold text-slate-900 group-hover:text-blue-700 transition-colors">Add via contacts</h3>
+                        <p className="text-sm text-slate-500">Select directly from your phone book</p>
+                    </div>
                 </div>
-                <div className="flex-1 text-left">
-                    <h3 className="font-bold text-slate-900">Add via contacts</h3>
-                    <p className="text-sm text-slate-500">Select from your phone book</p>
-                </div>
-            </button>
+            </Card>
 
-            <button 
+            <Card 
                 onClick={() => setView('phone')}
-                className="w-full bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4 hover:bg-slate-50 transition-colors"
+                className="p-6 cursor-pointer hover:border-blue-300 hover:shadow-md transition-all group"
             >
-                <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center text-teal-600">
-                    <Phone className="w-6 h-6" />
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+                        <Phone className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                        <h3 className="font-bold text-slate-900 group-hover:text-blue-700 transition-colors">Add via phone number</h3>
+                        <p className="text-sm text-slate-500">Enter name and mobile number</p>
+                    </div>
                 </div>
-                <div className="flex-1 text-left">
-                    <h3 className="font-bold text-slate-900">Add via phone number</h3>
-                    <p className="text-sm text-slate-500">Enter name and number</p>
-                </div>
-            </button>
+            </Card>
 
-            <button 
+            <Card 
                 onClick={handleShareLink}
-                className="w-full bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4 hover:bg-slate-50 transition-colors"
+                className="p-6 cursor-pointer hover:border-blue-300 hover:shadow-md transition-all group"
             >
-                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
-                    <Share2 className="w-6 h-6" />
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
+                        <Share2 className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                        <h3 className="font-bold text-slate-900 group-hover:text-blue-700 transition-colors">Share invite link</h3>
+                        <p className="text-sm text-slate-500">Send link via WhatsApp or other apps</p>
+                    </div>
                 </div>
-                <div className="flex-1 text-left">
-                    <h3 className="font-bold text-slate-900">Add via send link</h3>
-                    <p className="text-sm text-slate-500">Share invite link</p>
-                </div>
-            </button>
+            </Card>
           </div>
         ) : (
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-             <div>
-                 <label className="block text-sm font-medium text-slate-700 mb-1">Player Name <span className="text-red-500">*</span></label>
-                 <input 
-                    type="text"
+          <Card className="p-6 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+             <div className="space-y-4">
+                 <Input
+                    label="Player Name"
+                    required
                     value={name}
-                    onChange={e => setName(e.target.value)}
-                    className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:border-teal-500 transition-colors"
+                    onChange={(e) => setName(e.target.value)}
                     placeholder="Enter full name"
                  />
-             </div>
-             <div>
-                 <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number <span className="text-red-500">*</span></label>
-                 <div className="flex">
-                    <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 text-slate-500 text-sm">
-                        +91
-                    </span>
-                    <input 
+                 
+                 <div>
+                     <Input
+                        label="Phone Number"
+                        required
                         type="tel"
                         value={phone}
-                        onChange={e => setPhone(e.target.value)}
-                        className="flex-1 p-3 border border-slate-300 rounded-r-lg outline-none focus:border-teal-500 transition-colors"
+                        onChange={(e) => setPhone(e.target.value)}
                         placeholder="9876543210"
-                    />
+                        startIcon={Phone}
+                        helperText="Enter 10-digit mobile number"
+                     />
                  </div>
              </div>
-             <button
+
+             <Button
                 onClick={handleAddByPhone}
                 disabled={!name || !phone}
-                className={`w-full py-3 rounded-lg font-bold text-white transition-all ${name && phone ? 'bg-teal-600 hover:bg-teal-700' : 'bg-slate-300 cursor-not-allowed'}`}
+                variant="primary"
+                className="w-full gap-2"
              >
+                 <Plus className="w-4 h-4" />
                  Add Player
-             </button>
-          </div>
+             </Button>
+          </Card>
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 };

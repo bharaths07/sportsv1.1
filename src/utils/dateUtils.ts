@@ -24,3 +24,15 @@ export function formatRelativeTime(dateString: string): string {
 
   return date.toLocaleDateString();
 }
+
+const monthMap: Record<string, string> = {
+  Jan: 'January', Feb: 'February', Mar: 'March', Apr: 'April', May: 'May', Jun: 'June',
+  Jul: 'July', Aug: 'August', Sep: 'September', Oct: 'October', Nov: 'November', Dec: 'December'
+};
+
+export const extractMonthYear = (dates: string) => {
+  const m = dates.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}.*?(\d{4})/);
+  if (!m) return 'Unknown';
+  const monthFull = monthMap[m[1]] || m[1];
+  return `${monthFull} ${m[2]}`;
+};
