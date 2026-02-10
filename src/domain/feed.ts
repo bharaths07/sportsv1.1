@@ -46,6 +46,7 @@ export interface FeedItem {
   publishedAt: string;
   visibility: 'public' | 'institution' | 'private';
   location?: string;
+  metadata?: any;
 }
 
 export interface FeedFilter {

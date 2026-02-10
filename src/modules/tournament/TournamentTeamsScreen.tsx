@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, X, Share2, Search, Users, Shield, ArrowRight, Trophy, CheckCircle, Copy } from 'lucide-react';
+import { Plus, X, Search, Users, ArrowRight, Share2 } from 'lucide-react';
 import { useGlobalState } from '../../app/AppProviders';
 import { Team } from '../../domain/team';
 import { PageContainer } from '../../components/layout/PageContainer';
@@ -9,7 +9,6 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Avatar } from '../../components/ui/Avatar';
-import { toast } from 'react-hot-toast';
 
 export const TournamentTeamsScreen: React.FC = () => {
   const { tournamentId } = useParams<{ tournamentId: string }>();

@@ -8,4 +8,5 @@ export interface Achievement {
   matchId: string;
   date: string;
   description: string;
+  metadata?: any;
 }

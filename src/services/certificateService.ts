@@ -59,13 +59,28 @@ export const certificateService = {
 function mapToDomain(db: any): Certificate {
   return {
     id: db.id,
+    templateId: db.template_id || 'default', // Default fallback
     type: db.type,
-    title: db.title,
+    recipientId: db.player_id, // Assuming recipient is the player
+    recipientName: db.recipient_name || 'Unknown', // Fallback
+    
+    // Context
     playerId: db.player_id,
     matchId: db.match_id,
+    tournamentId: db.tournament_id,
     achievementId: db.achievement_id,
-    date: db.date,
+    
+    // Content
+    title: db.title,
     description: db.description,
+    date: db.date,
+    
+    // Verification
+    issueDate: db.created_at || new Date().toISOString(),
+    issuerId: db.created_by || 'system',
+    verificationHash: db.verification_hash || 'pending',
+    status: db.status || 'issued',
+    
     metadata: db.metadata
   };
 }

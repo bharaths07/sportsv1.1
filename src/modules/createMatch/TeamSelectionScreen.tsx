@@ -72,7 +72,7 @@ export const TeamSelectionScreen: React.FC = () => {
     <PageContainer>
       <PageHeader 
         title={`Select Team ${slot}`} 
-        description={`Choose a team for ${game} match`}
+        description={`Choose a team for a ${game} match`}
         backUrl={`/start-match/select-teams?${searchParams.toString()}`}
       />
 
@@ -202,23 +202,6 @@ export const TeamSelectionScreen: React.FC = () => {
       </div>
     </PageContainer>
   );
-};
-
-// Consistent Colors Helper
-const stringToColor = (str: string) => {
-  const colors = [
-    'bg-blue-500', 
-    'bg-indigo-500', 
-    'bg-emerald-500', 
-    'bg-violet-500', 
-    'bg-amber-500', 
-    'bg-cyan-500'
-  ];
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length];
 };
 
 interface AddTeamFormProps {

@@ -83,6 +83,7 @@ interface GlobalState {
   removeTeamFromTournament: (tournamentId: string, teamId: string) => void;
   updateTournamentStructure: (tournamentId: string, structure: any) => void;
   updateTournamentScheduleMode: (tournamentId: string, scheduleMode: 'AUTO' | 'MANUAL' | 'LATER') => void;
+  startTournament: (tournamentId: string) => void;
   updateFeed: () => void;
   assignScorer: (matchId: string, userId: string) => void;
   removeScorer: (matchId: string, userId: string) => void;
@@ -1223,6 +1224,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       removeTeamFromTournament,
       updateTournamentStructure,
       updateTournamentScheduleMode,
+      startTournament,
       matches,
       players,
       gameProfiles,

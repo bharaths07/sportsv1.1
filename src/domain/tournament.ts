@@ -6,7 +6,8 @@ export interface Tournament {
   location: string;
   description: string;
   bannerUrl: string;
-  status: 'upcoming' | 'ongoing' | 'completed';
+  logoUrl?: string;
+  status: 'upcoming' | 'ongoing' | 'completed' | 'draft';
   sportId?: string; // s1=Cricket, s2=Football, s3=Kabaddi
   level?: 'Institute' | 'City' | 'State' | 'Country' | 'Other';
   organizerId?: string;

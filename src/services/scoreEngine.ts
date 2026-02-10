@@ -114,12 +114,12 @@ export const scoreEngine = {
       
       // Runs off bat
       if (event.runsScored !== undefined) {
-        batter.runs += event.runsScored;
+        batter.runs = (batter.runs || 0) + event.runsScored;
       }
       
       // Balls faced (Wides don't count for batter)
       if (!isWideOrNoBall) {
-        batter.balls += 1;
+        batter.balls = (batter.balls || 0) + 1;
       }
       
       // Update array reference
@@ -146,7 +146,7 @@ export const scoreEngine = {
 
       // Wickets (Run outs don't count for bowler)
       if (event.isWicket && event.dismissal?.type !== 'run_out') {
-        bowler.wickets += 1;
+        bowler.wickets = (bowler.wickets || 0) + 1;
       }
 
       bowlingSide.players = bowlingSide.players.map(p => p.playerId === event.bowlerId ? bowler! : p);

@@ -1,70 +1,33 @@
 import React from 'react';
 import { useGlobalState } from '../../app/AppProviders';
 import { PageContainer } from '../../components/layout/PageContainer';
-import { PageHeader } from '../../components/layout/PageHeader';
 import { FeaturedMatches } from './components/FeaturedMatches';
-import { NewsSection } from './components/NewsSection';
 import { ActivityFeed } from '../../components/ActivityFeed';
-import { Button } from '../../components/ui/Button';
-import { Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Card } from '../../components/ui/Card';
 
 export const HomeScreen: React.FC = () => {
   const { feedItems, currentUser } = useGlobalState();
-  const navigate = useNavigate();
 
   return (
     <PageContainer>
-      <PageHeader 
-        title={`Welcome back, ${currentUser?.name || 'Guest'}`} 
-        description="Your sports feed and upcoming matches"
-      />
+      {/* Greeting Section (Hero Lite) */}
+      <div className="mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+          Welcome back, {currentUser?.name || 'Guest'} 👋
+        </h1>
+        <p className="text-slate-500 mt-1 text-lg">Here’s what’s happening in sports today</p>
+      </div>
 
-      {/* Quick Actions */}
-      <section className="mb-8">
-        <div className="section-header">
-          <h2 className="section-title">Quick Actions</h2>
-        </div>
-        <Card>
-          <div className="flex gap-4">
-            <Button 
-              onClick={() => navigate('/create-match')}
-            >
-              Quick Match
-            </Button>
-            <Button 
-              variant="secondary" 
-              icon={<Plus size={18} />}
-              onClick={() => navigate('/tournament/create')}
-            >
-              Create Tournament
-            </Button>
-          </div>
-        </Card>
+      {/* Upcoming Matches Section (Primary Focus) */}
+      <section className="mb-12">
+        <FeaturedMatches />
       </section>
 
-      {/* Featured Matches Section */}
-      <section className="mb-8">
-        <div className="section-header">
-          <h2 className="section-title">Upcoming Matches</h2>
+      {/* Recent Activity Section (Secondary) */}
+      <section className="max-w-3xl">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-bold text-slate-900">Recent Activity</h2>
         </div>
-        <Card>
-          <FeaturedMatches />
-        </Card>
-      </section>
-
-      {/* News & Headlines */}
-      <NewsSection />
-
-      {/* Activity Feed */}
-      <section className="mb-8">
-        <div className="section-header">
-          <h2 className="section-title">Recent Activity</h2>
-        </div>
-        <Card>
-          <ActivityFeed items={feedItems} />
-        </Card>
+        <ActivityFeed items={feedItems} />
       </section>
 
     </PageContainer>

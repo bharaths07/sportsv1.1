@@ -1,9 +1,7 @@
 import React from 'react';
-import { Menu, Search, Bell, ChevronDown } from 'lucide-react';
+import { Menu, Bell } from 'lucide-react';
 import { NavLink, Link } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
-import { Avatar } from '../ui/Avatar';
-
 import { Input } from '../ui/Input';
 
 interface TopNavbarProps {
@@ -16,41 +14,31 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onMenuClick }) => {
 
   return (
     <header 
-      style={{ 
-        borderBottom: '1px solid var(--border-default)', 
-        background: 'var(--bg-surface)', 
-      }}
+      className="sticky top-0 z-40 bg-surface border-b border-border h-16"
     >
       <div 
-        style={{ 
-          maxWidth: 1200, 
-          margin: '0 auto', 
-          padding: '12px 16px', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-        }}
+        className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between"
       >
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={onMenuClick}
-            className="lg:hidden p-2 -ml-2 text-text-muted hover:text-text-primary"
-          >
-            <Menu size={24} />
-          </button>
-          
-          <div className="hidden lg:flex items-center gap-2 mr-8">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold">
-              S
-            </div>
-            <span className="text-xl font-bold tracking-tight text-text-primary">SportSync</span>
-          </div>
+        <div className="flex items-center gap-8">
+          {/* Brand */}
+          <Link to="/" className="flex items-center gap-2 group">
+            <img 
+              src="/logo.png" 
+              alt="" 
+              className="w-8 h-8 object-contain"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }} 
+            />
+            <span className="text-xl font-bold tracking-tight text-text-primary group-hover:text-primary transition-colors">PlayLegends</span>
+          </Link>
 
-          <nav style={{ display: 'flex', gap: 'var(--space-4)' }} className="hidden md:flex">
+          {/* Navigation */}
+          <nav className="hidden md:flex items-center gap-1">
              <NavLink 
               to="/" 
               className={({ isActive }) => 
-                `text-sm font-medium transition-colors ${isActive ? 'text-primary' : 'text-text-secondary hover:text-text-primary'}`
+                `px-3 py-2 text-sm font-medium rounded-md transition-colors ${isActive ? 'text-primary bg-blue-50/50' : 'text-text-secondary hover:text-text-primary hover:bg-muted'}`
               }
             >
               Home
@@ -58,7 +46,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onMenuClick }) => {
             <NavLink 
               to="/matches" 
               className={({ isActive }) => 
-                `text-sm font-medium transition-colors ${isActive ? 'text-primary' : 'text-text-secondary hover:text-text-primary'}`
+                `px-3 py-2 text-sm font-medium rounded-md transition-colors ${isActive ? 'text-primary bg-blue-50/50' : 'text-text-secondary hover:text-text-primary hover:bg-muted'}`
               }
             >
               Matches
@@ -66,7 +54,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onMenuClick }) => {
             <NavLink 
               to="/tournaments" 
               className={({ isActive }) => 
-                `text-sm font-medium transition-colors ${isActive ? 'text-primary' : 'text-text-secondary hover:text-text-primary'}`
+                `px-3 py-2 text-sm font-medium rounded-md transition-colors ${isActive ? 'text-primary bg-blue-50/50' : 'text-text-secondary hover:text-text-primary hover:bg-muted'}`
               }
             >
               Tournaments
@@ -74,7 +62,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onMenuClick }) => {
             <NavLink 
               to="/teams" 
               className={({ isActive }) => 
-                `text-sm font-medium transition-colors ${isActive ? 'text-primary' : 'text-text-secondary hover:text-text-primary'}`
+                `px-3 py-2 text-sm font-medium rounded-md transition-colors ${isActive ? 'text-primary bg-blue-50/50' : 'text-text-secondary hover:text-text-primary hover:bg-muted'}`
               }
             >
               Teams
@@ -82,7 +70,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onMenuClick }) => {
             <NavLink 
               to="/stats" 
               className={({ isActive }) => 
-                `text-sm font-medium transition-colors ${isActive ? 'text-primary' : 'text-text-secondary hover:text-text-primary'}`
+                `px-3 py-2 text-sm font-medium rounded-md transition-colors ${isActive ? 'text-primary bg-blue-50/50' : 'text-text-secondary hover:text-text-primary hover:bg-muted'}`
               }
             >
               Stats
@@ -90,30 +78,29 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onMenuClick }) => {
           </nav>
         </div>
 
-        <div style={{ display: 'flex', gap: 'var(--space-3)' }} className="items-center">
-          {/* Search Bar - Hidden on small mobile */}
-          <div className="hidden md:block w-64">
-            <Input 
-              placeholder="Search..." 
-              startIcon={<Search size={16} className="text-text-muted" />}
-              className="h-9 bg-muted border-none focus-visible:ring-primary/20"
-            />
-          </div>
-
+        {/* Right Actions */}
+        <div className="flex items-center gap-4">
           <button className="relative p-2 text-text-muted hover:bg-muted rounded-full transition-colors">
             <Bell size={20} />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-surface"></span>
           </button>
           
-          <div className="flex items-center gap-2 pl-2">
-            <Link to="/profile">
-              <Avatar
-                src={currentUser?.avatarUrl || currentUser?.profilePhoto}
-                fallback={currentUser?.firstName?.charAt(0) || 'G'}
-                className="w-8 h-8 bg-primary-light text-primary font-semibold text-sm"
-              />
+          <div className="flex items-center pl-2 border-l border-border">
+            <Link to="/profile" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <div className="text-right hidden sm:block">
+                <div className="text-sm font-medium text-text-primary">{currentUser?.name || 'Guest'}</div>
+                <div className="text-xs text-text-muted">View Profile</div>
+              </div>
             </Link>
           </div>
+
+          {/* Mobile Menu Button */}
+          <button 
+            onClick={onMenuClick}
+            className="lg:hidden p-2 text-text-muted hover:text-text-primary"
+          >
+            <Menu size={24} />
+          </button>
         </div>
       </div>
     </header>

@@ -18,6 +18,7 @@ export function calculateStandings(
       lost: 0,
       tied: 0,
       points: 0,
+      netRunRate: 0,
     };
   });
 

@@ -52,6 +52,16 @@ function mapToDomain(db: any): FeedItem {
     publishedAt: db.published_at,
     relatedEntityId: db.related_entity_id,
     visibility: db.visibility,
-    metadata: db.metadata
+    metadata: db.metadata,
+    
+    // Defaults for missing DB fields
+    authorId: db.author_id || 'system',
+    authorName: db.author_name || 'System',
+    authorType: db.author_type || 'system',
+    media: db.media || [],
+    likesCount: db.likes_count || 0,
+    commentsCount: db.comments_count || 0,
+    sharesCount: db.shares_count || 0,
+    hashtags: db.hashtags || []
   };
 }

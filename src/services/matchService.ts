@@ -19,6 +19,25 @@ export const matchService = {
     return data.map((m: any) => mapToDomain(m));
   },
 
+  async getMatchById(id: string): Promise<Match | undefined> {
+    const { data, error } = await supabase
+      .from('matches')
+      .select(`
+        *,
+        home_team:home_team_id (name),
+        away_team:away_team_id (name)
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching match:', error);
+      return undefined;
+    }
+
+    return mapToDomain(data);
+  },
+
   async createMatch(match: Match): Promise<Match> {
     const { 
       id, homeParticipant, awayParticipant, 

@@ -27,27 +27,31 @@ export const calculateImpactScore = (
   let bowlingScore = 0;
   let fieldingScore = 0;
 
+  const runs = playerStats.runs || 0;
+  const balls = playerStats.balls || 0;
+  const wickets = playerStats.wickets || 0;
+
   // --- Batting Impact ---
-  if (playerStats.runs > 0) {
-      battingScore += playerStats.runs * 1.0;
+  if (runs > 0) {
+      battingScore += runs * 1.0;
       
-      const sr = playerStats.balls > 0 ? (playerStats.runs / playerStats.balls) * 100 : 0;
-      if (playerStats.runs > 10) {
+      const sr = balls > 0 ? (runs / balls) * 100 : 0;
+      if (runs > 10) {
           if (sr > 150) battingScore += 10;
           else if (sr > 120) battingScore += 5;
           else if (sr < 80) battingScore -= 2;
       }
       
       // Milestones
-      if (playerStats.runs >= 50) battingScore += 10;
-      if (playerStats.runs >= 100) battingScore += 20;
+      if (runs >= 50) battingScore += 10;
+      if (runs >= 100) battingScore += 20;
   }
 
   // --- Bowling Impact ---
-  if (playerStats.wickets > 0) {
-      bowlingScore += playerStats.wickets * 25; // Increased weight for wickets as per MVP formula memory (25)
-      if (playerStats.wickets >= 3) bowlingScore += 10;
-      if (playerStats.wickets >= 5) bowlingScore += 20;
+  if (wickets > 0) {
+      bowlingScore += wickets * 25; // Increased weight for wickets as per MVP formula memory (25)
+      if (wickets >= 3) bowlingScore += 10;
+      if (wickets >= 5) bowlingScore += 20;
   }
   
   // Economy Rate Bonus
@@ -89,16 +93,16 @@ export const getMatchImpactRankings = (match: Match): ImpactScore[] => {
                 playerId: p.playerId,
                 score: impact,
                 breakdown: { 
-                    batting: p.runs, // simplified breakdown for UI
-                    bowling: p.wickets * 25, 
+                    batting: p.runs || 0, // simplified breakdown for UI
+                    bowling: (p.wickets || 0) * 25, 
                     fielding: (p.catches || 0) * 10 + (p.runouts || 0) * 15 
                 },
                 details: {
-                    runs: p.runs,
-                    balls: p.balls,
-                    wickets: p.wickets,
-                    wicketsTaken: p.wickets,
-                    overs: Math.floor((p.ballsBowled || 0) / 6),
+                    runs: p.runs || 0,
+                    balls: p.balls || 0,
+                    wickets: p.wickets || 0,
+                    wicketsTaken: p.wickets || 0,
+                    overs: (p.ballsBowled || 0) / 6,
                     catches: p.catches || 0,
                     runouts: p.runouts || 0
                 }
