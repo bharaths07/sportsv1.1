@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, HelpCircle, X, ArrowRight, Trophy } from 'lucide-react';
+import { ArrowRight, Trophy, Plus, HelpCircle, X } from 'lucide-react';
 import { useGlobalState } from '../../app/AppProviders';
 import { TeamConfirmAnimation } from '../../components/TeamConfirmAnimation/TeamConfirmAnimation';
 import { PageContainer } from '../../components/layout/PageContainer';
@@ -13,7 +13,7 @@ export const SelectTeamsScreen: React.FC = () => {
   const navigate = useNavigate();
   const { teams } = useGlobalState();
   const [searchParams] = useSearchParams();
-  const game = searchParams.get('game') || 'cricket';
+  // const game = searchParams.get('game') || 'cricket';
   const teamAId = searchParams.get('teamA');
   const teamBId = searchParams.get('teamB');
 
@@ -134,7 +134,7 @@ export const SelectTeamsScreen: React.FC = () => {
         description="Choose two teams to start a match"
         backUrl="/start-match"
         action={
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="sm">
             <HelpCircle className="w-5 h-5 text-slate-400" />
           </Button>
         }

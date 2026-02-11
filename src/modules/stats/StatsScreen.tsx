@@ -11,7 +11,7 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { Tabs } from '../../components/ui/Tabs';
 import { Card } from '../../components/ui/Card';
 
-type TabType = 'batting' | 'bowling' | 'fielding' | 'teams' | 'football';
+// import { TabType } from './types'; // Removed unused type definition
 
 export const StatsScreen: React.FC = () => {
   const [filters, setFilters] = useState<StatsFilters>({

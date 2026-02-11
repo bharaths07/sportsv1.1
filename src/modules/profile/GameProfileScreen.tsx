@@ -1,10 +1,9 @@
-import React from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Share2, QrCode, SlidersHorizontal, Trophy, Award, ChevronLeft } from 'lucide-react';
 import { MatchCard } from '../match/components/MatchCard';
-import { StatsCard, BattingSummaryCard, BowlingSummaryCard, FieldingSummaryCard, FootballSummaryCard } from './components/StatsCards';
+import { BattingSummaryCard, BowlingSummaryCard, FieldingSummaryCard, FootballSummaryCard } from './components/StatsCards';
 import { TrophiesTab, BadgesTab } from './components/AchievementCards';
-import { CurrentTeamCard, PastTeamCard, TeamsTab } from './components/TeamCards';
+import { TeamsTab } from './components/TeamCards';
 import { MediaTabs } from './components/MediaTabs';
 import { useGlobalState } from '../../app/AppProviders';
 import { Avatar } from '../../components/ui/Avatar';
@@ -157,11 +156,11 @@ export const GameProfileScreen = () => {
             {[
               { id: 'matches', label: 'Matches', count: 12 },
               { id: 'stats', label: 'Stats' },
-              { id: 'trophies', label: 'Trophies', count: player.trophies.length, countColor: 'bg-yellow-100 text-yellow-700' },
-              { id: 'badges', label: 'Badges', count: player.badges.length, countColor: 'bg-purple-100 text-purple-700' },
+              { id: 'trophies', label: 'Trophies', count: player.trophies?.length || 0, countColor: 'bg-yellow-100 text-yellow-700' },
+              { id: 'badges', label: 'Badges', count: player.badges?.length || 0, countColor: 'bg-purple-100 text-purple-700' },
               { id: 'teams', label: 'Teams' },
               { id: 'highlights', label: 'Highlights' },
-              { id: 'photos', label: 'Photos', count: player.photos.length, countColor: 'bg-green-100 text-green-700' }
+              { id: 'photos', label: 'Photos', count: player.photos?.length || 0, countColor: 'bg-green-100 text-green-700' }
             ].map((tab) => (
               <button 
                 key={tab.id}
@@ -230,7 +229,7 @@ export const GameProfileScreen = () => {
 
         {activeTab === 'highlights' && (
           <MediaTabs 
-            highlights={player.highlights} 
+            highlights={player.highlights || []} 
             photos={[]} 
             activeTab="highlights" 
           />
@@ -239,7 +238,7 @@ export const GameProfileScreen = () => {
         {activeTab === 'photos' && (
           <MediaTabs 
             highlights={[]} 
-            photos={player.photos} 
+            photos={player.photos || []} 
             activeTab="photos" 
           />
         )}

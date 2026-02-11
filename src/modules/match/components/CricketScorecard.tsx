@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Match } from '../../../domain/match';
 import { useGlobalState } from '../../../app/AppProviders';
-import { useNavigate } from 'react-router-dom';
+// // import { useNavigate } from 'react-router-dom';
 import { Card } from '../../../components/ui/Card';
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
 
 export const CricketScorecard: React.FC<Props> = ({ match }) => {
   const { players } = useGlobalState();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   
   // Default to the team currently batting or the one that batted last
   const initialInnings = match.currentBattingTeamId === match.awayParticipant.id ? 'away' : 'home';

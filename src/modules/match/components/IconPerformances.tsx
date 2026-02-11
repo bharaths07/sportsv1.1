@@ -2,6 +2,7 @@ import React from 'react';
 import { useGlobalState } from '../../../app/AppProviders';
 import { ImpactScore } from '../../../utils/cricketMetrics';
 import { useNavigate } from 'react-router-dom';
+import { Avatar } from '../../../components/ui/Avatar';
 
 interface Props {
   performances: ImpactScore[];

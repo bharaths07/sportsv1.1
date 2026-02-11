@@ -10,6 +10,7 @@ import { feedService } from '../services/feedService';
 import { scorerService } from '../services/scorerService';
 import { playerService } from '../services/playerService';
 import { scoreEngine } from '../services/scoreEngine';
+import { cricheroesIntegrationService } from '../services/cricheroesIntegrationService';
 import { Match, ScoreEvent, PlayerStats } from '../domain/match';
 import { Player } from '../domain/player';
 import { GameProfile } from '../domain/gameProfile';
@@ -229,7 +230,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           id: u.id,
           name: u.name,
           email: u.email,
-          role: 'player' as const,
+          role: undefined,
           firstName: u.name?.split(' ')[0] || '',
           lastName: u.name?.split(' ').slice(1).join(' ') || '',
           active: true,
@@ -248,7 +249,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   useEffect(() => {
     refreshData();
 
-    supabase.auth.getSession().then(async ({ data }) => {
+    supabase.auth.getSession().then(async ({ data }: { data: any }) => {
       const session = data.session;
 
       if (session?.user) {
@@ -271,7 +272,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   useEffect(() => {
     const { 
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event: string, session: any) => {
       if (session?.user) {
         const profile = await profileService.getProfile(session.user.id);
         if (profile) {
@@ -739,7 +740,16 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       publishedAt: new Date().toISOString(),
       relatedEntityId: matchId,
       content: newEvent.description,
-      visibility: 'public'
+      visibility: 'public',
+      authorId: 'system',
+      authorName: 'System',
+      authorType: 'system',
+      media: [],
+      likesCount: 0,
+      commentsCount: 0,
+      sharesCount: 0,
+      hashtags: [],
+      isLikedByCurrentUser: false
     };
 
     try {
@@ -972,6 +982,13 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             matchId: match.id,
             date: new Date().toISOString(),
             description: `For participating in the match between ${match.homeParticipant.name} and ${match.awayParticipant.name}`,
+            templateId: 'default',
+            recipientId: stat.playerId,
+            recipientName: 'Player',
+            issueDate: new Date().toISOString(),
+            issuerId: 'system',
+            verificationHash: 'pending',
+            status: 'issued',
             metadata: {
                 matchName: `${match.homeParticipant.name} vs ${match.awayParticipant.name}`,
                 sportName,
@@ -995,7 +1012,14 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             matchId: match.id,
             achievementId: ach.id,
             date: new Date().toISOString(),
-            description: ach.description, 
+            description: ach.description,
+            templateId: 'default',
+            recipientId: ach.playerId,
+            recipientName: 'Player',
+            issueDate: new Date().toISOString(),
+            issuerId: 'system',
+            verificationHash: 'pending',
+            status: 'issued', 
             metadata: {
                 matchName: `${match.homeParticipant.name} vs ${match.awayParticipant.name}`,
                 sportName,
@@ -1028,12 +1052,21 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // 5. Update Feed
     const feedItem: FeedItem = {
       id: `${Date.now()}_end`,
-      type: 'match_result',
+      type: 'match_update',
       title: 'Match Completed',
       publishedAt: new Date().toISOString(),
       relatedEntityId: match.id,
       content: `${match.homeParticipant.name} ${homeScore}/${match.homeParticipant.wickets || 0} vs ${match.awayParticipant.name} ${awayScore}/${match.awayParticipant.wickets || 0}. Winner: ${winnerId === match.homeParticipant.id ? match.homeParticipant.name : (winnerId === match.awayParticipant.id ? match.awayParticipant.name : 'Draw')}`,
-      visibility: 'public'
+      visibility: 'public',
+      authorId: 'system',
+      authorName: 'System',
+      authorType: 'system',
+      media: [],
+      likesCount: 0,
+      commentsCount: 0,
+      sharesCount: 0,
+      hashtags: [],
+      isLikedByCurrentUser: false
     };
     
     try {

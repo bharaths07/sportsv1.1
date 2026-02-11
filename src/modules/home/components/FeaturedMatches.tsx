@@ -4,7 +4,7 @@ import { MatchCard } from '../../match/components/MatchCard';
 import { Tabs } from '../../../components/ui/Tabs';
 import { Button } from '../../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Calendar, Radio, PlusCircle } from 'lucide-react';
+import { ArrowRight, Calendar, Radio } from 'lucide-react';
 import { EmptyState } from '../../../components/EmptyState';
 
 export const FeaturedMatches: React.FC = () => {
@@ -40,21 +40,22 @@ export const FeaturedMatches: React.FC = () => {
   const displayedMatches = activeTab === 'top' ? topMatches.slice(0, 4) : liveMatches;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-      <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 overflow-hidden">
+      <div className="px-8 py-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-           <h2 className="text-lg font-bold text-slate-900 mb-1">Upcoming Matches</h2>
-           <p className="text-sm text-slate-500">Don't miss the action</p>
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">Upcoming Matches</h2>
+          <p className="text-sm text-slate-500 font-medium mt-1">Don't miss the action</p>
         </div>
-        <Tabs 
-          tabs={tabs} 
-          activeTab={activeTab} 
-          onTabChange={setActiveTab}
-          variant="pill"
-        />
+        <div>
+          <Tabs 
+            tabs={tabs} 
+            activeTab={activeTab} 
+            onTabChange={setActiveTab}
+            variant="pill"
+          />
+        </div>
       </div>
-
-      <div className="p-6">
+      <div className="p-8">
         {displayedMatches.length === 0 ? (
           <div className="py-8">
             <EmptyState 
@@ -81,19 +82,19 @@ export const FeaturedMatches: React.FC = () => {
             ))}
           </div>
         )}
+
+        {displayedMatches.length > 0 && (
+           <div className="mt-8 text-center border-t border-slate-50 pt-4 -mx-8 -mb-8 bg-slate-50/50">
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate('/matches')}
+                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 w-full sm:w-auto h-12"
+              >
+                View Full Schedule <ArrowRight size={16} className="ml-2" />
+              </Button>
+           </div>
+        )}
       </div>
-      
-      {displayedMatches.length > 0 && (
-         <div className="bg-slate-50 p-4 border-t border-slate-100 text-center">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/matches')}
-              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 w-full sm:w-auto"
-            >
-              View Full Schedule <ArrowRight size={16} className="ml-2" />
-            </Button>
-         </div>
-      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, Image as ImageIcon, Type, Square, Download, Plus } from 'lucide-react';
+import { Image as ImageIcon, Type, Square, Download } from 'lucide-react';
 
 interface PosterElement {
   id: string;

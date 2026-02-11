@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from './TeamConfirmAnimation.module.css';
-import { Calendar, MapPin, Trophy, Activity, CheckCircle } from 'lucide-react';
+import { Calendar, MapPin } from 'lucide-react';
+import { Avatar } from '../ui/Avatar';
 
 // Use a simplified Team interface to be flexible
 export interface TeamProp {
@@ -27,7 +28,7 @@ interface MatchDetails {
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Mock API
-const fetchMatchDetails = async (matchId: string): Promise<MatchDetails> => {
+const fetchMatchDetails = async (_matchId: string): Promise<MatchDetails> => {
   await wait(600); // Simulate network latency (should be faster than total animation if parallel)
   return {
     date: new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),

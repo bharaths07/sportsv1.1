@@ -32,7 +32,7 @@ export const NotificationsScreen: React.FC = () => {
       
       {items.length === 0 ? (
         <EmptyState 
-          icon={Bell}
+          icon={<Bell size={48} />}
           message="No notifications yet"
           description="We'll notify you when important events happen."
         />

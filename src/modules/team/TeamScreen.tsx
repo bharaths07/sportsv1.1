@@ -20,7 +20,7 @@ const SPORTS_MAP: Record<string, string> = {
 
 type TabType = 'overview' | 'squad' | 'matches' | 'stats' | 'achievements';
 
-const StatCard: React.FC<{ label: string; value: string; color?: string; bgColor?: string }> = ({ label, value, color, bgColor }) => (
+const StatCard: React.FC<{ label: string; value: string; color?: string; bgColor?: string }> = ({ label, value, color }) => (
   <Card className="flex flex-col items-center justify-center p-4">
     <div className={`text-2xl font-bold leading-none mb-1 ${color || 'text-slate-900'}`}>{value}</div>
     <div className="text-xs font-bold text-slate-500 uppercase tracking-wide">{label}</div>
@@ -108,8 +108,8 @@ export const TeamScreen: React.FC = () => {
 
       completedMatches.forEach(m => {
           const isHome = m.homeParticipant.id === team.id;
-          const myScore = isHome ? parseInt(m.homeScore || '0') : parseInt(m.awayScore || '0');
-          const oppScore = isHome ? parseInt(m.awayScore || '0') : parseInt(m.homeScore || '0');
+          const myScore = isHome ? (m.homeParticipant.score || 0) : (m.awayParticipant.score || 0);
+          const oppScore = isHome ? (m.awayParticipant.score || 0) : (m.homeParticipant.score || 0);
           
           goalsFor += isNaN(myScore) ? 0 : myScore;
           goalsAgainst += isNaN(oppScore) ? 0 : oppScore;

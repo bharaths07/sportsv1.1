@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Match, ScoreEvent } from '../../../domain/match';
+import { Match } from '../../../domain/match';
 import { useGlobalState } from '../../../app/AppProviders';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
-import { Trophy, Activity, AlertCircle, Clock, User, Shield } from 'lucide-react';
+import { Activity } from 'lucide-react';
 
 interface FootballLiveScorerProps {
   match: Match;
@@ -24,10 +24,10 @@ export const FootballLiveScorer: React.FC<FootballLiveScorerProps> = ({ match, o
     setActionType('goal');
   };
 
-  const handleCardClick = (teamId: string) => {
-    setSelectedTeamId(teamId);
-    setActionType('card');
-  };
+  // const handleCardClick = (teamId: string) => {
+  //   setSelectedTeamId(teamId);
+  //   setActionType('card');
+  // };
 
   const confirmGoal = (scorerId?: string, assistId?: string) => {
     if (!selectedTeamId) return;
@@ -114,7 +114,7 @@ export const FootballLiveScorer: React.FC<FootballLiveScorerProps> = ({ match, o
                   }}
                   className="p-3 bg-slate-50 hover:bg-slate-100 rounded-lg text-left border border-slate-200 transition-colors"
                 >
-                  <div className="font-bold text-slate-800 truncate">{player?.name || 'Unknown'}</div>
+                  <div className="font-bold text-slate-800 truncate">{player ? `${player.firstName} ${player.lastName}` : 'Unknown'}</div>
                   <div className="text-xs text-slate-500">#{playerId.slice(0, 4)}</div>
                 </button>
               );

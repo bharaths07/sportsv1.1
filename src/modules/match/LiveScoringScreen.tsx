@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Play, StopCircle, Trophy, Activity, AlertCircle, ChevronLeft } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Play, StopCircle, Trophy, ChevronLeft, AlertCircle } from 'lucide-react';
 import { useGlobalState } from '../../app/AppProviders';
 import { useRequireAuth } from '../../hooks/useRequireAuth';
 import { PageContainer } from '../../components/layout/PageContainer';
@@ -18,7 +18,7 @@ export const LiveScoringScreen: React.FC = () => {
   const [isEnding, setIsEnding] = useState(false); // Double-click protection
   
   // Dev toggle for Viewer/Scorer mode verification
-  const [isSimulatingViewer, setIsSimulatingViewer] = useState(false);
+  // const [isSimulatingViewer, setIsSimulatingViewer] = useState(false);
 
   // Route Protection
   useEffect(() => {
@@ -41,7 +41,7 @@ export const LiveScoringScreen: React.FC = () => {
 
   // Determine permissions
   const hasPermission = canScoreMatch(match.id);
-  const canScore = !isSimulatingViewer && hasPermission;
+  const canScore = hasPermission;
 
   if (!canScore) {
     return (
@@ -70,14 +70,50 @@ export const LiveScoringScreen: React.FC = () => {
     );
   }
 
+  const handleEndMatch = () => {
+    if (isEnding) return;
+    if (window.confirm('Are you sure you want to end the match? This action cannot be undone.')) {
+        setIsEnding(true);
+        endMatch(match.id);
+        navigate(`/matches/${match.id}`);
+    }
+  };
+
+  // --- Cricket Logic Implementation ---
+  const handleStartMatch = () => {
+    startMatch(match.id);
+  };
+
+  // Determine Batting/Bowling (Simple fallback)
+  const battingTeamId = match.currentBattingTeamId || match.homeParticipant.id;
+  const battingParticipant = match.homeParticipant.id === battingTeamId ? match.homeParticipant : match.awayParticipant;
+  const bowlingParticipant = match.homeParticipant.id === battingTeamId ? match.awayParticipant : match.homeParticipant;
+
+  const runs = battingParticipant.score || 0;
+  const wickets = battingParticipant.wickets || 0;
+  
+  const totalOvers = battingParticipant.overs || 0;
+  const oversCount = Math.floor(totalOvers);
+  const ballsInOver = Math.round((totalOvers - oversCount) * 10);
+
+  const handleScore = (runValue: number, isWicket: boolean) => {
+      scoreMatch(match.id, {
+          type: isWicket ? 'wicket' : 'delivery',
+          teamId: battingParticipant.id,
+          runsScored: runValue,
+          points: runValue, // Total points added
+          description: isWicket ? 'Wicket Fall' : `${runValue} runs`,
+          timestamp: new Date().toISOString()
+      });
+  };
+
   // Football Scoring Interface
   if (match.sportId === 's3') {
     return (
         <PageContainer>
             <div className="max-w-md mx-auto space-y-4">
                <PageHeader 
-                    title="Live Scoring" 
-                    subtitle="Football"
+                    title="Live Scoring - Football" 
                     backUrl={`/matches/${match.id}`}
                 />
                 <FootballLiveScorer 
@@ -89,37 +125,6 @@ export const LiveScoringScreen: React.FC = () => {
         </PageContainer>
     );
   }
-
-  const battingTeamId = match.currentBattingTeamId || match.homeParticipant.id;
-  const isHomeBatting = battingTeamId === match.homeParticipant.id;
-  const battingParticipant = isHomeBatting ? match.homeParticipant : match.awayParticipant;
-  const bowlingParticipant = isHomeBatting ? match.awayParticipant : match.homeParticipant;
-
-  const runs = battingParticipant.score || 0;
-  const wickets = battingParticipant.wickets || 0;
-  const balls = battingParticipant.balls || 0;
-  const oversCount = Math.floor(balls / 6);
-  const ballsInOver = balls % 6;
-
-  const handleStartMatch = () => {
-    if (window.confirm('Start the match? This will enable scoring.')) {
-        startMatch(match.id);
-    }
-  };
-
-  const handleScore = (points: number, isWicket: boolean) => {
-    if (match.status !== 'live') return;
-    scoreMatch(match.id, points, isWicket);
-  };
-
-  const handleEndMatch = () => {
-    if (isEnding) return;
-    if (window.confirm('Are you sure you want to end the match? This action cannot be undone.')) {
-        setIsEnding(true);
-        endMatch(match.id);
-        navigate(`/matches/${match.id}`);
-    }
-  };
 
   return (
     <PageContainer>

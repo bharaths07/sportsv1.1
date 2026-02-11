@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGlobalState } from '../../../app/AppProviders';
-import { User } from '../../../domain/user';
+// import { User } from '../../../domain/user';
 
 interface ScorerAssignmentProps {
   matchId: string;
@@ -9,7 +9,7 @@ interface ScorerAssignmentProps {
 export const ScorerAssignment: React.FC<ScorerAssignmentProps> = ({ matchId }) => {
   const { 
     users, 
-    matchScorers, 
+    // matchScorers, 
     assignScorer, 
     removeScorer, 
     getMatchScorers,
@@ -23,7 +23,7 @@ export const ScorerAssignment: React.FC<ScorerAssignmentProps> = ({ matchId }) =
   // Filter users who are eligible to score (role='scorer' or 'admin')
   // and not already assigned
   const availableUsers = users.filter(u => 
-    (u.role === 'scorer' || u.role === 'admin') && 
+    (u.role === 'admin') && 
     !assignedScorers.some(as => as.userId === u.id)
   );
 
@@ -79,7 +79,7 @@ export const ScorerAssignment: React.FC<ScorerAssignmentProps> = ({ matchId }) =
                       fontWeight: 'bold',
                       color: '#475569'
                     }}>
-                      {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                      {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
                     </div>
                     <div>
                       <div style={{ fontWeight: '500', color: '#1e293b' }}>{user.firstName} {user.lastName}</div>

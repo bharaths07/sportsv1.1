@@ -14,9 +14,9 @@ interface Props {
   variant?: 'default' | 'horizontal';
 }
 
-export const MatchCard: React.FC<Props> = ({ match, isFollowed, className = '', showTournamentContext = true, variant = 'default' }) => {
+export const MatchCard: React.FC<Props> = ({ match, className = '', showTournamentContext = true, variant = 'default' }) => {
   const navigate = useNavigate();
-  const { toggleFollowMatch, tournaments } = useGlobalState();
+  const { tournaments } = useGlobalState();
 
   const isLive = match.status === 'live';
   const isFinished = match.status === 'completed' || match.status === 'locked' || match.status === 'cancelled';

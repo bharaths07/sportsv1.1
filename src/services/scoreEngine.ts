@@ -1,4 +1,4 @@
-import { Match, ScoreEvent, MatchParticipant, PlayerStats, MatchLiveState } from '../domain/match';
+import { Match, ScoreEvent } from '../domain/match';
 
 export const scoreEngine = {
   /**

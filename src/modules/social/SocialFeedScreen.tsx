@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Heart, MessageCircle, Share2, MoreHorizontal, Image, Send } from 'lucide-react';
+import { Heart, MessageCircle, Share2, MoreHorizontal, Image } from 'lucide-react';
 import { useGlobalState } from '../../app/AppProviders';
-import { FeedItem, FeedComment } from '../../domain/feed';
+import { FeedItem } from '../../domain/feed';
 import { formatRelativeTime } from '../../utils/dateUtils';
 import { Avatar } from '../../components/ui/Avatar';
 import { Input } from '../../components/ui/Input';

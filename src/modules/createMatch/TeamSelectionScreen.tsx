@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, Plus, MapPin, Users, Trophy, Calendar, Clock, Shield } from 'lucide-react';
+import { Search, Plus, MapPin, Users, Trophy, Shield } from 'lucide-react';
 import { useGlobalState } from '../../app/AppProviders';
 import { Team } from '../../domain/team';
 import { PageContainer } from '../../components/layout/PageContainer';
@@ -12,7 +12,7 @@ import { Tabs } from '../../components/ui/Tabs';
 import { Avatar } from '../../components/ui/Avatar';
 import { stringToColor } from '../../utils/colors';
 
-type Tab = 'your-teams' | 'opponents' | 'add';
+// type Tab = 'your-teams' | 'opponents' | 'add';
 
 export const TeamSelectionScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ export const TeamSelectionScreen: React.FC = () => {
   
   const [activeTab, setActiveTab] = useState<string>('your-teams');
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
 
   // Filter teams based on tab and search
   const filteredTeams = globalTeams.filter(team => {
@@ -39,9 +39,8 @@ export const TeamSelectionScreen: React.FC = () => {
   });
 
   const handleTeamSelect = (team: Team) => {
-    setLoading(true);
-    // Simulate slight delay for interaction feedback
-    setTimeout(() => {
+      // Simulate slight delay for interaction feedback
+      setTimeout(() => {
         const currentParams = new URLSearchParams(searchParams);
         if (slot === 'A') {
           currentParams.set('teamA', team.id);
@@ -84,7 +83,7 @@ export const TeamSelectionScreen: React.FC = () => {
                 { id: 'add', label: 'Create New' },
             ]}
             activeTab={activeTab}
-            onChange={setActiveTab}
+            onTabChange={setActiveTab}
             variant="pill"
         />
 

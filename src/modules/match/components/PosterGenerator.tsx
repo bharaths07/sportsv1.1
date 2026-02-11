@@ -21,7 +21,7 @@ export const PosterGenerator: React.FC<Props> = ({ data, match, onClose }) => {
         setLoading(true);
         setImageUrl(null);
         
-        const player = data.player ? players.find(p => p.id === data.player.playerId) : undefined;
+        const player = data.player ? players.find(p => p.id === data.player?.playerId) : undefined;
         
         // Prepare config
         const config: any = {

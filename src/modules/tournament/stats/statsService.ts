@@ -1,6 +1,6 @@
-import { Match } from '../../../../domain/match';
-import { Team } from '../../../../domain/team';
-import { Player } from '../../../../domain/player';
+import { Match } from '../../../domain/match';
+import { Team } from '../../../domain/team';
+import { Player } from '../../../domain/player';
 import { TournamentPlayerStats, LeaderboardCategory } from './types';
 
 // Helper to get initials
@@ -27,8 +27,8 @@ export const calculateTournamentStats = (
         name: player ? `${player.firstName} ${player.lastName}` : 'Unknown Player',
         teamId: teamId,
         teamName: team?.name || 'Unknown Team',
-        teamCode: team?.shortName || getTeamCode(team?.name || ''),
-        avatar: player?.profilePictureUrl,
+        teamCode: getTeamCode(team?.name || ''),
+        avatar: player?.avatarUrl,
         matches: 0,
         innings: 0,
         runs: 0,
@@ -106,11 +106,11 @@ export const calculateTournamentStats = (
 
         } else {
             // Cricket Batting
-            if (pStats.runs > 0 || pStats.balls > 0) {
+            if ((pStats.runs || 0) > 0 || (pStats.balls || 0) > 0) {
           stats.innings += 1;
-          stats.runs += pStats.runs;
-          stats.ballsFaced += pStats.balls;
-          stats.highestScore = Math.max(stats.highestScore, pStats.runs);
+          stats.runs += (pStats.runs || 0);
+          stats.ballsFaced += (pStats.balls || 0);
+          stats.highestScore = Math.max(stats.highestScore, (pStats.runs || 0));
           
           // Check for Not Out
           // We need to check events to confirm dismissal
@@ -122,12 +122,12 @@ export const calculateTournamentStats = (
           }
 
           // Check for boundaries
-          // Assuming 'run' type events with points 4 or 6 and scorerId = playerId
+          // Assuming 'delivery' type events with runsScored 4 or 6 and scorerId = playerId
           const fours = match.events.filter(e => 
-            e.type === 'run' && e.points === 4 && e.scorerId === pStats.playerId
+            e.type === 'delivery' && e.runsScored === 4 && e.scorerId === pStats.playerId
           ).length;
           const sixes = match.events.filter(e => 
-            e.type === 'run' && e.points === 6 && e.scorerId === pStats.playerId
+            e.type === 'delivery' && e.runsScored === 6 && e.scorerId === pStats.playerId
           ).length;
 
           stats.fours += fours;
@@ -137,15 +137,15 @@ export const calculateTournamentStats = (
         // Bowling
         if (pStats.ballsBowled && pStats.ballsBowled > 0) {
             stats.ballsBowled += pStats.ballsBowled;
-            stats.wickets += pStats.wickets;
+            stats.wickets += (pStats.wickets || 0);
             stats.runsConceded += (pStats.runsConceded || 0);
             stats.overs = Math.floor(stats.ballsBowled / 6) + (stats.ballsBowled % 6) / 10; // Approx display
             
             // Best Bowling Logic
-            if (pStats.wickets > stats.bestBowlingWickets) {
-                stats.bestBowlingWickets = pStats.wickets;
+            if ((pStats.wickets || 0) > stats.bestBowlingWickets) {
+                stats.bestBowlingWickets = (pStats.wickets || 0);
                 stats.bestBowlingRuns = pStats.runsConceded || 0;
-            } else if (pStats.wickets === stats.bestBowlingWickets) {
+            } else if ((pStats.wickets || 0) === stats.bestBowlingWickets) {
                 // If wickets same, check simpler runs
                 if ((pStats.runsConceded || 0) < stats.bestBowlingRuns) {
                     stats.bestBowlingRuns = pStats.runsConceded || 0;

@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Match, MatchParticipant } from '../domain/match';
+import { Match } from '../domain/match';
 
 export const matchService = {
   async getAllMatches(): Promise<Match[]> {

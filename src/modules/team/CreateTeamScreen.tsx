@@ -109,7 +109,7 @@ export const CreateTeamScreen: React.FC = () => {
                     <Input 
                         label="Team Name"
                         value={name}
-                        onChange={setName}
+                        onChange={(e) => setName(e.target.value)}
                         placeholder="e.g. Royal Challengers"
                         required
                     />
@@ -117,7 +117,7 @@ export const CreateTeamScreen: React.FC = () => {
                     <Input 
                         label="City / Location"
                         value={city}
-                        onChange={setCity}
+                        onChange={(e) => setCity(e.target.value)}
                         placeholder="e.g. Bengaluru"
                         required
                     />
@@ -125,7 +125,7 @@ export const CreateTeamScreen: React.FC = () => {
                     <Textarea 
                         label="About Team"
                         value={about}
-                        onChange={setAbout}
+                        onChange={(e) => setAbout(e.target.value)}
                         placeholder="Tell us about your team..."
                         rows={4}
                     />

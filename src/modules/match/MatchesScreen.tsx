@@ -8,7 +8,7 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { Tabs } from '../../components/ui/Tabs';
 import { Select } from '../../components/ui/Select';
 import { Button } from '../../components/ui/Button';
-import { Filter, X, Calendar, Trophy, Layers, Activity } from 'lucide-react';
+import { Filter, X, Trophy, Layers, Activity } from 'lucide-react';
 import { EmptyState } from '../../components/EmptyState';
 
 // --- Components ---
@@ -412,10 +412,48 @@ export const MatchesScreen: React.FC = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+      {/* Filters Bar */}
+      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Select
+            label="Sport"
+            value={activeFormat}
+            onChange={(e) => setActiveFormat(e.target.value)}
+            options={[
+              { value: 'All', label: 'All Sports' },
+              { value: 'Cricket', label: 'Cricket' },
+              { value: 'Football', label: 'Football' },
+              { value: 'Kabaddi', label: 'Kabaddi' },
+            ]}
+          />
+
+          <Select
+            label="Tournament"
+            value={activeTournamentId}
+            onChange={(e) => setActiveTournamentId(e.target.value)}
+            options={[
+              { value: 'All', label: 'All Tournaments' },
+              ...tournaments.map(t => ({ value: t.id, label: t.name }))
+            ]}
+          />
+
+          <Select
+            label="Type"
+            value={activeLevel}
+            onChange={(e) => setActiveLevel(e.target.value)}
+            options={[
+              { value: 'All', label: 'All Types' },
+              { value: 'Institute', label: 'Institute' },
+              { value: 'City', label: 'City' },
+              { value: 'State', label: 'State' },
+              { value: 'Country', label: 'Country' },
+            ]}
+          />
+      </div>
+
+      <div className="flex flex-col gap-6">
         
-        {/* Left Content (Matches List) */}
-        <div className="lg:col-span-3 order-2 lg:order-1">
+        {/* Matches List Container */}
+        <div className="flex-1">
             {/* Toolbar */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
@@ -463,53 +501,6 @@ export const MatchesScreen: React.FC = () => {
               onReset={resetFilters}
               hasFilters={hasActiveFilters}
             />
-        </div>
-
-        {/* Right Sidebar (Filters) */}
-        <div className="lg:col-span-1 order-1 lg:order-2">
-           <div className="bg-white rounded-xl border border-slate-200 p-5 sticky top-24">
-              <div className="flex items-center gap-2 mb-4 text-slate-900 font-bold">
-                <Filter size={18} />
-                <h3>Filters</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <Select
-                  label="Sport"
-                  value={activeFormat}
-                  onChange={(e) => setActiveFormat(e.target.value)}
-                  options={[
-                    { value: 'All', label: 'All Sports' },
-                    { value: 'Cricket', label: 'Cricket' },
-                    { value: 'Football', label: 'Football' },
-                    { value: 'Kabaddi', label: 'Kabaddi' },
-                  ]}
-                />
-
-                <Select
-                  label="Tournament"
-                  value={activeTournamentId}
-                  onChange={(e) => setActiveTournamentId(e.target.value)}
-                  options={[
-                    { value: 'All', label: 'All Tournaments' },
-                    ...tournaments.map(t => ({ value: t.id, label: t.name }))
-                  ]}
-                />
-
-                <Select
-                  label="Type"
-                  value={activeLevel}
-                  onChange={(e) => setActiveLevel(e.target.value)}
-                  options={[
-                    { value: 'All', label: 'All Types' },
-                    { value: 'Institute', label: 'Institute' },
-                    { value: 'City', label: 'City' },
-                    { value: 'State', label: 'State' },
-                    { value: 'Country', label: 'Country' },
-                  ]}
-                />
-              </div>
-           </div>
         </div>
 
       </div>

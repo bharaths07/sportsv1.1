@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Player, PlayerStats } from '../domain/player';
+import { Player } from '../domain/player';
 
 export const playerService = {
   async getAllPlayers(): Promise<Player[]> {

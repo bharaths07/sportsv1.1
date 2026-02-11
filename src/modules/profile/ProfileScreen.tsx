@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
+import { Avatar } from '../../components/ui/Avatar';
 
 export const ProfileScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ export const ProfileScreen: React.FC = () => {
     avatarUrl: null
   } : {
     name: `${currentUser.firstName} ${currentUser.lastName}`,
-    initial: currentUser.firstName.charAt(0),
+    initial: currentUser.firstName?.charAt(0) || 'U',
     subtitle: `Member since ${currentUser.memberSince}`,
     avatarUrl: currentUser.avatarUrl
   };

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Download, Share2, Type, Layout, Palette, Image as ImageIcon } from 'lucide-react';
+import { Download, Layout } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 

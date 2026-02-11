@@ -1,26 +1,29 @@
-import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
-import { RightSidebar } from './layout/RightSidebar';
-import { TopNavbar } from './layout/TopNavbar';
+import React from "react";
+import { TopNavbar } from "./navigation/TopNavbar";
 
-export const MainLayout: React.FC = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+interface MainLayoutProps {
+  children: React.ReactNode;
+}
 
+export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+  console.log("MainLayout mounting");
   return (
-    <div className="flex min-h-screen bg-background relative">
-      {/* Right Sidebar Overlay */}
-      <RightSidebar 
-        isOpen={isSidebarOpen} 
-        onClose={() => setIsSidebarOpen(false)} 
-      />
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      
+      {/* Top Navbar */}
+      <TopNavbar onMenuClick={() => {}} />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
-        <TopNavbar onMenuClick={() => setIsSidebarOpen(true)} />
-        
-        <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
-          <Outlet />
+      {/* Main Content + Sidebar */}
+      <div className="flex flex-1 max-w-7xl mx-auto w-full px-6 py-6 gap-6">
+
+        {/* Main Page Content */}
+        <main className="flex-1 min-w-0">
+          {children}
         </main>
+
+        {/* Right Sidebar */}
+        {/* Sidebar removed as per requirement */}
+
       </div>
     </div>
   );

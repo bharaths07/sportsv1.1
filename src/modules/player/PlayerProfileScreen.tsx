@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
+import { Avatar } from '../../components/ui/Avatar';
 
 export const PlayerProfileScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -42,7 +43,6 @@ export const PlayerProfileScreen: React.FC = () => {
     let yellowCards = 0;
     let redCards = 0;
     let minutesPlayed = 0;
-    let cleanSheets = 0;
 
     totalMatches = playerMatches.length;
 
@@ -78,8 +78,8 @@ export const PlayerProfileScreen: React.FC = () => {
         m.events?.forEach(e => {
             if (e.scorerId === player.id) {
                 if (!isFootball) {
-                     if (e.type === 'run' && e.points === 4) fours++;
-                     if (e.type === 'run' && e.points === 6) sixes++;
+                     if (e.type === 'delivery' && e.runsScored === 4) fours++;
+                     if (e.type === 'delivery' && e.runsScored === 6) sixes++;
                 }
             }
         });

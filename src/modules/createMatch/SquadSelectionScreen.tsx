@@ -4,7 +4,6 @@ import { useGlobalState } from '../../app/AppProviders';
 import { Match } from '../../domain/match';
 import { Team } from '../../domain/team';
 import { CheckCircle2, Crown, Shield, Plus, ArrowRight } from 'lucide-react';
-import { Player } from '../../domain/player';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Card } from '../../components/ui/Card';
@@ -168,7 +167,7 @@ export const SquadSelectionScreen: React.FC = () => {
   const isTeamBValid = teamBSquad.size >= 7;
   const canConfirm = isTeamAValid && isTeamBValid;
 
-  const renderTeamSection = (team: Team, squad: Set<string>, captainId: string | undefined, wkId: string | undefined, gkId: string | undefined, isHome: boolean) => {
+  const renderTeamSection = (team: Team, squad: Set<string>, captainId: string | undefined, wkId: string | undefined, gkId: string | undefined) => {
       // Resolve players
       const teamPlayers = team.members.map(m => {
           const p = players.find(pl => pl.id === m.playerId);
@@ -276,8 +275,8 @@ export const SquadSelectionScreen: React.FC = () => {
       />
 
       <div className="space-y-6">
-          {renderTeamSection(teamA, teamASquad, teamACaptainId, teamAWicketKeeperId, teamAGoalkeeperId, true)}
-          {renderTeamSection(teamB, teamBSquad, teamBCaptainId, teamBWicketKeeperId, teamBGoalkeeperId, false)}
+          {renderTeamSection(teamA, teamASquad, teamACaptainId, teamAWicketKeeperId, teamAGoalkeeperId)}
+          {renderTeamSection(teamB, teamBSquad, teamBCaptainId, teamBWicketKeeperId, teamBGoalkeeperId)}
           
           {!canConfirm && (
               <p className="text-center text-xs text-slate-400">

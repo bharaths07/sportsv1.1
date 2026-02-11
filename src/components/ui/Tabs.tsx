@@ -10,16 +10,18 @@ interface TabsProps {
   activeTab: string;
   onTabChange: (id: string) => void;
   variant?: 'underline' | 'pill';
+  className?: string;
 }
 
 export const Tabs: React.FC<TabsProps> = ({ 
   tabs, 
   activeTab, 
   onTabChange,
-  variant = 'underline' 
+  variant = 'underline',
+  className = ''
 }) => {
   return (
-    <div className={`flex ${variant === 'pill' ? 'gap-2' : 'gap-6 border-b border-slate-200'}`}>
+    <div className={`flex ${variant === 'pill' ? 'gap-2' : 'gap-6 border-b border-slate-200'} ${className}`}>
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         

@@ -6,7 +6,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Avatar } from '../../components/ui/Avatar';
 import { stringToColor } from '../../utils/colors';
-import { Bell, Shield, Trophy, User } from 'lucide-react';
+import { Bell, Shield, User } from 'lucide-react';
 
 export const SettingsScreen: React.FC = () => {
   const {

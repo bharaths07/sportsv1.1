@@ -1,8 +1,6 @@
 import { CricheroesAdapter } from './adapters/cricheroesAdapter';
 import { matchService } from './matchService';
 import { tournamentService } from './tournamentService';
-import { Match } from '../domain/match';
-import { Tournament } from '../domain/tournament';
 import { Team } from '../domain/team';
 import { generateRoundRobinMatches } from '../utils/scheduling/generateRoundRobin';
 

@@ -1,13 +1,13 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Users } from 'lucide-react';
-import { TeamType } from '../../domain/team';
 import { useGlobalState } from '../../app/AppProviders';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Select } from '../../components/ui/Select';
+import { Input } from '../../components/ui/Input';
 import { Avatar } from '../../components/ui/Avatar';
 import { EmptyState } from '../../components/EmptyState';
 
@@ -105,7 +105,7 @@ export const TeamListScreen: React.FC = () => {
              <Input 
                 placeholder="Search teams..." 
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                 startIcon={<Search size={18} className="text-slate-400" />}
                 className="w-full"
              />
@@ -113,17 +113,17 @@ export const TeamListScreen: React.FC = () => {
           <Select 
             options={sportOptions}
             value={selectedSport}
-            onChange={setSelectedSport}
+            onChange={(e) => setSelectedSport(e.target.value)}
           />
           <Select 
             options={typeOptions}
             value={selectedType}
-            onChange={setSelectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
           />
           <Select 
             options={sortOptions}
             value={sortBy}
-            onChange={setSortBy}
+            onChange={(e) => setSortBy(e.target.value)}
           />
         </div>
       </Card>

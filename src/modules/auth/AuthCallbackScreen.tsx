@@ -6,7 +6,7 @@ export const AuthCallbackScreen: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data }: { data: any }) => {
       if (data.session) {
         navigate('/home', { replace: true });
       } else {

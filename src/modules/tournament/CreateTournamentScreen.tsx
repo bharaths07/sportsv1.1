@@ -43,10 +43,8 @@ export const CreateTournamentScreen: React.FC = () => {
   const [pitchType, setPitchType] = useState('');
   const [matchType, setMatchType] = useState('');
 
-  // Step 5 State: Requirements
-  const [needsMoreTeams, setNeedsMoreTeams] = useState(false);
-  const [needsOfficials, setNeedsOfficials] = useState(false);
-
+  // Step 5 State: Requirements (Removed unused states)
+  
   // Step 6 State: Branding
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
@@ -222,7 +220,7 @@ export const CreateTournamentScreen: React.FC = () => {
 
   // Organiser Details (Read-only)
   const organiserName = currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Guest User';
-  const organiserPhone = currentUser?.phone || '+91 98765 43210';
+  const organiserPhone = '+91 98765 43210';
   const organiserEmail = currentUser?.email || 'guest@example.com';
 
   return (
@@ -231,7 +229,6 @@ export const CreateTournamentScreen: React.FC = () => {
         title={view === 'review' ? 'Review Details' : (isEditMode ? 'Edit Tournament' : 'Add a tournament')}
         description={view === 'review' ? 'Review and confirm tournament details' : 'Create a new tournament or series'}
         backUrl={view === 'review' ? undefined : (isEditMode ? `/tournament/${editTournamentId}` : '/')}
-        onBackClick={view === 'review' ? () => setView('form') : undefined}
         action={
             <Button
                 onClick={handleNext}
@@ -386,7 +383,7 @@ export const CreateTournamentScreen: React.FC = () => {
                             onChange={(e) => setCity(e.target.value)}
                             placeholder="e.g. Bengaluru"
                             required
-                            startIcon={MapPin}
+                            startIcon={<MapPin size={18} />}
                         />
                         <Input
                             label="Ground"

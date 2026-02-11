@@ -1,6 +1,55 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--bg-page);
+  --color-surface: var(--bg-card);
+  --color-muted: var(--bg-muted);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-hover);
+  --color-primary-light: #eff6ff;
+  --color-secondary: var(--accent);
+  --color-accent: var(--accent);
+  --color-live: var(--live);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+  --color-border: var(--border);
+  
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+/* Validated CSS Build */
+
+:root {
+  /* Core Colors */
+  --primary: #2563eb;        /* blue-600 */
+  --primary-hover: #1d4ed8;  /* blue-700 */
+  --secondary: #64748b;      /* slate-500 */
+  --accent: #f59e0b;         /* amber-500 */
+  
+  /* Backgrounds */
+  --bg-page: #f8fafc;        /* slate-50 */
+  --bg-card: #ffffff;        /* white */
+  --bg-muted: #f1f5f9;       /* slate-100 */
+  
+  /* Typography */
+  --text-primary: #0f172a;   /* slate-900 */
+  --text-secondary: #64748b; /* slate-500 */
+  --text-muted: #94a3b8;     /* slate-400 */
+  --text-inverse: #ffffff;   /* white */
+  
+  /* UI Elements */
+  --border: #e2e8f0;         /* slate-200 */
+  --live: #ef4444;           /* red-500 */
+  
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+}
 
 @layer base {
   html {
@@ -167,35 +216,5 @@
     font-size: 18px;
     font-weight: 700;
     color: var(--primary);
-  }
-
-  /* Sidebar */
-  .sidebar {
-    width: 240px;
-    background: var(--bg-card);
-    border-right: 1px solid var(--border);
-    padding: var(--space-lg);
-  }
-
-  .sidebar-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: 8px;
-    color: var(--text-secondary);
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s ease;
-  }
-
-  .sidebar-item:hover {
-    background: #F1F5F9;
-  }
-
-  .sidebar-item.active {
-    background: #EFF6FF;
-    color: var(--primary);
-    font-weight: 600;
   }
 }

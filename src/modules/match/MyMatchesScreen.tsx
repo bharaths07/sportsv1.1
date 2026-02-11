@@ -95,7 +95,7 @@ export const MyMatchesScreen: React.FC = () => {
             { id: 'history', label: 'History' }
         ]}
         activeTab={activeTab}
-        onChange={setActiveTab}
+        onTabChange={setActiveTab}
         className="mb-6"
       />
 

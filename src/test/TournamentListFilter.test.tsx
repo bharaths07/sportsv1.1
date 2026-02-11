@@ -19,28 +19,34 @@ const mockTournaments = [
   { 
     id: '1', 
     name: 'Upcoming League', 
-    dates: 'Jan 2025', 
+    dates: '2025-01-01', 
     status: 'upcoming',
+    sportId: 's1', // Cricket
+    level: 'City',
     structure: { format: 'LEAGUE' },
-    organizerId: 'u1', // User is organizer
+    organizerId: 'u1', 
     bannerUrl: 'test.jpg' 
   },
   { 
     id: '2', 
     name: 'Ongoing Knockout', 
-    dates: 'Feb 2025', 
+    dates: '2025-02-01', 
     status: 'ongoing',
+    sportId: 's2', // Football
+    level: 'State',
     structure: { format: 'KNOCKOUT' },
-    scorers: ['u1'], // User is scorer
+    scorers: ['u1'], 
     bannerUrl: 'test.jpg' 
   },
   { 
     id: '3', 
     name: 'Completed Group', 
-    dates: 'Mar 2025', 
+    dates: '2025-03-01', 
     status: 'completed',
+    sportId: 's3', // Kabaddi
+    level: 'Institute',
     structure: { format: 'GROUP_KNOCKOUT' },
-    teams: ['t1'], // User is participant (via team t1)
+    teams: ['t1'], 
     bannerUrl: 'test.jpg' 
   }
 ];
@@ -62,123 +68,109 @@ describe('TournamentListFilter', () => {
     cleanup();
   });
 
-  it('renders new filter UI correctly', () => {
+  it('renders UI correctly', () => {
     render(<TournamentListScreen />);
 
-    expect(screen.getByText('Filter Tournaments')).toBeTruthy();
-    expect(screen.getByPlaceholderText('Tournament name...')).toBeTruthy();
-    expect(screen.getByText('Status')).toBeTruthy();
-    expect(screen.getByText('Format')).toBeTruthy();
-    expect(screen.getByText('My Role')).toBeTruthy();
+    expect(screen.getByText('Tournaments')).toBeTruthy();
+    expect(screen.getByText('Create Tournament')).toBeTruthy();
+    expect(screen.getByPlaceholderText('Search tournaments...')).toBeTruthy();
     
-    // Check Status options
-    const statusSelect = screen.getAllByRole('combobox')[0] as HTMLSelectElement; // Status is 1st select (0 is likely search if it was a select, but search is input)
-    // Actually input is not combobox. Selects are: Status, Format, Role.
-    
-    // Verify selects exist
+    // Check Tabs
+    expect(screen.getByText('Ongoing')).toBeTruthy();
+    expect(screen.getByText('Upcoming')).toBeTruthy();
+    expect(screen.getByText('Completed')).toBeTruthy();
+
+    // Check Filters
     const selects = screen.getAllByRole('combobox');
-    expect(selects.length).toBe(3);
+    expect(selects.length).toBe(2); // Sport and Type filters
+    expect(screen.getByText('All Sports')).toBeTruthy();
+    expect(screen.getByText('All Types')).toBeTruthy();
   });
 
-  it('filters by status', async () => {
+  it('filters by status (Tabs)', async () => {
     render(<TournamentListScreen />);
-    const statusSelect = screen.getAllByRole('combobox')[0] as HTMLSelectElement; // Status
     
-    // Initially all 3 shown
-    expect(screen.getAllByText('Upcoming League').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Ongoing Knockout').length).toBeGreaterThan(0);
-    expect(screen.getByText('Completed Group')).toBeTruthy();
-
-    // Select Ongoing
-    fireEvent.change(statusSelect, { target: { value: 'ongoing' } });
-    expect(statusSelect.value).toBe('ongoing');
-    
-    await waitFor(() => {
-      expect(screen.queryByText('Upcoming League')).toBeNull();
-    });
-    expect(screen.getAllByText('Ongoing Knockout').length).toBeGreaterThan(0);
+    // Default is Ongoing
+    expect(screen.getByText('Ongoing Knockout')).toBeTruthy();
+    expect(screen.queryByText('Upcoming League')).toBeNull();
     expect(screen.queryByText('Completed Group')).toBeNull();
-  });
 
-  it('filters by format', async () => {
-    render(<TournamentListScreen />);
-    const formatSelect = screen.getAllByRole('combobox')[1]; // Format
-    
-    fireEvent.change(formatSelect, { target: { value: 'KNOCKOUT' } });
-    
+    // Click Upcoming
+    fireEvent.click(screen.getByText('Upcoming'));
     await waitFor(() => {
-      expect(screen.queryByText('Upcoming League')).toBeNull();
+      expect(screen.getByText('Upcoming League')).toBeTruthy();
     });
-    expect(screen.getAllByText('Ongoing Knockout').length).toBeGreaterThan(0);
-    expect(screen.queryByText('Completed Group')).toBeNull();
+    expect(screen.queryByText('Ongoing Knockout')).toBeNull();
+
+    // Click Completed
+    fireEvent.click(screen.getByText('Completed'));
+    await waitFor(() => {
+      expect(screen.getByText('Completed Group')).toBeTruthy();
+    });
+    expect(screen.queryByText('Upcoming League')).toBeNull();
   });
 
   it('filters by search', async () => {
     render(<TournamentListScreen />);
-    const searchInput = screen.getByRole('textbox');
     
+    // Switch to Upcoming tab first since we search for "Upcoming"
+    fireEvent.click(screen.getByText('Upcoming'));
+    
+    const searchInput = screen.getByPlaceholderText('Search tournaments...');
+    
+    // Search for existing
     fireEvent.change(searchInput, { target: { value: 'Upcoming' } });
-    
     await waitFor(() => {
-      expect(screen.getAllByText('Upcoming League').length).toBeGreaterThan(0);
+      expect(screen.getByText('Upcoming League')).toBeTruthy();
     });
-    expect(screen.queryByText('Ongoing Knockout')).toBeNull();
-    expect(screen.queryByText('Completed Group')).toBeNull();
+
+    // Search for non-existing in this tab
+    fireEvent.change(searchInput, { target: { value: 'Ongoing' } });
+    await waitFor(() => {
+      expect(screen.queryByText('Upcoming League')).toBeNull();
+      expect(screen.getByText('No tournaments found')).toBeTruthy();
+    });
   });
 
-  it('filters by role: Organizer', async () => {
+  it('filters by Sport', async () => {
     render(<TournamentListScreen />);
-    const roleSelect = screen.getAllByRole('combobox')[2]; // Role
     
-    fireEvent.change(roleSelect, { target: { value: 'organizer' } });
+    // Switch to Upcoming to test Cricket (s1)
+    fireEvent.click(screen.getByText('Upcoming'));
     
+    const sportSelect = screen.getAllByRole('combobox')[0]; // First select is Sport
+    
+    // Filter by Cricket
+    fireEvent.change(sportSelect, { target: { value: 'cricket' } });
     await waitFor(() => {
-      expect(screen.getAllByText('Upcoming League').length).toBeGreaterThan(0); // u1 is organizer
+      expect(screen.getByText('Upcoming League')).toBeTruthy();
     });
-    expect(screen.queryByText('Ongoing Knockout')).toBeNull();
-    expect(screen.queryByText('Completed Group')).toBeNull();
-  });
 
-  it('filters by role: Scorer', async () => {
-    render(<TournamentListScreen />);
-    const roleSelect = screen.getAllByRole('combobox')[2]; // Role
-    
-    fireEvent.change(roleSelect, { target: { value: 'scorer' } });
-    
+    // Filter by Football (should show empty in Upcoming tab)
+    fireEvent.change(sportSelect, { target: { value: 'football' } });
     await waitFor(() => {
       expect(screen.queryByText('Upcoming League')).toBeNull();
     });
-    expect(screen.getAllByText('Ongoing Knockout').length).toBeGreaterThan(0); // Scorer u1
-    expect(screen.queryByText('Completed Group')).toBeNull();
   });
 
-  it('filters by role: Participant', async () => {
+  it('filters by Level', async () => {
     render(<TournamentListScreen />);
-    const roleSelect = screen.getAllByRole('combobox')[2]; // Role
     
-    fireEvent.change(roleSelect, { target: { value: 'participant' } });
-    expect(roleSelect.value).toBe('participant');
+    // Switch to Upcoming to test City level
+    fireEvent.click(screen.getByText('Upcoming'));
     
+    const typeSelect = screen.getAllByRole('combobox')[1]; // Second select is Level/Type
+    
+    // Filter by City
+    fireEvent.change(typeSelect, { target: { value: 'City' } });
+    await waitFor(() => {
+      expect(screen.getByText('Upcoming League')).toBeTruthy();
+    });
+
+    // Filter by State (should show empty in Upcoming tab)
+    fireEvent.change(typeSelect, { target: { value: 'State' } });
     await waitFor(() => {
       expect(screen.queryByText('Upcoming League')).toBeNull();
     });
-    
-    expect(screen.queryByText('Ongoing Knockout')).toBeNull();
-    expect(screen.getByText('Completed Group')).toBeTruthy(); // Team t1 is participant, u1 is in t1
-  });
-
-  it('hides role filter when user is not logged in', () => {
-    vi.spyOn(AppProviders, 'useGlobalState').mockReturnValue({
-      tournaments: mockTournaments,
-      currentUser: null,
-      teams: [],
-      players: []
-    } as any);
-
-    render(<TournamentListScreen />);
-    
-    expect(screen.queryByText('My Role')).toBeNull();
-    const selects = screen.getAllByRole('combobox');
-    expect(selects.length).toBe(2); // Only Status and Format
   });
 });

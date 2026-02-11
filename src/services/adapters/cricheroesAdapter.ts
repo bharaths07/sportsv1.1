@@ -1,7 +1,6 @@
 import { Match } from '../../domain/match';
 import { Tournament } from '../../domain/tournament';
 import { Team } from '../../domain/team';
-import { Player } from '../../domain/player';
 
 // --- Cricheroes External API Interfaces (Simulated) ---
 
