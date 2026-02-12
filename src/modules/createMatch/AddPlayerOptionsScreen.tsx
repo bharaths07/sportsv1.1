@@ -95,7 +95,7 @@ export const AddPlayerOptionsScreen: React.FC = () => {
     if (navigator.share) {
         navigator.share({
             title: 'Join Team',
-            text: 'Join my team on ScoreHeroes!',
+            text: 'Join my team on Play Legends!',
             url: window.location.origin + `/join-team?teamId=${teamId}`
         }).catch(console.error);
     } else {

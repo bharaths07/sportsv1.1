@@ -17,14 +17,36 @@ export const CreateTournamentScreen: React.FC = () => {
   const requireAuth = useRequireAuth();
   const [searchParams] = useSearchParams();
   const editTournamentId = searchParams.get('edit');
+  const gameIdParam = searchParams.get('game');
   const isEditMode = Boolean(editTournamentId);
   
   const { currentUser, addTournament, updateTournament, tournaments, matches } = useGlobalState();
 
-  // Route Protection
+  // Route Protection & Game Selection Check
   useEffect(() => {
     requireAuth(currentUser);
-  }, [currentUser, requireAuth]);
+    
+    // If creating new tournament and no game selected, redirect to selection
+    if (!isEditMode && !gameIdParam) {
+      navigate('/tournament/create');
+    }
+  }, [currentUser, requireAuth, isEditMode, gameIdParam, navigate]);
+
+  // Map game ID to sport ID (s1, s2, etc.)
+  const getSportId = (gameId: string | null) => {
+    switch(gameId) {
+      case 'cricket': return 's1';
+      case 'football': return 's2';
+      case 'kabaddi': return 's3';
+      case 'badminton': return 's4';
+      default: return 's1'; // Default to cricket
+    }
+  };
+
+  const getSportName = (gameId: string | null) => {
+    if (!gameId) return 'Cricket';
+    return gameId.charAt(0).toUpperCase() + gameId.slice(1);
+  };
 
   // Step 1 State: Identity
   const [name, setName] = useState('');
@@ -191,6 +213,7 @@ export const CreateTournamentScreen: React.FC = () => {
           ground,
           startDate,
           endDate,
+          sportId: isEditMode ? undefined : getSportId(gameIdParam), // Only set on creation
         };
 
         if (isEditMode && editTournamentId) {
@@ -226,9 +249,9 @@ export const CreateTournamentScreen: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader
-        title={view === 'review' ? 'Review Details' : (isEditMode ? 'Edit Tournament' : 'Add a tournament')}
+        title={view === 'review' ? 'Review Details' : (isEditMode ? 'Edit Tournament' : `Create ${getSportName(gameIdParam)} Tournament`)}
         description={view === 'review' ? 'Review and confirm tournament details' : 'Create a new tournament or series'}
-        backUrl={view === 'review' ? undefined : (isEditMode ? `/tournament/${editTournamentId}` : '/')}
+        backUrl={view === 'review' ? undefined : (isEditMode ? `/tournament/${editTournamentId}` : '/tournament/create')}
         action={
             <Button
                 onClick={handleNext}

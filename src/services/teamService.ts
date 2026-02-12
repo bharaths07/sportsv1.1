@@ -19,6 +19,8 @@ export const teamService = {
   },
 
   async createTeam(team: Partial<Team>): Promise<Team | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+
     const dbTeam = {
       name: team.name,
       type: team.type,
@@ -26,6 +28,8 @@ export const teamService = {
       logo_url: team.logoUrl,
       // Defaulting others or mapping if they existed in DB
       active: true,
+      created_by: user?.id,
+      sport_id: team.sportId
     };
 
     const { data, error } = await supabase
@@ -78,7 +82,7 @@ function mapToDomain(dbTeam: any): Team {
   return {
     id: dbTeam.id,
     name: dbTeam.name,
-    sportId: 'Cricket', // Default for now
+    sportId: dbTeam.sport_id || 'Cricket', // Default for now
     type: dbTeam.type,
     members: (dbTeam.team_members || []).map((m: any) => ({
       playerId: m.player_id || m.user_id || 'unknown',

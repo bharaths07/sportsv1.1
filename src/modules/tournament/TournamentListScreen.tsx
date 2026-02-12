@@ -68,7 +68,7 @@ export const TournamentListScreen: React.FC = () => {
           <Button 
             variant="primary" 
             icon={<Plus size={18} />}
-            onClick={() => navigate('/create-tournament')}
+            onClick={() => navigate('/tournament/create')}
           >
             Create Tournament
           </Button>

@@ -194,7 +194,7 @@ export const LoginScreen: React.FC = () => {
 
         {/* Footer */}
         <p className="text-center text-xs text-slate-400">
-          &copy; {new Date().getFullYear()} Sports Legends. All rights reserved.
+          &copy; {new Date().getFullYear()} Play Legends. All rights reserved.
         </p>
       </div>
     </div>

@@ -53,7 +53,10 @@ export const TournamentTeamsScreen: React.FC = () => {
   };
 
   const handleCreateNewTeam = () => {
-    navigate(`/team/create?context=tournament&tournamentId=${tournamentId}`);
+    // If tournament has a sportId, we could pass it as 'game' param if we map it back
+    // s1=cricket, s2=football, etc.
+    // For now, let's route to selection, preserving context
+    navigate(`/teams/create?context=tournament&tournamentId=${tournamentId}`);
   };
 
   const handleInviteTeam = () => {

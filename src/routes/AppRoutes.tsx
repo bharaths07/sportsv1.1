@@ -21,9 +21,11 @@ import { MyCertificatesScreen } from '../modules/certificates/MyCertificatesScre
 import { TournamentScreen } from '../modules/tournament/TournamentScreen';
 import { TeamListScreen } from '../modules/team/TeamListScreen';
 import { CreateTeamScreen } from '../modules/team/CreateTeamScreen';
+import { SelectTeamGameScreen } from '../modules/team/SelectTeamGameScreen';
 import { StatsScreen } from '../modules/stats/StatsScreen';
 import { TournamentListScreen } from '../modules/tournament/TournamentListScreen';
 import { CreateTournamentScreen } from '../modules/tournament/CreateTournamentScreen';
+import { SelectTournamentGameScreen } from '../modules/tournament/SelectTournamentGameScreen';
 import { TournamentTeamsScreen } from '../modules/tournament/TournamentTeamsScreen';
 import { TournamentStructureScreen } from '../modules/tournament/TournamentStructureScreen';
 import { TournamentScheduleScreen } from '../modules/tournament/TournamentScheduleScreen';
@@ -42,6 +44,10 @@ import { PlaceholderScreen } from '../components/PlaceholderScreen';
 import { SearchResultsScreen } from '../modules/search/SearchResultsScreen';
 
 import { LoginScreen } from '../modules/auth/LoginScreen';
+import { DualPanelLoginScreen } from '../modules/auth/DualPanelLoginScreen';
+import { PhoneLoginScreen } from '../modules/auth/PhoneLoginScreen';
+import { OtpVerificationScreen } from '../modules/auth/OtpVerificationScreen';
+import { AuthSuccessScreen } from '../modules/auth/AuthSuccessScreen';
 import { AuthCallbackScreen } from '../modules/auth/AuthCallbackScreen';
 
 import { VenuesScreen } from '../modules/system/VenuesScreen';
@@ -78,12 +84,15 @@ export const AppRoutes: React.FC = () => {
     <Routes>
       {/* 🔓 Public Routes */}
       <Route element={<PublicRoute />}>
-        <Route path="/login" element={<LoginScreen />} />
+        <Route path="/login" element={<DualPanelLoginScreen />} />
+        <Route path="/login-email" element={<DualPanelLoginScreen />} />
+        <Route path="/auth/verify" element={<OtpVerificationScreen />} />
         <Route path="/auth/callback" element={<AuthCallbackScreen />} />
       </Route>
 
       {/* 🔐 Protected Routes */}
       <Route element={<ProtectedRoute />}>
+        <Route path="/auth/success" element={<AuthSuccessScreen />} />
         <Route path="/" element={<HomeScreen />} />
         <Route path="/home" element={<HomeScreen />} />
         <Route path="/live" element={<LiveScreen />} />
@@ -123,7 +132,10 @@ export const AppRoutes: React.FC = () => {
         <Route path="/start-match/openers" element={<SelectOpenersScreen />} />
         <Route path="/start-match/add-player" element={<AddPlayerOptionsScreen />} />
         <Route path="/create-match" element={<CreateMatchScreen />} />
-        <Route path="/tournament/create" element={<CreateTournamentScreen />} />
+        <Route path="/teams/create" element={<SelectTeamGameScreen />} />
+        <Route path="/teams/setup" element={<CreateTeamScreen />} />
+        <Route path="/tournament/create" element={<SelectTournamentGameScreen />} />
+        <Route path="/tournament/setup" element={<CreateTournamentScreen />} />
         <Route path="/manage-matches" element={<MyMatchesScreen />} />
         <Route path="/venues" element={<VenuesScreen />} />
         <Route path="/officials" element={<OfficialsScreen />} />

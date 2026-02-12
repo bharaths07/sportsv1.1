@@ -41,6 +41,23 @@ const createMockClient = () => {
       getSession: () => Promise.resolve({ data: { session: null }, error: null }),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
       signInWithPassword: () => Promise.resolve({ data: { user: { id: 'mock-user' }, session: {} }, error: null }),
+      signInWithOtp: (params: any) => {
+        console.log('[MockSupabase] signInWithOtp:', params);
+        return Promise.resolve({ data: { user: null, session: null }, error: null });
+      },
+      verifyOtp: (params: any) => {
+        console.log('[MockSupabase] verifyOtp:', params);
+        if (params.token === '123456') {
+            return Promise.resolve({ 
+                data: { 
+                    user: { id: 'mock-user', phone: params.phone }, 
+                    session: { access_token: 'mock-token' } 
+                }, 
+                error: null 
+            });
+        }
+        return Promise.resolve({ data: { user: null, session: null }, error: { message: 'Invalid OTP' } });
+      },
       signOut: () => Promise.resolve({ error: null }),
       getUser: () => Promise.resolve({ data: { user: { id: 'mock-user' } }, error: null }),
     },

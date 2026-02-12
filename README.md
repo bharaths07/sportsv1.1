@@ -1,4 +1,4 @@
-# PlayLegends (formerly SportSync)
+# Play Legends
 
 A professional sports platform dashboard for managing tournaments, matches, teams, and live scoring.
 

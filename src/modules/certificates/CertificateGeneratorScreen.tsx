@@ -143,7 +143,7 @@ export const CertificateGeneratorScreen: React.FC = () => {
                 <div className="text-xs text-slate-400 uppercase font-bold">Organizer</div>
               </div>
               <div className="text-center">
-                <div className="w-32 border-b border-slate-400 mb-2 font-handwriting text-xl text-slate-600 italic">ScoreHeroes</div>
+                <div className="w-32 border-b border-slate-400 mb-2 font-handwriting text-xl text-slate-600 italic">Play Legends</div>
                 <div className="text-xs text-slate-400 uppercase font-bold">Verified By</div>
               </div>
             </div>

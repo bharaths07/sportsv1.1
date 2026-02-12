@@ -28,7 +28,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onMenuClick }) => {
             to="/"
             className="text-xl font-bold text-gray-900 tracking-tight"
           >
-            Sports Legends
+            Play Legends
           </Link>
 
           <nav className="hidden md:flex items-center gap-2">
@@ -54,7 +54,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onMenuClick }) => {
         <div className="flex items-center gap-4">
           <button
             onClick={onMenuClick}
-            className="md:hidden p-2 text-gray-600 hover:text-gray-900"
+            className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <Menu size={22} />
           </button>
@@ -63,14 +63,6 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ onMenuClick }) => {
             <Bell size={20} />
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>
-
-          <Link to="/profile">
-            <Avatar
-              src={currentUser?.avatarUrl}
-              fallback={currentUser?.firstName?.charAt(0) || "G"}
-              className="w-9 h-9"
-            />
-          </Link>
         </div>
       </div>
     </header>

@@ -67,8 +67,8 @@ export const PosterGenerator: React.FC<Props> = ({ data, match, onClose }) => {
           const link = document.createElement('a');
           link.href = imageUrl;
           const filename = data.type === 'team_win' 
-              ? `ScoreHeroes_Poster_Match_${match.id}.png`
-              : `ScoreHeroes_Poster_${data.player?.playerId || 'player'}.png`;
+              ? `PlayLegends_Poster_Match_${match.id}.png`
+              : `PlayLegends_Poster_${data.player?.playerId || 'player'}.png`;
           link.download = filename;
           document.body.appendChild(link);
           link.click();

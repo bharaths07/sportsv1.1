@@ -18,6 +18,20 @@ export const CreateTeamScreen: React.FC = () => {
   
   const context = searchParams.get('context');
   const tournamentId = searchParams.get('tournamentId');
+  const gameId = searchParams.get('game');
+
+  // Redirect to game selection if no game specified
+  React.useEffect(() => {
+    if (!gameId && !context) { // Allow context (like from tournament) to bypass or handle differently? 
+       // actually, for now, let's enforce game selection for standard flow
+       navigate('/teams/create');
+    }
+  }, [gameId, context, navigate]);
+
+  const getSportName = (id: string | null) => {
+    if (!id) return 'Team';
+    return id.charAt(0).toUpperCase() + id.slice(1);
+  };
 
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
@@ -33,7 +47,7 @@ export const CreateTeamScreen: React.FC = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!name.trim() || !city.trim()) return;
     setIsSubmitting(true);
 
@@ -42,7 +56,7 @@ export const CreateTeamScreen: React.FC = () => {
       id: `team_${Date.now()}`,
       name: name.trim(),
       type: 'club', // Default
-      sportId: 'cricket',
+      sportId: gameId || 'cricket',
       active: true,
       members: [],
       createdAt: new Date().toISOString(),
@@ -51,18 +65,23 @@ export const CreateTeamScreen: React.FC = () => {
       logoUrl: logoUrl || undefined,
     };
 
-    // Add to global state
-    addTeam(newTeam);
-    
-    // Logic for context
-    setTimeout(() => {
+    try {
+        // Add to global state
+        await addTeam(newTeam);
+        
+        // Logic for context
         if (context === 'tournament' && tournamentId) {
             addTeamToTournament(tournamentId, newTeam.id);
             navigate(`/tournament/${tournamentId}/teams`);
         } else {
             navigate('/teams'); // Default back to list
         }
-    }, 500);
+    } catch (error) {
+        console.error("Team creation failed", error);
+        // Alert handled by provider, but we stop loading state
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   const isValid = name.trim().length > 0 && city.trim().length > 0;
@@ -70,8 +89,9 @@ export const CreateTeamScreen: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader 
-        title="Create New Team" 
-        description="Add a new team to your collection"
+        title={`Create ${getSportName(gameId)} Team`} 
+        description={`Add a new ${getSportName(gameId).toLowerCase()} team to your collection`}
+        backUrl="/teams/create"
       />
 
       <div className="max-w-xl mx-auto space-y-6">
@@ -129,6 +149,20 @@ export const CreateTeamScreen: React.FC = () => {
                         placeholder="Tell us about your team..."
                         rows={4}
                     />
+
+                    {/* Game Specific Fields */}
+                    {gameId === 'cricket' && (
+                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                            <h4 className="text-sm font-bold text-blue-900 mb-2">Cricket Details</h4>
+                            <p className="text-xs text-blue-700">Standard squad size: 11-15 players</p>
+                        </div>
+                    )}
+                    {gameId === 'football' && (
+                        <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100">
+                            <h4 className="text-sm font-bold text-emerald-900 mb-2">Football Details</h4>
+                            <p className="text-xs text-emerald-700">Standard squad size: 11-18 players</p>
+                        </div>
+                    )}
                 </div>
 
                 <div className="pt-4">

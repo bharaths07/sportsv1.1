@@ -1,10 +1,10 @@
 # First-Time User Experience (FTUE) Guidelines
 
-This document defines the experience for a new user to understand SportSync in under 30 seconds.
+This document defines the experience for a new user to understand Play Legends in under 30 seconds.
 
 ## 🎯 Goal
 A first-time user should immediately understand:
-1.  What SportSync is.
+1.  What Play Legends is.
 2.  What they can do here.
 3.  What to do next.
 

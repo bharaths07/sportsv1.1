@@ -98,123 +98,32 @@
     font-weight: 600;
     color: var(--text-primary);
   }
+}
 
-  /* Empty State */
-  .empty-state {
-    text-align: center;
-    padding: var(--space-xl);
-    color: var(--text-secondary);
-  }
+/* Custom Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
-  /* Button System */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px 16px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
 
-  .btn-primary {
-    background: var(--primary);
-    color: #fff;
-  }
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
 
-  .btn-primary:hover {
-    background: var(--primary-hover);
-    transform: translateY(-1px);
-  }
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
 
-  .btn-secondary {
-    background: transparent;
-    color: var(--primary);
-    border: 1px solid var(--border);
-  }
+.animate-slide-in-left {
+  animation: slideInLeft 0.7s ease-out forwards;
+}
 
-  .btn-secondary:hover {
-    background: #EFF6FF;
-  }
-
-  .btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  /* Tabs */
-  .tabs {
-    display: flex;
-    gap: 20px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .tab {
-    padding: 10px 0;
-    font-weight: 600;
-    color: var(--text-secondary);
-    cursor: pointer;
-    position: relative;
-    background: none;
-    border: none;
-  }
-
-  .tab.active {
-    color: var(--primary);
-  }
-
-  .tab.active::after {
-    content: "";
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: var(--primary);
-  }
-
-  /* Status Pills */
-  .badge {
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 600;
-    display: inline-block;
-  }
-
-  .badge-live {
-    background: #FEE2E2;
-    color: var(--live);
-  }
-
-  .badge-upcoming {
-    background: #DBEAFE;
-    color: var(--primary);
-  }
-
-  .badge-finished {
-    background: var(--bg-muted);
-    color: var(--text-secondary);
-  }
-
-  /* Navbar */
-  .navbar {
-    height: 64px;
-    background: var(--bg-card);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 var(--space-lg);
-    justify-content: space-between;
-  }
-
-  .navbar-brand {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--primary);
-  }
+.animate-slide-in-right {
+  animation: slideInRight 0.7s ease-out forwards;
 }

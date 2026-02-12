@@ -20,33 +20,33 @@ const GAMES: GameOption[] = [
   {
     id: 'cricket',
     name: 'Cricket',
-    description: 'Score full matches with ball-by-ball tracking and detailed stats.',
+    description: 'Create leagues, knockout tournaments, and series.',
     icon: <Trophy size={32} className="text-blue-600" />,
   },
   {
     id: 'football',
     name: 'Football',
-    description: 'Track goals, assists, and match events in real-time.',
+    description: 'Organize tournaments with group stages and finals.',
     icon: <Activity size={32} className="text-emerald-500" />,
     comingSoon: false,
   },
   {
     id: 'badminton',
     name: 'Badminton',
-    description: 'Keep score for singles and doubles matches.',
+    description: 'Manage singles and doubles tournaments.',
     icon: <Users size={32} className="text-amber-500" />,
     comingSoon: true,
   },
   {
     id: 'kabaddi',
     name: 'Kabaddi',
-    description: 'Raid points, tackle points, and team standings.',
+    description: 'Create kabaddi tournaments and track standings.',
     icon: <Shield size={32} className="text-purple-500" />,
     comingSoon: true,
   },
 ];
 
-export const SelectGameScreen: React.FC = () => {
+export const SelectTournamentGameScreen: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [comingSoonGame, setComingSoonGame] = useState<GameOption | null>(null);
@@ -54,9 +54,6 @@ export const SelectGameScreen: React.FC = () => {
   const [notified, setNotified] = useState(false);
 
   const handleGameSelect = (game: GameOption) => {
-    // Analytics placeholder
-    console.log(`[Analytics] Game Selected: ${game.name}`);
-
     if (game.comingSoon) {
       setComingSoonGame(game);
       return;
@@ -64,7 +61,7 @@ export const SelectGameScreen: React.FC = () => {
 
     const params = new URLSearchParams(searchParams);
     params.set('game', game.id);
-    navigate(`/start-match/select-teams?${params.toString()}`);
+    navigate(`/tournament/setup?${params.toString()}`);
   };
 
   const handleNotifyMe = (e: React.FormEvent) => {
@@ -85,8 +82,8 @@ export const SelectGameScreen: React.FC = () => {
   return (
     <PageContainer>
         <PageHeader 
-            title="Select Game" 
-            description="Choose a sport to start scoring"
+            title="Select Tournament Sport" 
+            description="Choose a sport to organize a tournament for"
             actions={<button className="text-slate-400 hover:text-slate-600" aria-label="Help"><HelpCircle size={24}/></button>}
         />
         
@@ -127,7 +124,7 @@ export const SelectGameScreen: React.FC = () => {
                     ) : (
                         <div className="mt-auto w-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 transform translate-y-2 group-hover:translate-y-0">
                             <Button variant="primary" className="w-full justify-center" size="sm">
-                                Start Match <ChevronRight size={16} />
+                                Create Tournament <ChevronRight size={16} />
                             </Button>
                         </div>
                     )}
@@ -147,7 +144,7 @@ export const SelectGameScreen: React.FC = () => {
                     <Bell size={32} className="text-blue-600" />
                 </div>
                 <p className="text-slate-600 mb-6">
-                    We're working hard to bring <strong>{comingSoonGame?.name}</strong> to Play Legends. 
+                    We're working hard to bring <strong>{comingSoonGame?.name}</strong> tournament support to Play Legends. 
                     Get notified when it's ready!
                 </p>
 

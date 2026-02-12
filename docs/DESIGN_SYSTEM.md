@@ -1,7 +1,7 @@
-# SportSync Design System
+# Play Legends Design System
 
 ## 1. Introduction
-The SportSync Design System is the single source of truth for UI/UX across the platform. It ensures consistency, accessibility, and a premium "sports-tech" feel.
+The Play Legends Design System is the single source of truth for UI/UX across the platform. It ensures consistency, accessibility, and a premium "sports-tech" feel.
 
 **Core Principles:**
 - **Energetic & Trustworthy:** A balance of vibrant sports energy and reliable data presentation.
