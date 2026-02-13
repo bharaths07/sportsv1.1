@@ -11,7 +11,8 @@ import {
   Award, 
   Settings, 
   Zap, 
-  ChevronRight 
+  ChevronRight,
+  LogOut
 } from 'lucide-react';
 import { useGlobalState } from '../../app/AppProviders';
 import { Avatar } from '../ui/Avatar';
@@ -24,7 +25,7 @@ interface SidebarDrawerProps {
 export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser } = useGlobalState();
+  const { currentUser, logout } = useGlobalState();
 
   // Close sidebar on route change
   useEffect(() => {
@@ -44,6 +45,11 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
 
   const handleNavigation = (path: string) => {
     navigate(path);
+    onClose();
+  };
+
+  const handleLogout = () => {
+    logout();
     onClose();
   };
 
@@ -75,6 +81,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
             <button 
               onClick={onClose}
               className="p-2 -mr-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
+              aria-label="Close menu"
             >
               <X size={20} />
             </button>
@@ -82,7 +89,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
 
           <div 
             className="flex items-center gap-4 p-3 rounded-xl bg-white border border-slate-200 shadow-sm cursor-pointer hover:border-blue-200 transition-colors"
-            onClick={() => handleNavigation('/profile')}
+            onClick={() => handleNavigation('/profile/me')}
           >
             <Avatar 
               src={currentUser?.avatarUrl} 
@@ -115,6 +122,18 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
               </span>
             </button>
           ))}
+          
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-red-50 active:bg-red-100 transition-all group mt-2 border-t border-slate-100"
+          >
+            <div className="p-2 rounded-lg bg-red-50 group-hover:bg-white group-hover:shadow-sm transition-all text-red-600">
+              <LogOut size={20} />
+            </div>
+            <span className="font-medium text-slate-700 group-hover:text-red-700">
+              Log Out
+            </span>
+          </button>
         </div>
 
         {/* Footer / Upgrade Plan */}

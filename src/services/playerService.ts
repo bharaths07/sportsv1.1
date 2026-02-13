@@ -69,6 +69,8 @@ export const playerService = {
     if (updates.active !== undefined) dbUpdates.active = updates.active;
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.avatarUrl) dbUpdates.avatar_url = updates.avatarUrl;
+    if (updates.photos) dbUpdates.photos = updates.photos;
+    if (updates.highlights) dbUpdates.highlights = updates.highlights;
 
     const { data, error } = await supabase
       .from('players')
@@ -103,6 +105,8 @@ function mapToDomain(dbPlayer: any): Player {
     },
     history: dbPlayer.history || [],
     avatarUrl: dbPlayer.avatar_url,
+    photos: dbPlayer.photos || [],
+    highlights: dbPlayer.highlights || [],
     // Map other fields as necessary
   };
 }

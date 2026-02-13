@@ -87,18 +87,23 @@ export const SelectTeamGameScreen: React.FC = () => {
             actions={<button className="text-slate-400 hover:text-slate-600" aria-label="Help"><HelpCircle size={24}/></button>}
         />
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" role="list">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {GAMES.map((game) => (
-                <Card 
+                <div 
                     key={game.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleGameSelect(game)}
-                    hoverable
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        handleGameSelect(game);
+                      }
+                    }}
                     className={`p-6 flex flex-col items-center text-center transition-all duration-200 group relative overflow-hidden border-2 ${
                         game.comingSoon 
                         ? 'border-slate-100 bg-slate-50/50' 
                         : 'border-transparent hover:border-blue-500/20 hover:shadow-xl cursor-pointer'
                     }`}
-                    role="listitem"
                     aria-label={`Select ${game.name}`}
                 >
                     <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 ${
@@ -128,7 +133,7 @@ export const SelectTeamGameScreen: React.FC = () => {
                             </Button>
                         </div>
                     )}
-                </Card>
+                </div>
             ))}
         </div>
 

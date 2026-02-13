@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
 import { Avatar } from '../../components/ui/Avatar';
+import { Settings, MapPin, Instagram, Linkedin, Twitter, Youtube, Github, Plus, QrCode } from 'lucide-react';
+import { Button } from '../../components/ui/Button';
 
 export const MyProfileDetailsScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -11,175 +13,188 @@ export const MyProfileDetailsScreen: React.FC = () => {
   // Resolve user display data
   const userData = isGuest ? {
     name: 'Guest User',
-    location: 'Location not set',
+    username: 'guest',
+    location: 'India',
     memberSince: '-',
     avatarUrl: null,
     initial: 'G',
     followers: 0,
+    following: 0,
     views: 0,
-    bio: ''
+    bio: 'Sign in to access full profile features and connect with other sports enthusiasts.',
+    favoriteGame: 'Sports Enthusiast',
+    gameRoles: {} as Record<string, string[]>
   } : {
-    name: currentUser.name || `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || 'User',
-    location: currentUser.location || 'Location not set',
+    name: currentUser.name || 'User',
+    username: currentUser.username || `user_${currentUser.id.slice(0,6)}`,
+    location: currentUser.location || 'India',
     memberSince: currentUser.memberSince || new Date().getFullYear().toString(),
     avatarUrl: currentUser.avatarUrl,
-    initial: (currentUser.name || currentUser.firstName || 'U').charAt(0),
+    initial: (currentUser.name || 'U').charAt(0),
     followers: currentUser.followersCount || 0,
+    following: currentUser.followingCount || 0,
     views: currentUser.profileViews || 0,
-    bio: currentUser.bio || ''
-  };
-
-  const handleCtaClick = () => {
-    if (isGuest) {
-      navigate('/login');
-    } else {
-      navigate('/profile/edit');
-    }
+    bio: currentUser.bio || 'Passionate about sports and competition. Always ready for a match!',
+    favoriteGame: currentUser.favoriteGame || 'Athlete',
+    gameRoles: currentUser.gameRoles || {},
   };
 
   return (
-    <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="min-h-screen bg-white">
       
-      {/* 1. Red Top App Bar & Header Background */}
-      <div style={{ backgroundColor: '#dc2626', paddingBottom: '60px' }}>
-        {/* App Bar */}
-        <div style={{ 
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '16px 20px', color: 'white'
-        }}>
-          <div onClick={() => navigate('/profile')} style={{ fontSize: '24px', cursor: 'pointer' }}>
-            ←
-          </div>
-          <div onClick={() => navigate('/profile/cricket/me')} style={{ fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-            Cricket profile 
-            <span style={{ fontSize: '12px' }}>›</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Profile Content (Overlapping) */}
-      <div style={{ 
-        backgroundColor: 'white', 
-        borderTopLeftRadius: '0px', borderTopRightRadius: '0px', 
-        flex: 1,
-        position: 'relative',
-        padding: '0 20px'
-      }}>
+      {/* 1. Header Section (Blue Gradient) */}
+      <div className="bg-gradient-to-b from-blue-600 to-cyan-400 pb-20 rounded-b-[3rem] relative overflow-hidden">
         
-        {/* Avatar & Basic Info Row */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '24px' }}>
-          
-          {/* Avatar (Overlapping) */}
-          <div style={{ 
-            marginTop: '-40px', // Pull up into red area
-            marginRight: '16px',
-            position: 'relative'
-          }}>
-            <Avatar 
-              src={userData.avatarUrl}
-              fallback={userData.initial}
-              className="w-[100px] h-[100px] border-4 border-white shadow-md text-3xl bg-slate-100 text-slate-500 font-bold"
-            />
-            
-            {/* Edit Overlay on Avatar */}
-            {!isGuest && (
-              <div 
-                onClick={() => navigate('/profile/edit')}
-                style={{
-                  position: 'absolute', bottom: '0', left: '0', right: '0',
-                  backgroundColor: 'rgba(0,0,0,0.6)',
-                  color: 'white', fontSize: '10px', textAlign: 'center',
-                  padding: '2px 0', cursor: 'pointer',
-                  borderBottomLeftRadius: '9999px', borderBottomRightRadius: '9999px',
-                  overflow: 'hidden' // Ensure it respects the border radius if Avatar didn't have it (Avatar is rounded-full)
-                }}
-                className="rounded-b-full" // Tailwind utility for cleaner rounding
-              >
-                Edit
-              </div>
-            )}
-          </div>
-
-          {/* Name & Identity Details (Right of Avatar) */}
-          <div style={{ paddingTop: '12px', flex: 1 }}>
-            <h1 style={{ 
-              fontSize: '20px', fontWeight: 700, color: '#0f172a', margin: '0 0 4px 0',
-              lineHeight: '1.2'
-            }}>
-              {userData.name}
-            </h1>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b', fontSize: '13px' }}>
-                <span>📍</span>
-                <span>{userData.location}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8', fontSize: '12px' }}>
-                <span>📅</span>
-                <span>Since {userData.memberSince}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* "Go PRO" button replacement (optional, per user request for no monetization, we omit or use Edit) 
-              The user asked for "Full-width primary CTA", so we keep this area clean 
-              or maybe put a small "Edit" button here if needed. 
-              For now, clean.
-          */}
-        </div>
-
-        {/* 3. Stats Strip */}
-        <div style={{ 
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '20px 0',
-          borderTop: '1px solid #f1f5f9',
-          borderBottom: '1px solid #f1f5f9'
-        }}>
-          {/* QR Code */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-            <div style={{ fontSize: '20px', color: '#059669' }}>⚃</div> {/* Greenish QR icon look */}
-            <span style={{ fontSize: '12px', color: '#64748b' }}>QR code</span>
-          </div>
-
-          <div style={{ width: '1px', height: '30px', backgroundColor: '#e2e8f0' }} />
-
-          {/* Followers */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-            <div style={{ fontSize: '18px', fontWeight: 700, color: '#059669' }}>{userData.followers}</div>
-            <span style={{ fontSize: '12px', color: '#64748b' }}>Followers</span>
-          </div>
-
-          <div style={{ width: '1px', height: '30px', backgroundColor: '#e2e8f0' }} />
-
-          {/* Profile Views */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-            <div style={{ fontSize: '18px', fontWeight: 700, color: '#059669' }}>{userData.views}</div>
-            <span style={{ fontSize: '12px', color: '#64748b' }}>Profile views</span>
-          </div>
-        </div>
-
-        {/* 4. Full Width CTA (Bottom) */}
-        <div style={{ marginTop: '40px' }}>
-          <button
-            onClick={handleCtaClick}
-            style={{
-              width: '100%',
-              padding: '16px',
-              backgroundColor: '#059669', // Green CTA like "Go PRO" or "Buy now" in image
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '16px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-            }}
+        {/* Top Navigation */}
+        <div className="flex justify-between items-center px-6 py-6 text-white">
+          <button 
+             onClick={() => navigate('/profile/game')}
+             className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold border border-white/30 hover:bg-white/30 transition-colors"
           >
-            {isGuest ? 'Login to Complete Profile' : 'Edit Profile'}
+            Game Profile
+          </button>
+          <button 
+            onClick={() => navigate('/settings')}
+            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+          >
+            <Settings size={24} />
           </button>
         </div>
 
+        {/* Profile Info */}
+        <div className="flex flex-col items-center text-white mt-2">
+          {/* Avatar */}
+          <div className="relative mb-4 group cursor-pointer" onClick={() => !isGuest && navigate('/profile/edit')}>
+            <div className="p-1 bg-white/20 rounded-full">
+                <Avatar 
+                    src={userData.avatarUrl}
+                    fallback={userData.initial}
+                    className="w-28 h-28 border-4 border-white shadow-xl text-3xl"
+                />
+            </div>
+          </div>
+
+          {/* Name & Location */}
+          <h1 className="text-2xl font-bold mb-1">{userData.name}</h1>
+          <div className="flex items-center gap-1 text-blue-50 text-sm font-medium mb-3">
+            <MapPin size={14} />
+            <span>{userData.location}</span>
+          </div>
+
+          {/* Role / Favorite Game */}
+          <div className="text-lg font-semibold mb-6">
+            {userData.favoriteGame}
+          </div>
+
+          {/* Action Button */}
+          <div className="flex items-center gap-3">
+             <button 
+                onClick={() => navigate('/profile/edit')}
+                className="bg-white text-blue-600 px-10 py-2.5 rounded-full font-bold shadow-lg hover:bg-blue-50 transition-colors active:scale-95"
+             >
+                Edit Profile
+             </button>
+             <button 
+                onClick={() => navigate('/profile/qr')}
+                className="p-2.5 bg-white/20 backdrop-blur-md rounded-full border border-white/30 text-white hover:bg-white/30 transition-colors active:scale-95"
+             >
+                <QrCode size={20} />
+             </button>
+          </div>
+
+          {/* Stats Row */}
+          <div className="flex items-center gap-8 mt-10 mb-6">
+             <div className="text-center">
+                <div className="text-2xl font-bold">{userData.followers}</div>
+                <div className="text-blue-100 text-xs font-medium uppercase tracking-wide">Followers</div>
+             </div>
+             <div className="w-px h-8 bg-blue-300/50"></div>
+             <div className="text-center">
+                <div className="text-2xl font-bold">{userData.following}</div>
+                <div className="text-blue-100 text-xs font-medium uppercase tracking-wide">Following</div>
+             </div>
+             <div className="w-px h-8 bg-blue-300/50"></div>
+             <div className="text-center">
+                <div className="text-2xl font-bold">{userData.views}</div>
+                <div className="text-blue-100 text-xs font-medium uppercase tracking-wide">Views</div>
+             </div>
+          </div>
+
+        </div>
       </div>
+
+      {/* 2. Content Section (White Background) */}
+      <div className="px-6 -mt-8 relative z-10">
+        
+        {/* Summary Section */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm mb-6 text-center">
+            <h3 className="text-lg font-bold text-slate-900 mb-3">Summary</h3>
+            <p className="text-slate-600 text-sm leading-relaxed mb-3 line-clamp-3">
+                {userData.bio}
+            </p>
+            <button className="text-blue-600 text-sm font-bold hover:underline">
+                Read More...
+            </button>
+
+            <div className="flex justify-center mt-6">
+                <button className="p-2 border border-slate-200 rounded-full text-slate-400 hover:border-blue-500 hover:text-blue-500 transition-colors">
+                    <Plus size={20} />
+                </button>
+            </div>
+        </div>
+
+        {/* Game Roles (Tech Stack style) */}
+        {userData.gameRoles && Object.keys(userData.gameRoles).length > 0 ? (
+            <div className="bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl p-6 mb-6 text-white shadow-lg shadow-blue-200">
+                <h3 className="text-center font-bold text-lg mb-4 border-b border-white/20 pb-2 mx-10">Game Roles</h3>
+                <div className="flex flex-wrap justify-center gap-2">
+                    {Object.entries(userData.gameRoles).map(([game, roles]) => (
+                        roles.map(role => (
+                            <div key={`${game}-${role}`} className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/30 text-xs font-bold">
+                                <span>{game}</span>
+                                <span className="w-1 h-1 bg-white rounded-full"></span>
+                                <span>{role}</span>
+                            </div>
+                        ))
+                    ))}
+                </div>
+            </div>
+        ) : (
+            <div className="bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl p-6 mb-6 text-white shadow-lg shadow-blue-200 text-center">
+                <p className="font-medium text-sm">Add game roles to showcase your skills!</p>
+                <button 
+                    onClick={() => navigate('/profile/edit')}
+                    className="mt-3 bg-white text-blue-600 px-4 py-1.5 rounded-full text-xs font-bold"
+                >
+                    Add Roles
+                </button>
+            </div>
+        )}
+
+        {/* Connect Section */}
+        <div className="text-center pb-10">
+            <h3 className="text-lg font-bold text-slate-900 mb-6">Connect</h3>
+            <div className="flex justify-center gap-6 text-slate-600">
+                <button className="hover:text-pink-600 transition-colors hover:scale-110 transform duration-200">
+                    <Instagram size={24} />
+                </button>
+                <button className="hover:text-blue-700 transition-colors hover:scale-110 transform duration-200">
+                    <Linkedin size={24} />
+                </button>
+                <button className="hover:text-black transition-colors hover:scale-110 transform duration-200">
+                    <Twitter size={24} /> {/* X icon */}
+                </button>
+                <button className="hover:text-red-600 transition-colors hover:scale-110 transform duration-200">
+                    <Youtube size={24} />
+                </button>
+                <button className="hover:text-slate-900 transition-colors hover:scale-110 transform duration-200">
+                    <Github size={24} />
+                </button>
+            </div>
+        </div>
+
+      </div>
+
     </div>
   );
 };

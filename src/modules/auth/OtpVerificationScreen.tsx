@@ -4,8 +4,7 @@ import {
   ShieldCheck, 
   ArrowRight, 
   RefreshCw,
-  Zap,
-  Trophy,
+  Trophy, 
   AlertCircle
 } from 'lucide-react';
 import { useGlobalState } from '../../app/AppProviders';
@@ -23,7 +22,7 @@ export const OtpVerificationScreen: React.FC = () => {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
+  const [timeLeft, setTimeLeft] = useState(120); // 2 minutes
   const [canResend, setCanResend] = useState(false);
 
   useEffect(() => {
@@ -98,17 +97,39 @@ export const OtpVerificationScreen: React.FC = () => {
 
     setLoading(true);
     
-    if (phone) {
-        const result = await verifyOtp(phone, otpString);
-        
-        if (result.success) {
-            localStorage.removeItem('temp_user_name');
-            navigate('/auth/success');
-        } else {
-            setError(result.error || 'Verification failed. Invalid OTP.');
+    // Safety timeout to prevent infinite loading
+    const timeoutPromise = new Promise<{ success: boolean; error?: string }>((_, reject) => {
+        setTimeout(() => reject(new Error('Verification timed out. Please try again.')), 15000);
+    });
+
+    try {
+        if (phone) {
+            console.log('[OtpVerify] Starting verification for:', phone);
+            
+            // Race between actual verification and timeout
+            const result = await Promise.race([
+                verifyOtp(phone, otpString),
+                timeoutPromise
+            ]) as { success: boolean; error?: string };
+            
+            console.log('[OtpVerify] Result:', result);
+
+            if (result.success) {
+                localStorage.removeItem('temp_user_name');
+                navigate('/auth/success');
+            } else {
+                setError(result.error || 'Verification failed. Invalid OTP.');
+            }
+        }
+    } catch (err: any) {
+        console.error('[OtpVerify] Error:', err);
+        setError(err.message || 'An unexpected error occurred.');
+    } finally {
+        // Ensure loading state is ALWAYS turned off
+        if (inputRefs.current) {
+            setLoading(false);
         }
     }
-    setLoading(false);
   };
 
   const handleResend = async () => {
@@ -177,6 +198,8 @@ export const OtpVerificationScreen: React.FC = () => {
                             onChange={(e) => handleChange(index, e.target.value)}
                             onKeyDown={(e) => handleKeyDown(index, e)}
                             className="w-10 h-12 sm:w-12 sm:h-14 text-center text-xl font-bold border-2 border-slate-200 rounded-lg focus:border-slate-900 focus:ring-0 outline-none transition-all bg-slate-50 focus:bg-white"
+                            disabled={loading}
+                            title={`Digit ${index + 1}`}
                         />
                     ))}
                 </div>

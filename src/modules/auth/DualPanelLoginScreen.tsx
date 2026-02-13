@@ -188,6 +188,7 @@ export const DualPanelLoginScreen: React.FC = () => {
                             className="w-full h-12 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 appearance-none cursor-pointer hover:border-slate-300 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium"
                             value={countryCode}
                             onChange={(e) => setCountryCode(e.target.value)}
+                            title="Select Country Code"
                         >
                             <option value="+91">India (+91)</option>
                             <option value="+1">United States (+1)</option>

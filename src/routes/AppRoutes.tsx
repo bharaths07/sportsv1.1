@@ -36,16 +36,18 @@ import { ProfileScreen } from '../modules/profile/ProfileScreen';
 import { GameProfileScreen } from '../modules/profile/GameProfileScreen';
 import { MyProfileDetailsScreen } from '../modules/profile/MyProfileDetailsScreen';
 import { EditProfileScreen } from '../modules/profile/EditProfileScreen';
+import { PublicProfileScreen } from '../modules/profile/PublicProfileScreen';
+import { MyQRCodeScreen } from '../modules/profile/MyQRCodeScreen';
 import { SocialFeedScreen } from '../modules/social/SocialFeedScreen';
 import { CertificateGeneratorScreen } from '../modules/certificates/CertificateGeneratorScreen';
 import { PosterGeneratorScreen } from '../modules/posters/PosterGeneratorScreen';
 
+import { ComingSoonScreen } from '../components/ComingSoonScreen';
 import { PlaceholderScreen } from '../components/PlaceholderScreen';
 import { SearchResultsScreen } from '../modules/search/SearchResultsScreen';
 
-import { LoginScreen } from '../modules/auth/LoginScreen';
+import { LoginPage } from '../modules/auth/LoginPage';
 import { DualPanelLoginScreen } from '../modules/auth/DualPanelLoginScreen';
-import { PhoneLoginScreen } from '../modules/auth/PhoneLoginScreen';
 import { OtpVerificationScreen } from '../modules/auth/OtpVerificationScreen';
 import { AuthSuccessScreen } from '../modules/auth/AuthSuccessScreen';
 import { AuthCallbackScreen } from '../modules/auth/AuthCallbackScreen';
@@ -84,7 +86,7 @@ export const AppRoutes: React.FC = () => {
     <Routes>
       {/* 🔓 Public Routes */}
       <Route element={<PublicRoute />}>
-        <Route path="/login" element={<DualPanelLoginScreen />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/login-email" element={<DualPanelLoginScreen />} />
         <Route path="/auth/verify" element={<OtpVerificationScreen />} />
         <Route path="/auth/callback" element={<AuthCallbackScreen />} />
@@ -106,16 +108,6 @@ export const AppRoutes: React.FC = () => {
         
         {/* Search Results */}
         <Route path="/search" element={<SearchResultsScreen />} />
-
-        {/* Side Menu Actions & Personal Areas */}
-        <Route path="/profile" element={<ProfileScreen />} />
-        <Route path="/profile/me" element={<MyProfileDetailsScreen />} />
-        <Route path="/profile/edit" element={<EditProfileScreen />} />
-        
-        {/* Game Profiles */}
-        <Route path="/profile/cricket/me" element={<GameProfileScreen />} />
-        <Route path="/profile/cricket/:userId" element={<GameProfileScreen />} />
-        <Route path="/profile/game/:sport" element={<GameProfileScreen />} />
 
         <Route path="/my-teams" element={<MyTeamsScreen />} />
         <Route path="/my-matches" element={<MyMatchesScreen />} />
@@ -145,6 +137,14 @@ export const AppRoutes: React.FC = () => {
         <Route path="/settings" element={<SettingsScreen />} />
         <Route path="/social" element={<SocialFeedScreen />} />
         
+        {/* Profile Routes */}
+        <Route path="/u/:username" element={<PublicProfileScreen />} />
+        <Route path="/profile/me" element={<MyProfileDetailsScreen />} />
+        <Route path="/profile/game" element={<GameProfileScreen />} />
+        <Route path="/profile/qr" element={<MyQRCodeScreen />} />
+        <Route path="/profile/edit" element={<EditProfileScreen />} />
+        <Route path="/profile/:userId" element={<ProfileScreen />} />
+        
         {/* Certificates & Posters */}
         <Route path="/certificates" element={<MyCertificatesScreen />} />
         <Route path="/certificates/generate" element={<CertificateGeneratorScreen />} />
@@ -161,6 +161,16 @@ export const AppRoutes: React.FC = () => {
         <Route path="/tournaments/:tournamentId/schedule" element={<TournamentScheduleScreen />} />
         <Route path="/tournaments/:tournamentId/auto-schedule" element={<TournamentAutoScheduleScreen />} />
         
+        {/* Placeholders for New Features */}
+        <Route path="/top-players" element={<ComingSoonScreen title="Top Players" />} />
+        <Route path="/insights" element={<ComingSoonScreen title="Insights" />} />
+        <Route path="/coming-soon" element={<ComingSoonScreen title="Coming Soon" />} />
+        <Route path="/messages/:id" element={<ComingSoonScreen title="Messages" />} />
+        <Route path="/media/:id" element={<ComingSoonScreen title="Media Viewer" />} />
+        <Route path="/matches/:matchId/insights" element={<ComingSoonScreen title="Match Insights" />} />
+        <Route path="/matches/:matchId/table" element={<ComingSoonScreen title="Points Table" />} />
+        <Route path="/matches/:matchId/leaderboard" element={<ComingSoonScreen title="Leaderboard" />} />
+
         {/* Fallback */}
         <Route path="*" element={<PlaceholderScreen title="Page Not Found" />} />
       </Route>

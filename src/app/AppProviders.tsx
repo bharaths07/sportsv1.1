@@ -55,6 +55,8 @@ interface GlobalState {
     language: string;
   };
   currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
+  authLoading: boolean;
   login: (email: string, password: string, name?: string) => Promise<void>;
   loginWithSupabase: (email: string, name?: string) => Promise<void>;
   loginWithPhone: (phone: string) => Promise<{ success: boolean; error?: string }>;
@@ -63,6 +65,7 @@ interface GlobalState {
   logout: () => void;
   updateUserProfile: (data: Partial<User>) => Promise<void>;
   addPlayer: (player: Player) => void;
+  updatePlayerState: (player: Player) => void;
   addTeam: (team: Team) => void;
   addTeamMember: (teamId: string, member: { playerId: string; role: 'captain' | 'vice-captain' | 'member'; joinedAt: string }) => void;
   addMatch: (match: Match) => void;
@@ -184,14 +187,8 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    try {
-      const saved = localStorage.getItem('currentUser');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
 
   const refreshData = async () => {
     try {
@@ -248,65 +245,125 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   };
 
-  // Step 2.2 — Read Auth Session on App Boot
+  // Step 3 — Centralized Auth State Manager
   useEffect(() => {
-    refreshData();
+    let mounted = true;
 
-    supabase.auth.getSession().then(async ({ data }: { data: any }) => {
-      const session = data.session;
+    const handleUserSession = async (authUser: any) => {
+      console.log('[AuthGate] Handling user session for:', authUser.id);
+      
+      try {
+        // Direct profile fetch without artificial timeout
+        const profile = await profileService.getProfile(authUser.id) as User | null;
 
-      if (session?.user) {
-        const profile = await profileService.getProfile(session.user.id);
-        if (profile) {
-          setCurrentUser(profile);
-        } else {
-          setCurrentUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata?.name ?? 'User',
-            role: 'user'
-          });
+        console.log('[AuthGate] Profile fetch result:', profile ? 'Found' : 'Missing');
+        
+        if (mounted) {
+          if (profile) {
+            console.log('[AuthGate] Profile found. Setting current user.');
+            setCurrentUser(profile);
+          } else {
+            console.log('[AuthGate] Profile missing, creating default user structure. Profile:', profile);
+            
+            // Just set the user with what we have from Auth
+            setCurrentUser({
+              id: authUser.id,
+              email: authUser.email || '',
+              phone: authUser.phone,
+              name: authUser.user_metadata?.name ?? '', 
+              role: 'user'
+            });
+          }
+        }
+      } catch (err) {
+        console.error("[AuthGate] Error fetching profile:", err);
+        // On error, still set current user so they can enter the app
+        if (mounted) {
+             setCurrentUser({
+              id: authUser.id,
+              email: authUser.email || '',
+              phone: authUser.phone,
+              name: '',
+              role: 'user'
+            });
         }
       }
-    });
-  }, []);
+    };
 
-  // Step 2.3 — Add Listener for Auth Changes (Passive)
-  useEffect(() => {
-    const { 
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event: string, session: any) => {
-      if (session?.user) {
-        const profile = await profileService.getProfile(session.user.id);
-        if (profile) {
-          setCurrentUser(profile);
-        } else {
-           setCurrentUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata?.name ?? 'User',
-            role: 'user'
-          });
+    const initAuth = async () => {
+      console.log('[AuthGate] Initializing auth...');
+      
+      // Safety timeout to ensure we never get stuck on loading screen
+      const safetyTimeout = setTimeout(() => {
+          console.warn('[AuthGate] Safety timeout triggered. Forcing load completion.');
+          if (mounted) setAuthLoading(false);
+      }, 2500);
+
+      try {
+        // Fire and forget refreshData, but catch errors to be safe
+        refreshData().catch(e => console.error('[AuthGate] Data refresh failed:', e));
+
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        
+        if (!data.session) {
+          console.log('[AuthGate] No session found');
+          // Check localStorage for legacy session (fallback)
+          const legacyUser = localStorage.getItem('scoreheroes_user');
+          if (legacyUser) {
+             try {
+                const parsed = JSON.parse(legacyUser);
+                console.log('[AuthGate] Recovered legacy session');
+                if (mounted) setCurrentUser(parsed);
+             } catch (e) {
+                console.warn('[AuthGate] Failed to parse legacy session', e);
+                if (mounted) setCurrentUser(null);
+             }
+          } else {
+             if (mounted) setCurrentUser(null);
+          }
+          return;
         }
-      } else {
-        setCurrentUser(null);
+        
+        console.log('[AuthGate] Session found, checking profile...');
+        if (data.session.user) {
+          await handleUserSession(data.session.user);
+        }
+      } catch (error) {
+        console.error('[AuthGate] Initialization error:', error);
+        // Fallback to null on error
+        if (mounted) setCurrentUser(null);
+      } finally {
+        clearTimeout(safetyTimeout);
+        console.log('[AuthGate] Loading finished (finally block)');
+        if (mounted) setAuthLoading(false);
       }
+    };
+
+    initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
+      console.log(`[AuthGate] Auth state change: ${event}`);
+      
+      if (event === 'SIGNED_OUT') {
+        if (mounted) setCurrentUser(null);
+      } else if (session?.user) {
+        await handleUserSession(session.user);
+      }
+      
+      // Ensure loading is false after any auth change event
+      if (mounted) setAuthLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
     localStorage.setItem('users', JSON.stringify(users));
   }, [users]);
-
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem('currentUser');
-    }
-  }, [currentUser]);
 
   // NOTE: MVP-only auth. Replace with real backend auth before production.
   const login = async (email: string, password: string, name?: string) => {
@@ -404,7 +461,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       followersCount: 0,
       followingCount: 0,
       profileViews: 0,
-      type: 'fan'
+      type: 'user'
     };
     setCurrentUser(guestUser);
   };
@@ -497,6 +554,9 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     if (currentUser) {
       // Session validation logic removed as we don't rely on mock players anymore
       // In a real app, this would be a server-side token check
+      localStorage.setItem('scoreheroes_user', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('scoreheroes_user');
     }
   }, [currentUser]);
 
@@ -1154,6 +1214,10 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   };
 
+  const updatePlayerState = (player: Player) => {
+    setPlayers(prev => prev.map(p => p.id === player.id ? player : p));
+  };
+
   const addTournament = async (tournament: Tournament) => {
     try {
       await tournamentService.createTournament(tournament);
@@ -1309,11 +1373,13 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           return { success: true };
       }
 
+      // Supabase verification
       const { data, error } = await supabase.auth.verifyOtp({
         phone,
         token,
         type: 'sms',
       });
+      
       if (error) throw error;
       
       if (data.user) {
@@ -1328,14 +1394,14 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             const user: User = {
                 id: profile.id,
                 name: profile.name || 'User',
-                email: '', // Phone auth doesn't imply email
+                email: '', 
                 phone: phone,
-                role: 'user', // Default
+                role: 'user',
                 avatarUrl: profile.avatar_url
             };
             setCurrentUser(user);
         } else {
-            // If new user, we might want to prompt for name later, or use default
+            // New user or profile fetch failed - Create minimal user
             const newUser: User = {
                 id: data.user.id,
                 name: 'New User',
@@ -1348,12 +1414,12 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       }
       return { success: true };
     } catch (error: any) {
-      console.error('OTP verification error:', error);
+      console.error('[AppProviders] OTP verification error:', error);
       
       // Enhanced Error Handling
       let errorMessage = 'Verification failed.';
-      if (error.message.includes('Token has expired')) errorMessage = 'OTP has expired. Please request a new one.';
-      if (error.message.includes('invalid')) errorMessage = 'Invalid OTP. Please check the code.';
+      if (error.message?.includes('Token has expired')) errorMessage = 'OTP has expired. Please request a new one.';
+      if (error.message?.includes('invalid')) errorMessage = 'Invalid OTP. Please check the code.';
       
       return { success: false, error: errorMessage };
     }
@@ -1362,6 +1428,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   return (
     <GlobalContext.Provider value={{
       addPlayer,
+      updatePlayerState,
       addTeam,
       addTeamMember,
       addTournament,
@@ -1380,6 +1447,8 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       achievements,
       certificates,
       currentUser,
+      setCurrentUser,
+      authLoading,
       login,
       loginWithSupabase,
       loginWithPhone,
