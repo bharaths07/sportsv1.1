@@ -1,6 +1,14 @@
 import { supabase } from '../lib/supabase';
 import { MatchScorer } from '../domain/scorer';
 
+interface DbScorer {
+  id: string;
+  match_id: string;
+  user_id: string;
+  assigned_by?: string;
+  assigned_at: string;
+}
+
 export const scorerService = {
   async assignScorer(scorer: MatchScorer): Promise<MatchScorer> {
     const dbScorer = {
@@ -21,7 +29,7 @@ export const scorerService = {
       throw error;
     }
 
-    return mapToDomain(data);
+    return mapToDomain(data as DbScorer);
   },
 
   async removeScorer(matchId: string, userId: string): Promise<void> {
@@ -47,7 +55,7 @@ export const scorerService = {
       return [];
     }
 
-    return data.map(mapToDomain);
+    return (data || []).map((row) => mapToDomain(row as DbScorer));
   },
 
   async getAllScorers(): Promise<MatchScorer[]> {
@@ -59,11 +67,11 @@ export const scorerService = {
         console.error('Error fetching all scorers:', error);
         return [];
     }
-    return data.map(mapToDomain);
+    return (data || []).map((row) => mapToDomain(row as DbScorer));
   }
 };
 
-function mapToDomain(db: any): MatchScorer {
+function mapToDomain(db: DbScorer): MatchScorer {
   return {
     id: db.id,
     matchId: db.match_id,

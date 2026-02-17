@@ -18,6 +18,7 @@ export interface Certificate {
   recipientId: string;
   recipientName: string;
   recipientRole?: string;
+  playerId?: string;
 
   // Context
   matchId?: string;

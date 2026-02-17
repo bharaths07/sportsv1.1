@@ -13,18 +13,10 @@ export const AuthCallbackScreen: React.FC = () => {
         navigate('/login', { replace: true });
       }
     });
-  }, []);
+  }, [navigate]);
 
   return (
-    <div style={{
-      height: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#f8fafc',
-      color: '#64748b',
-      fontSize: '1.125rem'
-    }}>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-500 text-lg">
       Signing you in...
     </div>
   );

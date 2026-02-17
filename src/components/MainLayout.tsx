@@ -1,27 +1,34 @@
-import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
-import { Sidebar } from './layout/Sidebar';
-import { TopNavbar } from './layout/TopNavbar';
-import './Layout.css';
+import React, { useState } from "react";
+import { TopNavbar } from "./navigation/TopNavbar";
+import { SidebarDrawer } from "./navigation/SidebarDrawer";
 
-export const MainLayout: React.FC = () => {
+interface MainLayoutProps {
+  children: React.ReactNode;
+}
+
+export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Sidebar */}
-      <Sidebar 
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      
+      {/* Top Navbar */}
+      <TopNavbar onMenuClick={() => setIsSidebarOpen(prev => !prev)} />
+
+      {/* Slide-out Sidebar */}
+      <SidebarDrawer 
         isOpen={isSidebarOpen} 
         onClose={() => setIsSidebarOpen(false)} 
       />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 lg:ml-0">
-        <TopNavbar onMenuClick={() => setIsSidebarOpen(true)} />
-        
-        <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
-          <Outlet />
+      {/* Main Content */}
+      <div className="flex flex-1 max-w-7xl mx-auto w-full px-6 py-6 gap-6">
+
+        {/* Main Page Content */}
+        <main className="flex-1 min-w-0">
+          {children}
         </main>
+
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   passwordHash?: string;
   role?: 'user' | 'admin';
   avatarUrl?: string;
@@ -17,4 +18,15 @@ export interface User {
   profileViews?: number;
   type?: 'user' | 'organizer' | 'admin';
   plan?: 'free' | 'premium' | 'enterprise';
+  
+  // New Onboarding Fields
+  username?: string;
+  favoriteGame?: string;
+
+  // Enhanced Profile Fields
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+  dateOfBirth?: string; // ISO date string (YYYY-MM-DD)
+  gameRoles?: Record<string, string[]>; // e.g. { "Cricket": ["Batsman", "Wicket Keeper"] }
+  displayEmail?: string;
+  displayPhone?: string;
 }

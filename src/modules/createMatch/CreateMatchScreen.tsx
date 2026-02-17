@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { Calendar, ChevronRight, MapPin, Clock } from 'lucide-react';
+import { Calendar, ChevronRight, MapPin, Clock, Plus } from 'lucide-react';
 import { useGlobalState } from '../../app/AppProviders';
 import { useRequireAuth } from '../../hooks/useRequireAuth';
 import { PageContainer } from '../../components/layout/PageContainer';
@@ -144,18 +144,29 @@ export const CreateMatchScreen: React.FC = () => {
   // Helper for colors
 
 
-  const TeamDisplay = ({ team, error, label }: { team?: Team, error?: string, label: string }) => (
-    <div className="flex flex-col items-center flex-1 p-4">
-        <Avatar
-            src={team?.logoUrl}
-            alt={team?.name || label}
-            fallback={team?.name ? team.name.substring(0, 2).toUpperCase() : '?'}
-            className={`w-20 h-20 text-2xl font-bold mb-3 shadow-md border-4 border-white ${team ? stringToColor(team.name) : 'bg-slate-200'}`}
-        />
-        <h3 className="font-bold text-slate-900 text-center line-clamp-1">{team?.name || label}</h3>
+  const TeamDisplay = ({ team, error, label, onClick }: { team?: Team, error?: string, label: string, onClick?: () => void }) => (
+    <div className="flex flex-col items-center flex-1 p-4 cursor-pointer group" onClick={onClick}>
+        {team ? (
+            <Avatar
+                src={team.logoUrl}
+                alt={team.name}
+                fallback={team.name.substring(0, 2).toUpperCase()}
+                className={`w-20 h-20 text-2xl font-bold mb-3 shadow-md border-4 border-white ${stringToColor(team.name)}`}
+            />
+        ) : (
+            <div className="w-20 h-20 rounded-full bg-slate-50 border-2 border-dashed border-slate-300 flex items-center justify-center mb-3 group-hover:border-blue-500 group-hover:bg-blue-50 group-hover:scale-105 transition-all duration-200">
+                <Plus className="w-8 h-8 text-slate-400 group-hover:text-blue-500" />
+            </div>
+        )}
+        
+        <h3 className={`font-bold text-center line-clamp-1 ${team ? 'text-slate-900' : 'text-slate-400 group-hover:text-blue-600'}`}>
+            {team?.name || `Select ${label}`}
+        </h3>
+        
         {error && (
             <p className="text-red-500 text-xs mt-1 font-medium">{error}</p>
         )}
+        
         <div className="mt-3">
              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
                 Squad (0)
@@ -178,7 +189,12 @@ export const CreateMatchScreen: React.FC = () => {
                 <h3 className="text-sm font-bold text-slate-500 uppercase">Teams</h3>
             </div>
             <div className="flex items-center justify-between relative p-2">
-                <TeamDisplay team={teamA} error={errors.teamA} label="Team A" />
+                <TeamDisplay 
+                    team={teamA} 
+                    error={errors.teamA} 
+                    label="Team A" 
+                    onClick={() => navigate('/start-match/select-team/A')}
+                />
                 
                 {/* VS Badge */}
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
@@ -187,7 +203,12 @@ export const CreateMatchScreen: React.FC = () => {
                     </div>
                 </div>
 
-                <TeamDisplay team={teamB} error={errors.teamB} label="Team B" />
+                <TeamDisplay 
+                    team={teamB} 
+                    error={errors.teamB} 
+                    label="Team B" 
+                    onClick={() => navigate('/start-match/select-team/B')}
+                />
             </div>
           </Card>
 

@@ -9,25 +9,17 @@ export const TournamentTabs: React.FC<TournamentTabsProps> = ({ activeTab, onTab
   const tabs = ['Overview', 'Matches', 'Squads', 'Points Table', 'Leaderboard'];
 
   return (
-    <div style={{ backgroundColor: '#0f172a', borderBottom: '1px solid #1e293b' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', display: 'flex', gap: '32px' }}>
+    <div className="bg-slate-900 border-b border-slate-800">
+      <div className="max-w-7xl mx-auto px-6 flex gap-8">
         {tabs.map(tab => (
           <button
             key={tab}
             onClick={() => onTabChange(tab)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              padding: '16px 0',
-              color: activeTab === tab ? '#ffffff' : '#94a3b8',
-              fontSize: '14px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              borderBottom: activeTab === tab ? '2px solid #3b82f6' : '2px solid transparent',
-              transition: 'all 0.2s',
-              position: 'relative',
-              top: '1px' // Push border down to overlap container border
-            }}
+            className={`relative translate-y-[1px] py-4 text-sm font-medium transition-colors ${
+              activeTab === tab
+                ? 'text-white border-b-2 border-blue-500'
+                : 'text-slate-400 border-b-2 border-transparent hover:text-slate-200'
+            }`}
           >
             {tab}
           </button>

@@ -1,6 +1,8 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Outlet, Navigate, useNavigate } from 'react-router-dom';
+import { useGlobalState } from '../app/AppProviders';
 import { MainLayout } from '../components/MainLayout';
+import { AuthLayout } from '../components/AuthLayout';
 import { HomeScreen } from '../modules/home/HomeScreen';
 import { LiveScreen } from '../modules/live/LiveScreen';
 import { MatchSummaryScreen } from '../modules/match/MatchSummaryScreen';
@@ -20,9 +22,12 @@ import { MyCertificatesScreen } from '../modules/certificates/MyCertificatesScre
 import { TournamentScreen } from '../modules/tournament/TournamentScreen';
 import { TeamListScreen } from '../modules/team/TeamListScreen';
 import { CreateTeamScreen } from '../modules/team/CreateTeamScreen';
+import { SelectTeamGameScreen } from '../modules/team/SelectTeamGameScreen';
 import { StatsScreen } from '../modules/stats/StatsScreen';
+import { LeaderboardsScreen } from '../modules/stats/LeaderboardsScreen';
 import { TournamentListScreen } from '../modules/tournament/TournamentListScreen';
 import { CreateTournamentScreen } from '../modules/tournament/CreateTournamentScreen';
+import { SelectTournamentGameScreen } from '../modules/tournament/SelectTournamentGameScreen';
 import { TournamentTeamsScreen } from '../modules/tournament/TournamentTeamsScreen';
 import { TournamentStructureScreen } from '../modules/tournament/TournamentStructureScreen';
 import { TournamentScheduleScreen } from '../modules/tournament/TournamentScheduleScreen';
@@ -33,14 +38,21 @@ import { ProfileScreen } from '../modules/profile/ProfileScreen';
 import { GameProfileScreen } from '../modules/profile/GameProfileScreen';
 import { MyProfileDetailsScreen } from '../modules/profile/MyProfileDetailsScreen';
 import { EditProfileScreen } from '../modules/profile/EditProfileScreen';
+import { PublicProfileScreen } from '../modules/profile/PublicProfileScreen';
+import { MyQRCodeScreen } from '../modules/profile/MyQRCodeScreen';
 import { SocialFeedScreen } from '../modules/social/SocialFeedScreen';
 import { CertificateGeneratorScreen } from '../modules/certificates/CertificateGeneratorScreen';
 import { PosterGeneratorScreen } from '../modules/posters/PosterGeneratorScreen';
+import { CardScoringDemoScreen } from '../modules/games/CardScoringDemoScreen';
 
+import { ComingSoonScreen } from '../components/ComingSoonScreen';
 import { PlaceholderScreen } from '../components/PlaceholderScreen';
 import { SearchResultsScreen } from '../modules/search/SearchResultsScreen';
 
-import { LoginScreen } from '../modules/auth/LoginScreen';
+import { LoginPage } from '../modules/auth/LoginPage';
+import { DualPanelLoginScreen } from '../modules/auth/DualPanelLoginScreen';
+import { OtpVerificationScreen } from '../modules/auth/OtpVerificationScreen';
+import { AuthSuccessScreen } from '../modules/auth/AuthSuccessScreen';
 import { AuthCallbackScreen } from '../modules/auth/AuthCallbackScreen';
 
 import { VenuesScreen } from '../modules/system/VenuesScreen';
@@ -49,45 +61,95 @@ import { MyTeamsScreen } from '../modules/team/MyTeamsScreen';
 import { MyMatchesScreen } from '../modules/match/MyMatchesScreen';
 import { SavedMatchesScreen } from '../modules/match/SavedMatchesScreen';
 import { SavedTournamentsScreen } from '../modules/tournament/SavedTournamentsScreen';
+import { MediaViewerScreen } from '../modules/media/MediaViewerScreen';
+import { PricingScreen } from '../modules/system/PricingScreen';
+
+// 🔐 Auth Guard Component
+const ProtectedRoute = () => {
+  const { currentUser } = useGlobalState();
+  
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <MainLayout><Outlet /></MainLayout>;
+};
+
+// 🔓 Public Route Component (redirects to home if already logged in)
+const PublicRoute = () => {
+  const { currentUser } = useGlobalState();
+  
+  if (currentUser) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <AuthLayout><Outlet /></AuthLayout>;
+};
+
+const DevAuthEnable: React.FC = () => {
+  const { setCurrentUser } = useGlobalState();
+  const navigate = useNavigate();
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_dev_auth_bypass', 'true');
+    setCurrentUser({
+      id: 'dev-bypass-user',
+      name: 'Developer Mode',
+      email: 'dev@local',
+      role: 'admin',
+      type: 'admin'
+    });
+    navigate('/', { replace: true });
+  }, [setCurrentUser, navigate]);
+  return null;
+};
+
+const DevAuthDisable: React.FC = () => {
+  const { setCurrentUser } = useGlobalState();
+  const navigate = useNavigate();
+  useEffect(() => {
+    localStorage.removeItem('scoreheroes_dev_auth_bypass');
+    setCurrentUser(null);
+    navigate('/login', { replace: true });
+  }, [setCurrentUser, navigate]);
+  return null;
+};
 
 export const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/login" element={<LoginScreen />} />
-      <Route path="/auth/callback" element={<AuthCallbackScreen />} />
-      <Route path="/" element={<MainLayout />}>
-        {/* Rule 2: App opens on Live (HomeScreen) */}
+      {/* 🔓 Public Routes */}
+      <Route element={<PublicRoute />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login-email" element={<DualPanelLoginScreen />} />
+        <Route path="/auth/verify" element={<OtpVerificationScreen />} />
+        <Route path="/auth/callback" element={<AuthCallbackScreen />} />
+        <Route path="/dev-auth/enable" element={<DevAuthEnable />} />
+        <Route path="/dev-auth/disable" element={<DevAuthDisable />} />
+      </Route>
+
+      {/* 🔐 Protected Routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/auth/success" element={<AuthSuccessScreen />} />
         <Route path="/" element={<HomeScreen />} />
         <Route path="/home" element={<HomeScreen />} />
         <Route path="/live" element={<LiveScreen />} />
         
-        {/* Top Nav Destinations (Rule 3) */}
+        {/* Top Nav Destinations */}
         <Route path="/matches" element={<MatchesScreen />} />
         <Route path="/tournaments" element={<TournamentListScreen />} />
         <Route path="/teams" element={<TeamListScreen />} />
         <Route path="/stats" element={<StatsScreen />} />
+        <Route path="/leaderboards" element={<LeaderboardsScreen />} />
         
         {/* Search Results */}
         <Route path="/search" element={<SearchResultsScreen />} />
-
-        {/* Side Menu Actions & Personal Areas (Rule 4) */}
-        <Route path="/profile" element={<ProfileScreen />} />
-        <Route path="/profile/me" element={<MyProfileDetailsScreen />} />
-        <Route path="/profile/edit" element={<EditProfileScreen />} />
-        
-        {/* Game Profiles (Cricket) */}
-        <Route path="/profile/cricket/me" element={<GameProfileScreen />} />
-        <Route path="/profile/cricket/:userId" element={<GameProfileScreen />} />
-        
-        {/* Fallback for legacy or other sports */}
-        <Route path="/profile/game/:sport" element={<GameProfileScreen />} />
 
         <Route path="/my-teams" element={<MyTeamsScreen />} />
         <Route path="/my-matches" element={<MyMatchesScreen />} />
         <Route path="/saved-matches" element={<SavedMatchesScreen />} />
         <Route path="/saved-tournaments" element={<SavedTournamentsScreen />} />
         
-        {/* Management (Rule 4) */}
+        {/* Management */}
         <Route path="/start-match" element={<SelectGameScreen />} />
         <Route path="/start-match/select-teams" element={<SelectTeamsScreen />} />
         <Route path="/start-match/select-team/:slot" element={<TeamSelectionScreen />} />
@@ -97,33 +159,57 @@ export const AppRoutes: React.FC = () => {
         <Route path="/start-match/openers" element={<SelectOpenersScreen />} />
         <Route path="/start-match/add-player" element={<AddPlayerOptionsScreen />} />
         <Route path="/create-match" element={<CreateMatchScreen />} />
-        <Route path="/tournament/create" element={<CreateTournamentScreen />} />
+        <Route path="/teams/create" element={<SelectTeamGameScreen />} />
+        <Route path="/teams/setup" element={<CreateTeamScreen />} />
+        <Route path="/tournament/create" element={<SelectTournamentGameScreen />} />
+        <Route path="/tournament/setup" element={<CreateTournamentScreen />} />
         <Route path="/manage-matches" element={<MyMatchesScreen />} />
         <Route path="/venues" element={<VenuesScreen />} />
         <Route path="/officials" element={<OfficialsScreen />} />
         
-        {/* System (Rule 4) */}
+        {/* System */}
         <Route path="/notifications" element={<NotificationsScreen />} />
         <Route path="/settings" element={<SettingsScreen />} />
-        <Route path="/help" element={<PlaceholderScreen />} />
+        <Route path="/social" element={<SocialFeedScreen />} />
+        <Route path="/pricing" element={<PricingScreen />} />
+        <Route path="/card-scoring" element={<CardScoringDemoScreen />} />
         
-        {/* Existing Routes */}
-        <Route path="/match/:id" element={<MatchSummaryScreen />} />
-        <Route path="/match/:id/live" element={<LiveScoringScreen />} />
-        <Route path="/player/:id" element={<PlayerProfileScreen />} />
-        <Route path="/team/:id" element={<TeamScreen />} />
-        <Route path="/team/create" element={<CreateTeamScreen />} />
-        <Route path="/tournament/:id" element={<TournamentScreen />} />
-        <Route path="/tournament/:id/schedule/auto" element={<TournamentAutoScheduleScreen />} />
-        <Route path="/tournament/:tournamentId/teams" element={<TournamentTeamsScreen />} />
-        <Route path="/tournament/:id/structure" element={<TournamentStructureScreen />} />
-        <Route path="/tournament/:id/schedule" element={<TournamentScheduleScreen />} />
+        {/* Profile Routes */}
+        <Route path="/u/:username" element={<PublicProfileScreen />} />
+        <Route path="/profile/me" element={<MyProfileDetailsScreen />} />
+        <Route path="/profile/game" element={<GameProfileScreen />} />
+        <Route path="/profile/qr" element={<MyQRCodeScreen />} />
+        <Route path="/profile/edit" element={<EditProfileScreen />} />
+        <Route path="/profile/:userId" element={<ProfileScreen />} />
+        
+        {/* Certificates & Posters */}
         <Route path="/certificates" element={<MyCertificatesScreen />} />
+        <Route path="/certificates/generate" element={<CertificateGeneratorScreen />} />
+        <Route path="/posters/generate" element={<PosterGeneratorScreen />} />
+
+        {/* Dynamic Routes */}
+        <Route path="/matches/:matchId" element={<MatchSummaryScreen />} />
+        <Route path="/matches/:matchId/score" element={<LiveScoringScreen />} />
+        <Route path="/players/:playerId" element={<PlayerProfileScreen />} />
+        <Route path="/team/:teamId" element={<TeamScreen />} />
+        <Route path="/tournaments/:tournamentId" element={<TournamentScreen />} />
+        <Route path="/tournaments/:tournamentId/teams" element={<TournamentTeamsScreen />} />
+        <Route path="/tournaments/:tournamentId/structure" element={<TournamentStructureScreen />} />
+        <Route path="/tournaments/:tournamentId/schedule" element={<TournamentScheduleScreen />} />
+        <Route path="/tournaments/:tournamentId/auto-schedule" element={<TournamentAutoScheduleScreen />} />
         
-        {/* Social & Creative Tools */}
-        <Route path="/feed" element={<SocialFeedScreen />} />
-        <Route path="/certificates/create" element={<CertificateGeneratorScreen />} />
-        <Route path="/posters/create" element={<PosterGeneratorScreen />} />
+        {/* Placeholders for New Features */}
+        <Route path="/top-players" element={<ComingSoonScreen title="Top Players" />} />
+        <Route path="/insights" element={<ComingSoonScreen title="Insights" />} />
+        <Route path="/coming-soon" element={<ComingSoonScreen title="Coming Soon" />} />
+        <Route path="/messages/:id" element={<ComingSoonScreen title="Messages" />} />
+        <Route path="/media/:id" element={<MediaViewerScreen />} />
+        <Route path="/matches/:matchId/insights" element={<ComingSoonScreen title="Match Insights" />} />
+        <Route path="/matches/:matchId/table" element={<ComingSoonScreen title="Points Table" />} />
+        <Route path="/matches/:matchId/leaderboard" element={<ComingSoonScreen title="Leaderboard" />} />
+
+        {/* Fallback */}
+        <Route path="*" element={<PlaceholderScreen />} />
       </Route>
     </Routes>
   );

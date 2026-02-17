@@ -10,6 +10,7 @@ export interface Team {
   id: string;
   name: string;
   sportId: string;
+  ownerId?: string;
   institutionId?: string;
   type: TeamType;
   members: TeamMember[];

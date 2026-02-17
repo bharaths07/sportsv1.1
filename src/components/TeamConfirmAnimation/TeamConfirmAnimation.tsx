@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from './TeamConfirmAnimation.module.css';
-import { Calendar, MapPin, Trophy, Activity, CheckCircle } from 'lucide-react';
+import { Calendar, MapPin } from 'lucide-react';
+import { Avatar } from '../ui/Avatar';
 
 // Use a simplified Team interface to be flexible
 export interface TeamProp {
@@ -27,7 +28,7 @@ interface MatchDetails {
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Mock API
-const fetchMatchDetails = async (matchId: string): Promise<MatchDetails> => {
+const fetchMatchDetails = async (): Promise<MatchDetails> => {
   await wait(600); // Simulate network latency (should be faster than total animation if parallel)
   return {
     date: new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
@@ -58,7 +59,7 @@ export const TeamConfirmAnimation: React.FC<TeamConfirmAnimationProps> = ({
       
       setStep('ascending');
       // Fetch details in parallel
-      const detailsPromise = fetchMatchDetails(matchId);
+      const detailsPromise = fetchMatchDetails();
       
       // Step 2: Wait for ascent (400ms)
       await wait(400);
@@ -119,8 +120,7 @@ export const TeamConfirmAnimation: React.FC<TeamConfirmAnimationProps> = ({
           {/* Team A */}
           <div className="flex flex-col items-center gap-2">
             <div 
-              className={styles.teamAvatar}
-              style={{ backgroundColor: teamA.color || getColor(teamA.name) }}
+              className={`${styles.teamAvatar} [background-color:${teamA.color || getColor(teamA.name)}]`}
             >
               <Avatar
                 src={teamA.logoUrl}
@@ -136,8 +136,7 @@ export const TeamConfirmAnimation: React.FC<TeamConfirmAnimationProps> = ({
           {/* Team B */}
           <div className="flex flex-col items-center gap-2">
             <div 
-              className={styles.teamAvatar}
-              style={{ backgroundColor: teamB.color || getColor(teamB.name) }}
+              className={`${styles.teamAvatar} [background-color:${teamB.color || getColor(teamB.name)}]`}
             >
               <Avatar
                 src={teamB.logoUrl}
@@ -178,7 +177,7 @@ export const TeamConfirmAnimation: React.FC<TeamConfirmAnimationProps> = ({
                 <div className={styles.statGrid}>
                    <div className={styles.statItem}>
                      <div className={styles.statLabel}>Win Prob</div>
-                     <div className={styles.statValue} style={{ color: '#10b981' }}>{details.winProbability}%</div>
+                     <div className={`${styles.statValue} text-emerald-600`}>{details.winProbability}%</div>
                    </div>
                    <div className={styles.statItem}>
                      <div className={styles.statLabel}>Form</div>

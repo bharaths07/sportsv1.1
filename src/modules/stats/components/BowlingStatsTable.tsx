@@ -81,7 +81,7 @@ export const BowlingStatsTable: React.FC<BowlingStatsTableProps> = ({ stats, min
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
-          {sortedStats.map((stat, index) => (
+          {sortedStats.map((stat) => (
             <tr key={stat.playerId} className="hover:bg-slate-50 transition-colors">
                 <td className="px-4 py-3 text-sm font-medium text-slate-900">
                   <Link to={`/player/${stat.playerId}`} className="hover:text-blue-600 transition-colors">

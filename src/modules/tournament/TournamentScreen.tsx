@@ -4,7 +4,6 @@ import {
   Calendar, 
   MapPin, 
   Trophy, 
-  Edit3, 
   PlayCircle,
   Share2,
   Settings
@@ -78,8 +77,9 @@ export const TournamentScreen: React.FC = () => {
   }
 
   const renderStatusBadge = (status: Tournament['status']) => {
-    const styles = {
+    const styles: Record<string, string> = {
       draft: 'bg-amber-100 text-amber-700',
+      upcoming: 'bg-blue-100 text-blue-700',
       ongoing: 'bg-green-100 text-green-700',
       completed: 'bg-slate-100 text-slate-700',
     };
@@ -145,7 +145,7 @@ export const TournamentScreen: React.FC = () => {
                          <div className="flex flex-wrap gap-4 text-sm font-medium opacity-90 md:text-slate-600">
                              <div className="flex items-center gap-1.5">
                                  <Calendar size={16} />
-                                 {new Date(tournament.startDate).toLocaleDateString()} - {new Date(tournament.endDate).toLocaleDateString()}
+                                 {tournament.startDate ? new Date(tournament.startDate).toLocaleDateString() : 'TBD'} - {tournament.endDate ? new Date(tournament.endDate).toLocaleDateString() : 'TBD'}
                              </div>
                              <div className="flex items-center gap-1.5">
                                  <MapPin size={16} />

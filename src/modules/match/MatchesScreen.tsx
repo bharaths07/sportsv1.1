@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
 import { MatchCard } from './components/MatchCard';
 import { Match } from '../../domain/match';
+import { Tournament } from '../../domain/tournament';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Tabs } from '../../components/ui/Tabs';
 import { Select } from '../../components/ui/Select';
 import { Button } from '../../components/ui/Button';
-import { Filter, X, Calendar, Trophy, Layers, Activity } from 'lucide-react';
+import { X, Trophy, Layers, Activity } from 'lucide-react';
 import { EmptyState } from '../../components/EmptyState';
 
 // --- Components ---
@@ -19,7 +20,7 @@ interface GroupedMatchesListProps {
   followedMatches: string[];
   activeTab: string;
   groupByTournament: boolean;
-  tournaments: any[];
+  tournaments: Tournament[];
   followedTournaments: string[];
   onReset: () => void;
   hasFilters: boolean;
@@ -36,18 +37,6 @@ const GroupedMatchesList: React.FC<GroupedMatchesListProps> = ({
   hasFilters
 }) => {
   const navigate = useNavigate();
-
-  if (matches.length === 0) {
-    return (
-      <EmptyState 
-        icon={<Activity size={48} />}
-        message="No matches found"
-        description="Try changing your filters or create a new match."
-        actionLabel="Create Match"
-        actionLink="/create-match"
-      />
-    );
-  }
 
   // Tournament Grouping Logic
   const tournamentGroups = useMemo(() => {
@@ -177,6 +166,17 @@ const GroupedMatchesList: React.FC<GroupedMatchesListProps> = ({
 
   if (matches.length === 0) {
     return (
+      <EmptyState 
+        icon={<Activity size={48} />}
+        message="No matches found"
+        description="Try changing your filters or create a new match."
+        actionLabel="Create Match"
+        actionLink="/create-match"
+      />
+    );
+  }
+  if (matches.length === 0) {
+    return (
       <div className="text-center py-16 bg-white rounded-xl border border-slate-100 flex flex-col items-center gap-4">
         <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-2">
             <Trophy className="w-8 h-8 text-slate-300" />
@@ -280,11 +280,7 @@ const GroupedMatchesList: React.FC<GroupedMatchesListProps> = ({
               {section}
             </h3>
             <div 
-              style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-                gap: 'var(--space-4)', 
-              }} 
+              className="grid [grid-template-columns:repeat(auto-fill,minmax(280px,1fr))] gap-[var(--space-4)]"
             >
               {sectionMatches.map((match) => {
                 const isFollowed = followedMatches.includes(match.id);
@@ -388,7 +384,7 @@ export const MatchesScreen: React.FC = () => {
     }
 
     return result;
-  }, [matches, activeTab, activeFormat, activeLevel, activeTournamentId, showFollowedOnly, followedMatches, currentUser, getMatchScorers]);
+  }, [matches, activeTab, activeFormat, activeTournamentId, showFollowedOnly, followedMatches, currentUser, getMatchScorers]);
 
   const tabs = [
     { id: 'Top Matches', label: 'Top Matches' },
@@ -412,10 +408,48 @@ export const MatchesScreen: React.FC = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+      {/* Filters Bar */}
+      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Select
+            label="Sport"
+            value={activeFormat}
+            onChange={(e) => setActiveFormat(e.target.value)}
+            options={[
+              { value: 'All', label: 'All Sports' },
+              { value: 'Cricket', label: 'Cricket' },
+              { value: 'Football', label: 'Football' },
+              { value: 'Kabaddi', label: 'Kabaddi' },
+            ]}
+          />
+
+          <Select
+            label="Tournament"
+            value={activeTournamentId}
+            onChange={(e) => setActiveTournamentId(e.target.value)}
+            options={[
+              { value: 'All', label: 'All Tournaments' },
+              ...tournaments.map(t => ({ value: t.id, label: t.name }))
+            ]}
+          />
+
+          <Select
+            label="Type"
+            value={activeLevel}
+            onChange={(e) => setActiveLevel(e.target.value)}
+            options={[
+              { value: 'All', label: 'All Types' },
+              { value: 'Institute', label: 'Institute' },
+              { value: 'City', label: 'City' },
+              { value: 'State', label: 'State' },
+              { value: 'Country', label: 'Country' },
+            ]}
+          />
+      </div>
+
+      <div className="flex flex-col gap-6">
         
-        {/* Left Content (Matches List) */}
-        <div className="lg:col-span-3 order-2 lg:order-1">
+        {/* Matches List Container */}
+        <div className="flex-1">
             {/* Toolbar */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
@@ -463,53 +497,6 @@ export const MatchesScreen: React.FC = () => {
               onReset={resetFilters}
               hasFilters={hasActiveFilters}
             />
-        </div>
-
-        {/* Right Sidebar (Filters) */}
-        <div className="lg:col-span-1 order-1 lg:order-2">
-           <div className="bg-white rounded-xl border border-slate-200 p-5 sticky top-24">
-              <div className="flex items-center gap-2 mb-4 text-slate-900 font-bold">
-                <Filter size={18} />
-                <h3>Filters</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <Select
-                  label="Sport"
-                  value={activeFormat}
-                  onChange={(e) => setActiveFormat(e.target.value)}
-                  options={[
-                    { value: 'All', label: 'All Sports' },
-                    { value: 'Cricket', label: 'Cricket' },
-                    { value: 'Football', label: 'Football' },
-                    { value: 'Kabaddi', label: 'Kabaddi' },
-                  ]}
-                />
-
-                <Select
-                  label="Tournament"
-                  value={activeTournamentId}
-                  onChange={(e) => setActiveTournamentId(e.target.value)}
-                  options={[
-                    { value: 'All', label: 'All Tournaments' },
-                    ...tournaments.map(t => ({ value: t.id, label: t.name }))
-                  ]}
-                />
-
-                <Select
-                  label="Type"
-                  value={activeLevel}
-                  onChange={(e) => setActiveLevel(e.target.value)}
-                  options={[
-                    { value: 'All', label: 'All Types' },
-                    { value: 'Institute', label: 'Institute' },
-                    { value: 'City', label: 'City' },
-                    { value: 'State', label: 'State' },
-                    { value: 'Country', label: 'Country' },
-                  ]}
-                />
-              </div>
-           </div>
         </div>
 
       </div>

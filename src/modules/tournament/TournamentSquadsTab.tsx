@@ -94,10 +94,10 @@ export const TournamentSquadsTab: React.FC<TournamentSquadsTabProps> = ({ initia
 
   if (squads.length === 0) {
     return (
-      <div style={{ padding: '48px', textAlign: 'center', color: '#64748b' }}>
-        <div style={{ fontSize: '48px', marginBottom: '16px' }}>👥</div>
-        <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a' }}>No Teams Added Yet</h3>
-        <p style={{ fontSize: '14px' }}>Teams participating in this tournament will appear here.</p>
+      <div className="p-12 text-center text-slate-500">
+        <div className="text-5xl mb-4">👥</div>
+        <h3 className="text-lg font-semibold text-slate-900">No Teams Added Yet</h3>
+        <p className="text-sm">Teams participating in this tournament will appear here.</p>
       </div>
     );
   }
@@ -114,35 +114,23 @@ export const TournamentSquadsTab: React.FC<TournamentSquadsTabProps> = ({ initia
   const roleOrder = ['Batters', 'Wicket Keepers', 'All-Rounders', 'Bowlers'];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+    <div className="flex flex-col gap-8">
       
       {/* 1. Team List (Entry Level) */}
       <div>
-        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', marginBottom: '16px' }}>Participating Teams</h3>
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', 
-          gap: '16px' 
-        }}>
+        <h3 className="text-lg font-bold text-slate-900 mb-4">Participating Teams</h3>
+        <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(160px,1fr))]">
           {squads.map((team) => {
             const isSelected = team.id === selectedTeamId;
             return (
               <div 
                 key={team.id}
                 onClick={() => setSelectedTeamId(team.id)}
-                style={{
-                  backgroundColor: isSelected ? '#eff6ff' : 'white',
-                  border: isSelected ? '2px solid #3b82f6' : '1px solid #e2e8f0',
-                  borderRadius: '12px',
-                  padding: '16px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '12px',
-                  boxShadow: isSelected ? '0 4px 6px -1px rgba(59, 130, 246, 0.1)' : 'none'
-                }}
+                className={`rounded-xl p-4 cursor-pointer transition-all flex flex-col items-center gap-3 ${
+                  isSelected
+                    ? 'bg-blue-50 border-2 border-blue-600 shadow-md shadow-blue-500/10'
+                    : 'bg-white border border-slate-200 hover:border-blue-300 hover:shadow-sm'
+                }`}
               >
                 <Avatar
                   src={team.logo}
@@ -150,9 +138,9 @@ export const TournamentSquadsTab: React.FC<TournamentSquadsTabProps> = ({ initia
                   fallback="🛡️"
                   className="w-12 h-12 bg-slate-200 text-xl"
                 />
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px' }}>{team.name}</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>{team.squadSize} Players</div>
+                <div className="text-center">
+                  <div className="font-bold text-slate-900 text-[15px]">{team.name}</div>
+                  <div className="text-xs text-slate-500">{team.squadSize} Players</div>
                 </div>
               </div>
             );
@@ -161,24 +149,10 @@ export const TournamentSquadsTab: React.FC<TournamentSquadsTabProps> = ({ initia
       </div>
 
       {/* 2. Selected Team Details (Master-Detail View) */}
-      <div style={{ 
-        backgroundColor: 'white', 
-        borderRadius: '16px', 
-        border: '1px solid #e2e8f0',
-        overflow: 'hidden' 
-      }}>
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
         {/* Team Context Header */}
-        <div style={{ 
-          padding: '24px', 
-          borderBottom: '1px solid #e2e8f0',
-          backgroundColor: '#f8fafc',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '16px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div className="p-6 border-b border-slate-200 bg-slate-50 flex justify-between items-center flex-wrap gap-4">
+          <div className="flex items-center gap-4">
             <Avatar
               src={selectedTeam.logo}
               alt={selectedTeam.name}
@@ -186,51 +160,31 @@ export const TournamentSquadsTab: React.FC<TournamentSquadsTabProps> = ({ initia
               className="w-16 h-16 border-2 border-white shadow-sm bg-slate-200 text-2xl"
             />
             <div>
-              <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>{selectedTeam.name}</h2>
+              <h2 className="m-0 text-2xl font-extrabold text-slate-900">{selectedTeam.name}</h2>
               {selectedTeam.note && (
-                <div style={{ 
-                  marginTop: '4px', 
-                  display: 'inline-block', 
-                  backgroundColor: '#e0f2fe', 
-                  color: '#0369a1', 
-                  fontSize: '12px', 
-                  fontWeight: 600, 
-                  padding: '2px 8px', 
-                  borderRadius: '12px' 
-                }}>
+                <div className="mt-1 inline-block bg-sky-100 text-sky-700 text-xs font-semibold px-2 py-0.5 rounded-full">
                   {selectedTeam.note}
                 </div>
               )}
             </div>
           </div>
           
-          <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="text-right flex flex-col gap-1">
              {selectedTeam.captainName && (
-               <div style={{ fontSize: '14px', color: '#475569' }}>
-                 Captain: <span style={{ fontWeight: 600, color: '#0f172a' }}>{selectedTeam.captainName}</span>
+               <div className="text-sm text-slate-600">
+                 Captain: <span className="font-semibold text-slate-900">{selectedTeam.captainName}</span>
                </div>
              )}
              {selectedTeam.coach && (
-               <div style={{ fontSize: '14px', color: '#475569' }}>
-                 Coach: <span style={{ fontWeight: 600, color: '#0f172a' }}>{selectedTeam.coach}</span>
+               <div className="text-sm text-slate-600">
+                 Coach: <span className="font-semibold text-slate-900">{selectedTeam.coach}</span>
                </div>
              )}
              
              {/* 5. Team Page Link */}
              <button 
                 onClick={() => navigate(`/team/${selectedTeam.id}`)}
-                style={{
-                  marginTop: '8px',
-                  background: 'none',
-                  border: 'none',
-                  color: '#2563eb',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  padding: 0,
-                  textAlign: 'right'
-                }}
+                className="mt-2 bg-none border-none text-blue-600 text-xs font-semibold underline text-right p-0"
              >
                View Team Profile →
              </button>
@@ -238,10 +192,10 @@ export const TournamentSquadsTab: React.FC<TournamentSquadsTabProps> = ({ initia
         </div>
 
         {/* 3. Squad List */}
-        <div style={{ padding: '24px' }}>
+        <div className="p-6">
           {selectedTeam.players.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px', color: '#94a3b8' }}>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>🤷‍♂️</div>
+            <div className="text-center p-6 text-slate-400">
+              <div className="text-2xl mb-2">🤷‍♂️</div>
               <p>No players added to this team yet.</p>
             </div>
           ) : (
@@ -250,53 +204,30 @@ export const TournamentSquadsTab: React.FC<TournamentSquadsTabProps> = ({ initia
               if (!players || players.length === 0) return null;
 
               return (
-                <div key={role} style={{ marginBottom: '24px' }}>
-                  <h4 style={{ 
-                    fontSize: '14px', 
-                    fontWeight: 700, 
-                    color: '#64748b', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.5px',
-                    marginBottom: '12px',
-                    borderBottom: '1px solid #e2e8f0',
-                    paddingBottom: '8px'
-                  }}>
+                <div key={role} className="mb-6">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 border-b border-slate-200 pb-2">
                     {role}
                   </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px' }}>
+                  <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
                     {players.map(player => (
-                      <div key={player.id} style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '12px',
-                        padding: '8px 12px',
-                        backgroundColor: '#f8fafc',
-                        borderRadius: '8px',
-                        border: '1px solid #f1f5f9'
-                      }}>
+                      <div key={player.id} className="flex items-center gap-3 px-3 py-2 bg-slate-50 rounded-lg border border-slate-100">
                         <Avatar
                           src={player.avatarUrl}
                           alt={player.name}
                           fallback={player.name.charAt(0)}
                           className="w-8 h-8 bg-slate-200 text-xs text-slate-500 font-semibold"
                         />
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold text-slate-900 flex items-center gap-1.5">
                             {player.name}
                             {player.isCaptain && (
-                              <span style={{ 
-                                backgroundColor: '#0f172a', color: 'white', 
-                                fontSize: '10px', padding: '1px 5px', borderRadius: '4px' 
-                              }}>C</span>
+                              <span className="bg-slate-900 text-white text-[10px] px-1.5 py-[1px] rounded">C</span>
                             )}
                             {player.role === 'Wicket Keeper' && (
-                              <span style={{ 
-                                backgroundColor: '#475569', color: 'white', 
-                                fontSize: '10px', padding: '1px 5px', borderRadius: '4px' 
-                              }}>WK</span>
+                              <span className="bg-slate-600 text-white text-[10px] px-1.5 py-[1px] rounded">WK</span>
                             )}
                           </div>
-                          <div style={{ fontSize: '12px', color: '#64748b' }}>{player.role}</div>
+                          <div className="text-xs text-slate-500">{player.role}</div>
                         </div>
                       </div>
                     ))}

@@ -2,6 +2,7 @@ import React from 'react';
 import { useGlobalState } from '../../../app/AppProviders';
 import { ImpactScore } from '../../../utils/cricketMetrics';
 import { useNavigate } from 'react-router-dom';
+import { Avatar } from '../../../components/ui/Avatar';
 
 interface Props {
   performances: ImpactScore[];
@@ -13,50 +14,23 @@ export const IconPerformances: React.FC<Props> = ({ performances, onGeneratePost
   const navigate = useNavigate();
 
   return (
-    <div style={{ marginBottom: '32px' }}>
-       <h3 style={{ 
-            fontSize: '16px', 
-            fontWeight: 800, 
-            color: '#0f172a', 
-            textTransform: 'uppercase', 
-            letterSpacing: '0.5px',
-            marginBottom: '16px',
-            display: 'flex', alignItems: 'center', gap: '8px'
-        }}>
-            <span style={{ fontSize: '18px' }}>⚡</span> Icon Performances
+    <div className="mb-8">
+       <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
+            <span className="text-base">⚡</span> Icon Performances
         </h3>
 
-        <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', 
-            gap: '12px' 
-        }}>
+        <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
             {performances.map((perf, index) => {
                 const player = players.find(p => p.id === perf.playerId);
                 
                 return (
                     <div 
                         key={perf.playerId}
-                        style={{ 
-                            backgroundColor: 'white',
-                            borderRadius: '12px',
-                            border: '1px solid #e2e8f0',
-                            padding: '12px',
-                            position: 'relative',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            cursor: 'pointer',
-                            transition: 'transform 0.2s'
-                        }}
+                        className="bg-white rounded-xl border border-slate-200 p-3 relative shadow-sm flex flex-col items-center cursor-pointer hover:-translate-y-0.5 transition-transform"
                         onClick={() => navigate(`/player/${perf.playerId}`)}
                     >
                          {/* Rank Badge */}
-                         <div style={{ 
-                             position: 'absolute', top: '8px', left: '8px',
-                             fontSize: '10px', fontWeight: 700, color: '#94a3b8'
-                         }}>
+                         <div className="absolute top-2 left-2 text-[10px] font-bold text-slate-400">
                              #{index + 4}
                          </div>
 
@@ -68,19 +42,12 @@ export const IconPerformances: React.FC<Props> = ({ performances, onGeneratePost
                          />
 
                          {/* Name */}
-                         <div style={{ 
-                             fontSize: '14px', fontWeight: 700, color: '#0f172a', 
-                             marginBottom: '4px', textAlign: 'center',
-                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%'
-                         }}>
+                         <div className="text-sm font-bold text-slate-900 mb-1 text-center whitespace-nowrap overflow-hidden text-ellipsis w-full">
                              {player?.firstName} {player?.lastName}
                          </div>
 
                          {/* Stat Line */}
-                         <div style={{ 
-                             fontSize: '12px', color: '#64748b', marginBottom: '12px',
-                             display: 'flex', gap: '8px', fontWeight: 500
-                         }}>
+                         <div className="text-xs text-slate-500 mb-3 flex gap-2 font-medium">
                              {perf.details.runs > 0 && <span>{perf.details.runs} R</span>}
                              {perf.details.wicketsTaken > 0 && <span>{perf.details.wicketsTaken} W</span>}
                          </div>
@@ -91,17 +58,7 @@ export const IconPerformances: React.FC<Props> = ({ performances, onGeneratePost
                                 e.stopPropagation();
                                 onGeneratePoster(perf, 'performance');
                             }}
-                            style={{ 
-                                width: '100%',
-                                padding: '6px',
-                                borderRadius: '6px',
-                                border: '1px solid #e2e8f0',
-                                backgroundColor: '#f8fafc',
-                                color: '#475569',
-                                fontSize: '11px',
-                                fontWeight: 600,
-                                cursor: 'pointer'
-                            }}
+                            className="w-full px-2 py-1.5 rounded-md border border-slate-200 bg-slate-50 text-slate-600 text-[11px] font-semibold hover:bg-slate-100"
                          >
                              Create Poster
                          </button>

@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
+import { ComponentType } from 'react';
 import { TeamConfirmAnimation } from './TeamConfirmAnimation';
 
 const meta: Meta<typeof TeamConfirmAnimation> = {
@@ -43,12 +45,9 @@ export const SlowMotion: Story = {
     ...Default.args,
   },
   decorators: [
-    (Story) => (
+    (Story: ComponentType) => (
       // Override CSS variables for slower animation (2x duration)
-      <div style={{ 
-        '--ascent-duration': '800ms', 
-        '--ease-out-cubic': 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' 
-      } as React.CSSProperties}>
+      <div className="[--ascent-duration:800ms] [--ease-out-cubic:cubic-bezier(0.25,0.46,0.45,0.94)]">
         <Story />
       </div>
     ),
@@ -64,8 +63,8 @@ export const ReducedMotionDescription: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'To test reduced motion, enable "prefers-reduced-motion" in your OS or browser dev tools.',
-      },
-    },
-  },
+        story: 'This component respects `prefers-reduced-motion`. Test by toggling the media query in developer tools.'
+      }
+    }
+  }
 };

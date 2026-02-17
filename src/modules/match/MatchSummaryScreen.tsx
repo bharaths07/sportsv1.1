@@ -11,7 +11,7 @@ import { PageContainer } from '../../components/layout/PageContainer';
 import { Button } from '../../components/ui/Button';
 import { Tabs } from '../../components/ui/Tabs';
 import { Avatar } from '../../components/ui/Avatar';
-import { ArrowLeft, Plus, Check, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Plus, Check } from 'lucide-react';
 
 export const MatchSummaryScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>();

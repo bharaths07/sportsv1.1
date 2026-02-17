@@ -24,9 +24,10 @@ export const NewsSection: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Primary Headline (Large) */}
         <Card className="lg:col-span-2 p-0 overflow-hidden flex flex-col group cursor-pointer hover:shadow-lg transition-shadow">
-          <div 
-            className="h-64 lg:h-80 bg-cover bg-center bg-muted group-hover:scale-105 transition-transform duration-700 ease-out"
-            style={{ backgroundImage: `url(${primaryNews.imageUrl || 'https://placehold.co/800x400/e2e8f0/64748b?text=News'})` }} 
+          <img
+            src={primaryNews.media?.[0]?.url || 'https://placehold.co/800x400/e2e8f0/64748b?text=News'}
+            alt={primaryNews.title}
+            className="h-64 lg:h-80 w-full object-cover bg-muted group-hover:scale-105 transition-transform duration-700 ease-out"
           />
           <div className="p-6 bg-surface relative">
             <div className="flex items-center gap-2 mb-3">
@@ -52,10 +53,11 @@ export const NewsSection: React.FC = () => {
         <div className="space-y-4">
           {secondaryNews.map(news => (
             <Card key={news.id} className="flex gap-4 p-3 hover:bg-muted cursor-pointer transition-colors group">
-              {news.imageUrl && (
-                <div 
-                  className="w-24 h-24 rounded-lg bg-cover bg-center flex-shrink-0 bg-muted"
-                  style={{ backgroundImage: `url(${news.imageUrl})` }} 
+              {news.media?.[0]?.url && (
+                <img 
+                  src={news.media[0].url}
+                  alt={news.title}
+                  className="w-24 h-24 rounded-lg object-cover shrink-0"
                 />
               )}
               <div className="flex flex-col justify-center">

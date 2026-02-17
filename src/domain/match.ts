@@ -9,7 +9,7 @@ export interface ScoreEvent {
   teamId?: string; // Team that scored
   
   // -- Detailed Scoring Fields --
-  type: 'delivery' | 'extra' | 'wicket' | 'milestone' | 'period_start' | 'period_end' | 'info' | 'goal' | 'card' | 'substitution'; // Expanded types
+  type: 'delivery' | 'extra' | 'wicket' | 'milestone' | 'period_start' | 'period_end' | 'info' | 'goal' | 'card' | 'substitution' | 'basket' | 'foul'; // Expanded types
   
   // Context
   batterId?: string;      // The striker
@@ -72,6 +72,10 @@ export interface PlayerStats {
   minutesPlayed?: number;
   yellowCards?: number;
   redCards?: number;
+
+  // Basketball
+  points?: number;
+  fouls?: number;
 }
 
 export interface MatchParticipant {

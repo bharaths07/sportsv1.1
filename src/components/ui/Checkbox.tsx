@@ -28,10 +28,10 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(({
           {...props}
         />
         <div className={`
-          h-5 w-5 rounded border bg-bg-input flex items-center justify-center transition-all duration-200 pointer-events-none
+          h-5 w-5 rounded border bg-white flex items-center justify-center transition-all duration-200 pointer-events-none
           peer-focus:ring-2 peer-focus:ring-primary/20 peer-focus:border-primary
           peer-checked:bg-primary peer-checked:border-primary
-          ${error ? 'border-red-500' : 'border-border'}
+          ${error ? 'border-red-500' : 'border-slate-300'}
           ${className}
         `}>
           <Check size={14} className="text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-200" strokeWidth={3} />

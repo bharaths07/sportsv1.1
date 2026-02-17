@@ -23,15 +23,15 @@ interface CommentaryBall {
   batter: string;
 }
 
-interface OverGroup {
-  overNumber: number;
-  runs: number;
-  wickets: number;
-  scoreAtEnd: string; // "58/9"
-  balls: CommentaryBall[];
-  bowler: string; // Primary bowler for the over
-  batterStats: { name: string; score: string }[]; // Snapshot of batters
-}
+// interface OverGroup {
+//   overNumber: number;
+//   runs: number;
+//   wickets: number;
+//   scoreAtEnd: string; // "58/9"
+//   balls: CommentaryBall[];
+//   bowler: string; // Primary bowler for the over
+//   batterStats: { name: string; score: string }[]; // Snapshot of batters
+// }
 
 export const MatchCommentaryTab: React.FC<Props> = ({ match }) => {
   // State for Filters
@@ -49,10 +49,8 @@ export const MatchCommentaryTab: React.FC<Props> = ({ match }) => {
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()); // Chronological for calculation
 
     // 2. Enrich and Group
-    const groups: Record<number, OverGroup> = {};
+  // const groups: Record<number, OverGroup> = {};
     
-    let runningScore = 0;
-    let runningWickets = 0;
     const enrichedBalls: CommentaryBall[] = [];
 
     events.forEach((e, index) => {
@@ -74,8 +72,7 @@ export const MatchCommentaryTab: React.FC<Props> = ({ match }) => {
         const isBoundary = e.points === 4 || e.points === 6;
         const isExtra = e.type === 'extra';
         
-        if (isWicket) runningWickets++;
-        runningScore += e.points;
+        /* */
 
         enrichedBalls.push({
             id: e.id,
@@ -129,7 +126,7 @@ export const MatchCommentaryTab: React.FC<Props> = ({ match }) => {
     });
 
     return finalGroups;
-  }, [match, battingTeam, activeInnings]); // Added activeInnings dependency
+  }, [match, battingTeam]);
 
   // Filter Logic
   const filteredGroups = useMemo(() => {
@@ -174,7 +171,7 @@ export const MatchCommentaryTab: React.FC<Props> = ({ match }) => {
               <Select 
                  options={filterOptions}
                  value={filterType}
-                 onChange={setFilterType}
+                 onChange={(e) => setFilterType(e.target.value)}
                  className="w-full"
               />
           </div>

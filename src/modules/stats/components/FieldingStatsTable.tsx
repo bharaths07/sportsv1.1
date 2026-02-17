@@ -30,8 +30,10 @@ export const FieldingStatsTable: React.FC<FieldingStatsTableProps> = ({ stats, m
   const sortedStats = useMemo(() => {
     let data = [...stats];
     
-    // Default: Hide if no data exists (Total dismissals = 0)
-    data = data.filter(s => s.totalDismissals > 0);
+    // Apply qualification filter when enabled
+    if (minQualification) {
+      data = data.filter(s => s.totalDismissals > 0);
+    }
 
     return data.sort((a, b) => {
       const valA = a[sortField];
@@ -77,7 +79,7 @@ export const FieldingStatsTable: React.FC<FieldingStatsTableProps> = ({ stats, m
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
-          {sortedStats.map((stat, index) => (
+          {sortedStats.map((stat) => (
             <tr key={stat.playerId} className="hover:bg-slate-50 transition-colors">
                 <td className="px-4 py-3 text-sm font-medium text-slate-900">
                   <Link to={`/player/${stat.playerId}`} className="hover:text-blue-600 transition-colors">

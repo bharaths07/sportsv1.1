@@ -1,10 +1,9 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bookmark, Trophy } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { useGlobalState } from '../../app/AppProviders';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/EmptyState';
 import { Card } from '../../components/ui/Card';
 
@@ -15,7 +14,7 @@ export const SavedTournamentsScreen: React.FC = () => {
   const savedTournamentsList = useMemo(() => {
     return tournaments
         .filter(t => followedTournaments.includes(t.id))
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        .sort((a, b) => new Date(b.startDate || 0).getTime() - new Date(a.startDate || 0).getTime());
   }, [tournaments, followedTournaments]);
 
   return (

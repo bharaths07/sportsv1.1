@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bookmark, Search } from 'lucide-react';
+import { Bookmark } from 'lucide-react';
 import { useGlobalState } from '../../app/AppProviders';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { Button } from '../../components/ui/Button';
+// import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/EmptyState';
 import { MatchCard } from './components/MatchCard';
 

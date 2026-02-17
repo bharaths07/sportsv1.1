@@ -1,9 +1,31 @@
 import { supabase } from '../lib/supabase';
-import { Match, MatchParticipant } from '../domain/match';
+import type { PostgrestError } from '@supabase/supabase-js';
+import { Match } from '../domain/match';
+
+interface DbTeamRef {
+  name?: string;
+}
+
+interface DbMatch {
+  id: string;
+  tournament_id?: string;
+  home_team_id: string;
+  away_team_id: string;
+  start_time: string;
+  location: string;
+  status: Match['status'];
+  winner_id?: string;
+  created_by: string;
+  data?: Partial<Match>;
+  home_team?: DbTeamRef;
+  away_team?: DbTeamRef;
+}
+
+type QueryResponse<T> = { data: T | null; error: PostgrestError | null };
 
 export const matchService = {
   async getAllMatches(): Promise<Match[]> {
-    const { data, error } = await supabase
+    const { data, error }: QueryResponse<DbMatch[]> = await supabase
       .from('matches')
       .select(`
         *,
@@ -16,12 +38,31 @@ export const matchService = {
       return [];
     }
 
-    return data.map((m: any) => mapToDomain(m));
+    return (data ?? []).map((m) => mapToDomain(m));
+  },
+
+  async getMatchById(id: string): Promise<Match | undefined> {
+    const { data, error }: QueryResponse<DbMatch> = await supabase
+      .from('matches')
+      .select(`
+        *,
+        home_team:home_team_id (name),
+        away_team:away_team_id (name)
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching match:', error);
+      return undefined;
+    }
+
+    return data ? mapToDomain(data) : undefined;
   },
 
   async createMatch(match: Match): Promise<Match> {
     const { 
-      id, homeParticipant, awayParticipant, 
+      homeParticipant, awayParticipant, 
       tournamentId, date, location, status, 
       createdByUserId, winnerId,
       ...restData 
@@ -45,7 +86,7 @@ export const matchService = {
       }
     };
 
-    const { data, error } = await supabase
+    const { data, error }: QueryResponse<DbMatch> = await supabase
       .from('matches')
       .insert(dbMatch)
       .select()
@@ -56,7 +97,7 @@ export const matchService = {
       throw error;
     }
 
-    return mapToDomain(data);
+    return mapToDomain(data as DbMatch);
   },
 
   async updateMatch(matchId: string, updates: Partial<Match>): Promise<void> {
@@ -64,8 +105,8 @@ export const matchService = {
     // But for MVP, let's assume 'updates' contains what we need or we overwrite specific fields.
     
     // Split updates into columns and JSON data
-    const dbUpdates: any = {};
-    const jsonUpdates: any = {};
+    const dbUpdates: { status?: Match['status']; winner_id?: string; start_time?: string } = {};
+    const jsonUpdates: Partial<Pick<Match, 'events' | 'homeParticipant' | 'awayParticipant' | 'currentBattingTeamId' | 'liveState'>> = {};
 
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.winnerId) dbUpdates.winner_id = updates.winnerId;
@@ -82,7 +123,7 @@ export const matchService = {
 
     // We can use Supabase's jsonb_set or just merge in JS if we fetch first.
     // Fetch first is safer for JSON merging.
-    const { data: current, error: fetchError } = await supabase
+    const { data: current, error: fetchError }: QueryResponse<Pick<DbMatch, 'data'>> = await supabase
       .from('matches')
       .select('data')
       .eq('id', matchId)
@@ -90,7 +131,7 @@ export const matchService = {
       
     if (fetchError) throw fetchError;
 
-    const newData = { ...current.data, ...jsonUpdates };
+    const newData = { ...(current?.data ?? {}), ...jsonUpdates };
     
     const { error: updateError } = await supabase
       .from('matches')
@@ -101,7 +142,7 @@ export const matchService = {
   }
 };
 
-function mapToDomain(dbMatch: any): Match {
+function mapToDomain(dbMatch: DbMatch): Match {
   const jsonData = dbMatch.data || {};
   
   // Merge column data with JSON data

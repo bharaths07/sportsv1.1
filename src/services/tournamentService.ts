@@ -1,6 +1,48 @@
 import { supabase } from '../lib/supabase';
 import { Tournament } from '../domain/tournament';
 
+interface DbTournament {
+  id: string;
+  name: string;
+  start_date?: string;
+  end_date?: string;
+  status?: Tournament['status'];
+  location?: string;
+  description?: string;
+  banner_url?: string;
+  organizer_id?: string;
+  organizer?: { name?: string } | null;
+  structure?: unknown;
+  teams?: string[];
+  schedule_mode?: 'AUTO' | 'MANUAL' | 'LATER';
+}
+
+type DbTournamentInsert = {
+  name?: string;
+  start_date?: string;
+  end_date?: string;
+  status?: Tournament['status'];
+  location?: string;
+  description?: string;
+  banner_url?: string;
+  organizer_id?: string;
+  structure?: unknown;
+  teams?: string[];
+};
+
+type DbTournamentUpdate = Partial<{
+  name: string;
+  status: Tournament['status'];
+  start_date: string;
+  end_date: string;
+  location: string;
+  description: string;
+  banner_url: string;
+  structure: unknown;
+  teams: string[];
+  schedule_mode: 'AUTO' | 'MANUAL' | 'LATER';
+}>;
+
 export const tournamentService = {
   async getAllTournaments(): Promise<Tournament[]> {
     const { data, error } = await supabase
@@ -15,11 +57,11 @@ export const tournamentService = {
       return [];
     }
 
-    return data.map((t: any) => mapToDomain(t));
+    return (data || []).map((t) => mapToDomain(t as DbTournament));
   },
 
   async createTournament(tournament: Partial<Tournament>): Promise<Tournament> {
-    const dbTournament = {
+    const dbTournament: DbTournamentInsert = {
       name: tournament.name,
       start_date: tournament.startDate,
       end_date: tournament.endDate,
@@ -43,11 +85,11 @@ export const tournamentService = {
       throw error;
     }
 
-    return mapToDomain(data);
+    return mapToDomain(data as DbTournament);
   },
 
   async updateTournament(id: string, updates: Partial<Tournament>): Promise<Tournament> {
-    const dbUpdates: any = {};
+    const dbUpdates: DbTournamentUpdate = {};
     if (updates.name) dbUpdates.name = updates.name;
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.startDate) dbUpdates.start_date = updates.startDate;
@@ -71,7 +113,7 @@ export const tournamentService = {
         throw error;
     }
     
-    return mapToDomain(data);
+    return mapToDomain(data as DbTournament);
   },
 
   async addTeam(tournamentId: string, teamId: string): Promise<void> {
@@ -119,7 +161,7 @@ export const tournamentService = {
   }
 };
 
-function mapToDomain(dbT: any): Tournament {
+function mapToDomain(dbT: DbTournament): Tournament {
   const start = dbT.start_date || '';
   const end = dbT.end_date || '';
   const dateString = end ? `${start} - ${end}` : start;

@@ -1,4 +1,4 @@
-import { Match, ScoreEvent, MatchParticipant, PlayerStats, MatchLiveState } from '../domain/match';
+import { Match, ScoreEvent } from '../domain/match';
 
 export const scoreEngine = {
   /**
@@ -75,6 +75,51 @@ export const scoreEngine = {
         return updatedMatch;
     }
 
+    // --- Basketball Logic ---
+    if (match.sportId === 's5') {
+        const teamId = event.teamId || updatedMatch.homeParticipant.id;
+        const isHome = teamId === updatedMatch.homeParticipant.id;
+        const team = isHome ? { ...updatedMatch.homeParticipant } : { ...updatedMatch.awayParticipant };
+        if (!team.players) team.players = [];
+        
+        // Score update
+        if (event.type === 'basket') {
+          const pts = event.points || 0;
+          team.score = (team.score || 0) + pts;
+        }
+        
+        // Player stats
+        if (event.scorerId) {
+          let player = team.players.find(p => p.playerId === event.scorerId);
+          if (!player) {
+            player = { playerId: event.scorerId, points: 0, fouls: 0 };
+            team.players.push(player);
+          }
+          if (event.type === 'basket') {
+            player.points = (player.points || 0) + (event.points || 0);
+          }
+          if (event.type === 'foul') {
+            player.fouls = (player.fouls || 0) + 1;
+          }
+          team.players = team.players.map(p => p.playerId === event.scorerId ? player! : p);
+        }
+        if (event.assistId) {
+          let assistant = team.players.find(p => p.playerId === event.assistId);
+          if (!assistant) {
+            assistant = { playerId: event.assistId, points: 0, fouls: 0, assists: 0 };
+            team.players.push(assistant);
+          }
+          // Reuse assists field for basketball
+          // @ts-expect-error optional field
+          assistant.assists = (assistant.assists || 0) + 1;
+          team.players = team.players.map(p => p.playerId === event.assistId ? assistant! : p);
+        }
+        
+        if (isHome) updatedMatch.homeParticipant = team; else updatedMatch.awayParticipant = team;
+        updatedMatch.events = [event, ...(updatedMatch.events || [])];
+        return updatedMatch;
+    }
+
     // Determine Batting Team
     const battingTeamId = event.teamId || updatedMatch.currentBattingTeamId || updatedMatch.homeParticipant.id;
     const isHomeBatting = battingTeamId === updatedMatch.homeParticipant.id;
@@ -114,12 +159,12 @@ export const scoreEngine = {
       
       // Runs off bat
       if (event.runsScored !== undefined) {
-        batter.runs += event.runsScored;
+        batter.runs = (batter.runs || 0) + event.runsScored;
       }
       
       // Balls faced (Wides don't count for batter)
       if (!isWideOrNoBall) {
-        batter.balls += 1;
+        batter.balls = (batter.balls || 0) + 1;
       }
       
       // Update array reference
@@ -146,7 +191,7 @@ export const scoreEngine = {
 
       // Wickets (Run outs don't count for bowler)
       if (event.isWicket && event.dismissal?.type !== 'run_out') {
-        bowler.wickets += 1;
+        bowler.wickets = (bowler.wickets || 0) + 1;
       }
 
       bowlingSide.players = bowlingSide.players.map(p => p.playerId === event.bowlerId ? bowler! : p);

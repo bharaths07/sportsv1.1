@@ -6,4 +6,5 @@ export interface TeamStanding {
   lost: number;
   tied: number;
   points: number;
+  netRunRate: number;
 }

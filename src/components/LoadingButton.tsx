@@ -15,59 +15,25 @@ export const LoadingButton: React.FC<LoadingButtonProps> = ({
   disabled,
   ...props 
 }) => {
-  let backgroundColor = 'var(--color-neon-cyan)';
-  let color = '#000';
-
-  if (variant === 'secondary') {
-    backgroundColor = 'rgba(255,255,255,0.1)';
-    color = 'var(--color-text-primary)';
-  } else if (variant === 'danger') {
-    backgroundColor = 'var(--color-neon-orange)';
-    color = 'white';
-  }
-
-  const baseStyle: React.CSSProperties = {
-    padding: '12px 24px',
-    borderRadius: '8px',
-    border: 'none',
-    fontSize: '16px',
-    fontWeight: 'bold',
-    cursor: (isLoading || disabled) ? 'not-allowed' : 'pointer',
-    opacity: (isLoading || disabled) ? 0.7 : 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '10px',
-    transition: 'all 0.2s',
-    backgroundColor,
-    color,
-    width: '100%', // Mobile friendly default
-    ...style
-  };
-
   return (
     <button 
       disabled={isLoading || disabled} 
-      style={baseStyle} 
+      className={`px-6 py-3 rounded-lg text-base font-bold w-full flex items-center justify-center gap-2 transition-all ${
+        isLoading || disabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'
+      } ${
+        variant === 'secondary'
+          ? 'bg-white/10 text-text-primary'
+          : variant === 'danger'
+          ? '[background-color:var(--color-neon-orange)] text-white'
+          : '[background-color:var(--color-neon-cyan)] text-black'
+      }`}
+      style={style}
       {...props}
     >
       {isLoading && (
-        <span style={{
-          display: 'inline-block',
-          width: '16px',
-          height: '16px',
-          border: '2px solid currentColor',
-          borderRightColor: 'transparent',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }} />
+        <span className="inline-block w-4 h-4 border-2 border-current border-r-transparent rounded-full animate-spin" />
       )}
       {isLoading ? loadingText : children}
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </button>
   );
 };

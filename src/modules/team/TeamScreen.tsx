@@ -20,7 +20,7 @@ const SPORTS_MAP: Record<string, string> = {
 
 type TabType = 'overview' | 'squad' | 'matches' | 'stats' | 'achievements';
 
-const StatCard: React.FC<{ label: string; value: string; color?: string; bgColor?: string }> = ({ label, value, color, bgColor }) => (
+const StatCard: React.FC<{ label: string; value: string; color?: string; bgColor?: string }> = ({ label, value, color }) => (
   <Card className="flex flex-col items-center justify-center p-4">
     <div className={`text-2xl font-bold leading-none mb-1 ${color || 'text-slate-900'}`}>{value}</div>
     <div className="text-xs font-bold text-slate-500 uppercase tracking-wide">{label}</div>
@@ -99,40 +99,51 @@ export const TeamScreen: React.FC = () => {
   const isFootball = team.sportId === 's3';
 
   // Stats Logic
-  let stats: any = {};
-  
-  if (isFootball) {
+  type FootballStats = {
+    goalsFor: number;
+    goalsAgainst: number;
+    goalDifference: number;
+    cleanSheets: number;
+    avgGoals: string;
+  };
+  type CricketStats = {
+    runs: number;
+    wickets: number;
+    avgRuns: number;
+    avgWickets: number;
+  };
+  const stats: FootballStats | CricketStats = (() => {
+    if (isFootball) {
       let goalsFor = 0;
       let goalsAgainst = 0;
       let cleanSheets = 0;
 
       completedMatches.forEach(m => {
           const isHome = m.homeParticipant.id === team.id;
-          const myScore = isHome ? parseInt(m.homeScore || '0') : parseInt(m.awayScore || '0');
-          const oppScore = isHome ? parseInt(m.awayScore || '0') : parseInt(m.homeScore || '0');
+          const myScore = isHome ? (m.homeParticipant.score || 0) : (m.awayParticipant.score || 0);
+          const oppScore = isHome ? (m.awayParticipant.score || 0) : (m.homeParticipant.score || 0);
           
           goalsFor += isNaN(myScore) ? 0 : myScore;
           goalsAgainst += isNaN(oppScore) ? 0 : oppScore;
           if (oppScore === 0) cleanSheets++;
       });
 
-      stats = {
+      return {
           goalsFor,
           goalsAgainst,
           goalDifference: goalsFor - goalsAgainst,
           cleanSheets,
           avgGoals: matchesPlayed > 0 ? (goalsFor / matchesPlayed).toFixed(1) : '0.0'
       };
-  } else {
-      // Cricket Stats (Mocked or calculated if needed, sticking to mock for now as per original file, but let's try to calculate simple ones)
-      // Actually, original file had hardcoded stats. Let's keep them hardcoded for Cricket to avoid breaking it, or use 0.
-      stats = {
+    } else {
+      return {
         runs: 2450,
         wickets: 128,
         avgRuns: 165,
         avgWickets: 6.5
       };
-  }
+    }
+  })();
 
   const tabs = [
     { id: 'overview', label: 'Overview' },

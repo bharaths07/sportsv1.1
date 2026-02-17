@@ -1,6 +1,17 @@
 import { supabase } from '../lib/supabase';
 import { Achievement } from '../domain/achievement';
 
+interface DbAchievement {
+  id: string;
+  type: Achievement['type'];
+  title: string;
+  player_id: string;
+  match_id?: string;
+  date: string;
+  description?: string;
+  metadata?: Record<string, unknown>;
+}
+
 export const achievementService = {
   async createAchievement(achievement: Achievement): Promise<Achievement> {
     const dbAchievement = {
@@ -24,7 +35,7 @@ export const achievementService = {
       throw error;
     }
 
-    return mapToDomain(data);
+    return mapToDomain(data as DbAchievement);
   },
 
   async getAchievementsByPlayer(playerId: string): Promise<Achievement[]> {
@@ -38,7 +49,7 @@ export const achievementService = {
       return [];
     }
 
-    return data.map(mapToDomain);
+    return (data || []).map((row) => mapToDomain(row as DbAchievement));
   },
   
   async getAllAchievements(): Promise<Achievement[]> {
@@ -51,11 +62,11 @@ export const achievementService = {
       return [];
     }
 
-    return data.map(mapToDomain);
+    return (data || []).map((row) => mapToDomain(row as DbAchievement));
   }
 };
 
-function mapToDomain(db: any): Achievement {
+function mapToDomain(db: DbAchievement): Achievement {
   return {
     id: db.id,
     type: db.type,

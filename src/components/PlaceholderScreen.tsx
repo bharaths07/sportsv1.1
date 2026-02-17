@@ -6,15 +6,15 @@ export const PlaceholderScreen: React.FC = () => {
   const title = location.pathname.substring(1).replace(/-/g, ' ').toUpperCase();
 
   return (
-    <div style={{ padding: '40px 20px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
-      <div style={{ fontSize: '48px', marginBottom: '20px' }}>🚧</div>
-      <h2 style={{ marginBottom: '10px', textTransform: 'capitalize' }}>{title || 'Page'}</h2>
-      <p style={{ color: '#666', marginBottom: '30px' }}>
+    <div className="max-w-[600px] mx-auto p-10 px-5 text-center">
+      <div className="text-5xl mb-5">🚧</div>
+      <h2 className="mb-2 capitalize">{title || 'Page'}</h2>
+      <p className="text-slate-600 mb-7">
         This is a placeholder for the <strong>{location.pathname}</strong> route.
         <br />
         It exists to verify the navigation flow contract.
       </p>
-      <Link to="/" style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>
+      <Link to="/" className="text-primary font-bold">
         Return to Live
       </Link>
     </div>

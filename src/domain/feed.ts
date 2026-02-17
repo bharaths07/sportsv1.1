@@ -19,7 +19,7 @@ export interface FeedItem {
   authorId: string;
   authorName: string;
   authorAvatar?: string;
-  authorType: 'user' | 'system' | 'team' | 'tournament';
+  authorType: 'user' | 'system' | 'team' | 'tournament' | 'institution';
 
   // Context
   relatedEntityId?: string; // MatchID, PlayerID, etc.
@@ -46,6 +46,7 @@ export interface FeedItem {
   publishedAt: string;
   visibility: 'public' | 'institution' | 'private';
   location?: string;
+  metadata?: any;
 }
 
 export interface FeedFilter {

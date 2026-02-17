@@ -11,25 +11,11 @@ export const MatchListCard: React.FC<MatchListCardProps> = ({ title, matches }) 
   if (matches.length === 0) return null;
 
   return (
-    <div className="match-list-card" style={{ marginBottom: '24px' }}>
-      <h3 className="list-card-title" style={{ 
-        fontSize: '18px', 
-        fontWeight: 700, 
-        marginBottom: '16px', 
-        color: '#111',
-        paddingLeft: '4px' 
-      }}>
+    <div className="match-list-card mb-6">
+      <h3 className="list-card-title text-lg font-bold mb-4 text-slate-900 pl-1">
         {title}
       </h3>
-      <div className="list-card-content" style={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        gap: '0px', // MatchCard has borderBottom
-        borderRadius: '12px',
-        overflow: 'hidden',
-        border: '1px solid #eee',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-      }}>
+      <div className="list-card-content flex flex-col gap-0 rounded-xl overflow-hidden border border-slate-200 shadow">
         {matches.map(match => (
           <MatchCard key={match.id} match={match} />
         ))}

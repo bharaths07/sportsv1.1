@@ -9,11 +9,11 @@ import { Button } from '../../components/ui/Button';
 import { Tabs } from '../../components/ui/Tabs';
 import { Select } from '../../components/ui/Select';
 import { EmptyState } from '../../components/EmptyState';
-import { Plus, Trophy, Calendar, MapPin, Users, Search } from 'lucide-react';
+import { Plus, Trophy, Calendar, MapPin, Users } from 'lucide-react';
 
 export const TournamentListScreen: React.FC = () => {
   const navigate = useNavigate();
-  const { tournaments, currentUser, teams, players } = useGlobalState();
+  const { tournaments, currentUser } = useGlobalState();
   
   // Tabs: 'active' (Ongoing), 'upcoming', 'completed'
   const [activeTab, setActiveTab] = useState('ongoing');
@@ -24,9 +24,7 @@ export const TournamentListScreen: React.FC = () => {
   const [search, setSearch] = useState('');
 
   // Helpers
-  const myPlayerId = useMemo(() => 
-    players.find(p => p.userId === currentUser?.id)?.id, 
-  [players, currentUser]);
+  // const myPlayerId = useMemo(() => players.find(p => p.userId === currentUser?.id)?.id, [players, currentUser]);
 
   const filteredTournaments = useMemo(() => {
     return tournaments.filter(t => {
@@ -70,7 +68,7 @@ export const TournamentListScreen: React.FC = () => {
           <Button 
             variant="primary" 
             icon={<Plus size={18} />}
-            onClick={() => navigate('/create-tournament')}
+            onClick={() => navigate('/tournament/create')}
           >
             Create Tournament
           </Button>
@@ -122,13 +120,7 @@ export const TournamentListScreen: React.FC = () => {
       </div>
 
       {/* List */}
-      <div 
-        style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-          gap: 'var(--space-4)', 
-        }} 
-      >
+      <div className="[display:grid] [grid-template-columns:repeat(auto-fill,_minmax(280px,_1fr))] gap-4">
         {filteredTournaments.length === 0 ? (
           <div className="col-span-full">
             <EmptyState 

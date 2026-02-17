@@ -1,5 +1,5 @@
 import React from 'react';
-import { Avatar } from '../../../../components/ui/Avatar';
+import { Avatar } from '../../../components/ui/Avatar';
 
 interface StatItem {
   id: string;
@@ -20,52 +20,35 @@ interface KeyStatsProps {
 
 export const KeyStats: React.FC<KeyStatsProps> = ({ stats, variant = 'sidebar' }) => {
   const displayStats = variant === 'full' ? stats : stats.slice(0, 3);
-  
-  const containerStyle: React.CSSProperties = variant === 'full' 
-    ? { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }
-    : { display: 'flex', flexDirection: 'column', gap: '16px' };
 
   return (
     <div>
       {variant === 'sidebar' && (
-        <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#1e293b', marginBottom: '16px' }}>Key Stats</h2>
+        <h2 className="text-lg font-semibold text-slate-800 mb-4">Key Stats</h2>
       )}
       
-      <div style={containerStyle}>
+      <div
+        className={
+          variant === 'full'
+            ? 'grid gap-6 [grid-template-columns:repeat(auto-fill,minmax(300px,1fr))]'
+            : 'flex flex-col gap-4'
+        }
+      >
         {displayStats.map(stat => (
           <div 
             key={stat.id} 
             title="Stats update as tournament progresses"
-            style={{ 
-              backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden',
-              cursor: 'help',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              boxShadow: variant === 'full' ? '0 1px 3px rgba(0,0,0,0.05)' : 'none'
-            }}
-            onMouseEnter={(e) => {
-              if (variant === 'full') {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (variant === 'full') {
-                e.currentTarget.style.transform = 'none';
-                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
-              }
-            }}
+            className={`bg-white rounded-xl border border-slate-200 overflow-hidden cursor-help transition-transform transition-shadow duration-200 ${
+              variant === 'full' ? 'shadow-sm hover:-translate-y-0.5 hover:shadow-lg' : ''
+            }`}
           >
-            <div style={{ 
-              padding: '8px 16px', borderBottom: '1px solid #f1f5f9',  
-              fontSize: '12px', fontWeight: 500, color: '#64748b',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-            }}>
+            <div className="px-4 py-2 border-b border-slate-100 text-xs font-medium text-slate-500 flex justify-between items-center">
               <span>{stat.category}</span>
-              {variant === 'full' && <span style={{ fontSize: '10px', backgroundColor: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>TOP PERFORMER</span>}
+              {variant === 'full' && <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded">TOP PERFORMER</span>}
             </div>
             
-            <div style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
                 <Avatar
                   src={stat.player.avatar}
                   alt={stat.player.name}
@@ -73,14 +56,14 @@ export const KeyStats: React.FC<KeyStatsProps> = ({ stats, variant = 'sidebar' }
                   className="w-12 h-12 rounded-full bg-slate-50"
                 />
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>{stat.player.name}</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>{stat.player.team}</div>
+                  <div className="text-sm font-semibold text-slate-900">{stat.player.name}</div>
+                  <div className="text-xs text-slate-500">{stat.player.team}</div>
                 </div>
               </div>
               
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a' }}>{stat.value}</div>
-                <div style={{ fontSize: '11px', color: '#64748b' }}>{stat.label}</div>
+              <div className="text-right">
+                <div className="text-xl font-bold text-slate-900">{stat.value}</div>
+                <div className="text-[11px] text-slate-500">{stat.label}</div>
               </div>
             </div>
           </div>

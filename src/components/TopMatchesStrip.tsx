@@ -13,53 +13,36 @@ export const TopMatchesStrip: React.FC = () => {
   const data = tab === 'top' ? topMatches : liveMatches;
 
   return (
-    <section style={{ marginBottom: 24 }}>
+    <section className="mb-6">
       {/* Header with Tabs (Left) + Schedule Link (Right) */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <div style={{ display: 'flex', gap: 16 }}>
+      <div className="flex justify-between items-center mb-3">
+        <div className="flex gap-4">
           <button
             onClick={() => setTab('top')}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: 0,
-              cursor: 'pointer',
-              fontWeight: tab === 'top' ? 800 : 600,
-              color: tab === 'top' ? '#111' : '#666'
-            }}
+            className={`bg-transparent border-0 p-0 cursor-pointer ${
+              tab === 'top' ? 'font-extrabold text-slate-900' : 'font-semibold text-slate-600 hover:text-slate-800'
+            }`}
           >
             Top Matches
           </button>
           <button
             onClick={() => setTab('live')}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: 0,
-              cursor: 'pointer',
-              fontWeight: tab === 'live' ? 800 : 600,
-              color: tab === 'live' ? '#111' : '#666'
-            }}
+            className={`bg-transparent border-0 p-0 cursor-pointer ${
+              tab === 'live' ? 'font-extrabold text-slate-900' : 'font-semibold text-slate-600 hover:text-slate-800'
+            }`}
           >
             Live ({liveMatches.length})
           </button>
         </div>
         <div>
-          <Link to="/matches" style={{ fontWeight: 700, color: '#1a1a1a', textDecoration: 'none' }}>
+          <Link to="/matches" className="font-bold text-slate-900 hover:underline">
             Cricket Schedule →
           </Link>
         </div>
       </div>
 
       {/* Horizontal row of equal cards with overflow scroll */}
-      <div
-        style={{
-          display: 'flex',
-          gap: 12,
-          overflowX: 'auto',
-          paddingBottom: 4
-        }}
-      >
+      <div className="flex gap-3 overflow-x-auto pb-1">
         {data.map(m => (
           <MatchStripCard key={m.id} match={m} />
         ))}

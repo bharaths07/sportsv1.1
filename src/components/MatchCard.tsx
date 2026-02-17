@@ -27,83 +27,56 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
   const isCompleted = match.status === 'completed' || match.status === 'locked';
   const isUpcoming = match.status === 'draft';
 
-  // Determine status text/color
+  // Determine status text
   let statusText = '';
-  let statusColor = '#666';
 
   if (isLive) {
     statusText = 'LIVE';
-    statusColor = '#d32f2f'; // Red
   } else if (isCompleted) {
     statusText = 'FINAL';
-    statusColor = '#333';
   } else if (isUpcoming) {
     // Show time for upcoming
     statusText = new Date(match.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    statusColor = '#666';
   }
 
   return (
     <div 
-      className="match-card" 
+      className="match-card p-4 bg-white border-b border-slate-200 cursor-pointer transition-colors hover:bg-slate-50" 
       onClick={() => navigate(isLive ? `/live/${match.id}` : `/matches/${match.id}`)}
-      style={{
-        padding: '16px',
-        backgroundColor: '#fff',
-        borderBottom: '1px solid #eee',
-        cursor: 'pointer',
-        transition: 'background-color 0.2s',
-      }}
-      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
-      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
     >
       {/* A. Match Context (Small, Top) */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        fontSize: '11px', 
-        color: '#666', 
-        marginBottom: '8px',
-        fontWeight: 500,
-        textTransform: 'uppercase',
-        letterSpacing: '0.5px'
-      }}>
+      <div className="flex justify-between text-[11px] text-slate-600 mb-2 font-medium uppercase tracking-[0.5px]">
         <span>{match.location || 'Unknown Location'}</span>
         {/* Optional: Add Tournament Name if available in future */}
       </div>
 
       {/* B. Teams (Main Focus) & C. Score (Integrated for side-by-side comparison) */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="flex items-center justify-between">
         
         {/* Home Team */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontWeight: 600, fontSize: '15px', color: '#111' }}>
+        <div className="flex-1 flex flex-col">
+          <span className="font-semibold text-[15px] text-slate-900">
             {match.homeParticipant.name}
           </span>
           {(isLive || isCompleted) && (
-            <span style={{ fontSize: '14px', fontFamily: 'monospace', color: '#333', marginTop: '2px' }}>
+            <span className="text-[14px] font-mono text-slate-700 mt-0.5">
               {getScore(match.homeParticipant)}
             </span>
           )}
         </div>
 
         {/* VS or Divider */}
-        <div style={{ 
-          padding: '0 12px', 
-          fontSize: '12px', 
-          color: '#999', 
-          fontWeight: 500 
-        }}>
+        <div className="px-3 text-[12px] text-slate-400 font-medium">
           {isUpcoming ? 'vs' : ''}
         </div>
 
         {/* Away Team (Right Aligned) */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', textAlign: 'right' }}>
-          <span style={{ fontWeight: 600, fontSize: '15px', color: '#111' }}>
+        <div className="flex-1 flex flex-col items-end text-right">
+          <span className="font-semibold text-[15px] text-slate-900">
             {match.awayParticipant.name}
           </span>
           {(isLive || isCompleted) && (
-            <span style={{ fontSize: '14px', fontFamily: 'monospace', color: '#333', marginTop: '2px' }}>
+            <span className="text-[14px] font-mono text-slate-700 mt-0.5">
               {getScore(match.awayParticipant)}
             </span>
           )}
@@ -111,42 +84,23 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
       </div>
 
       {/* C. Status & D. Action Hint (Bottom Row) */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginTop: '10px' 
-      }}>
+      <div className="flex justify-between items-center mt-2.5">
         {/* Status */}
-        <div style={{ 
-          fontSize: '12px', 
-          fontWeight: isLive ? 700 : 500, 
-          color: statusColor,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px'
-        }}>
+        <div className={`${isLive ? 'font-bold text-red-700' : 'font-medium text-slate-700'} text-[12px] flex items-center gap-1.5`}>
           {isLive && (
-            <span style={{ 
-              display: 'inline-block', 
-              width: '6px', 
-              height: '6px', 
-              borderRadius: '50%', 
-              backgroundColor: '#d32f2f',
-              marginBottom: '1px'
-            }}></span>
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-700 mb-[1px]"></span>
           )}
           {statusText}
           {/* Add result text for completed matches if available */}
           {isCompleted && match.homeParticipant.result && (
-            <span style={{ fontWeight: 400, color: '#666', marginLeft: '4px' }}>
+            <span className="font-normal text-slate-600 ml-1">
                • {match.homeParticipant.result === 'win' ? match.homeParticipant.name : match.awayParticipant.name} won
             </span>
           )}
         </div>
 
         {/* D. Action Hint */}
-        <div style={{ color: '#ccc', fontSize: '18px', lineHeight: 1 }}>
+        <div className="text-slate-300 text-[18px] leading-none">
           ›
         </div>
       </div>

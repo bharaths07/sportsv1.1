@@ -1,14 +1,14 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Match } from '../../domain/match';
-import { getMatchImpactRankings, ImpactScore } from '../../utils/cricketMetrics';
+// import { getMatchImpactRankings, ImpactScore } from '../../utils/cricketMetrics';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { Share, Trophy, Activity, AlertCircle } from 'lucide-react';
+import { Share, Trophy, Activity } from 'lucide-react';
 
 interface Props {
   match: Match;
-  onTabChange: (tab: any) => void;
+  onTabChange: (tab: string) => void;
 }
 
 export const MatchSummaryTab: React.FC<Props> = ({ match, onTabChange }) => {
@@ -146,9 +146,9 @@ export const MatchSummaryTab: React.FC<Props> = ({ match, onTabChange }) => {
             <div>
                 <div className="text-slate-500 mb-1">Toss</div>
                 <div className="font-medium text-slate-900">
-                    {match.tossWinnerId ? (
+                    {match.toss?.winnerTeamId ? (
                         <>
-                            {match.tossWinnerId === match.homeParticipant.id ? match.homeParticipant.name : match.awayParticipant.name} opt to {match.tossDecision}
+                            {match.toss.winnerTeamId === match.homeParticipant.id ? match.homeParticipant.name : match.awayParticipant.name} opt to {match.toss.decision}
                         </>
                     ) : 'Yet to be decided'}
                 </div>

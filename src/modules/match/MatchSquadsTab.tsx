@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { Match } from '../../domain/match';
 import { useGlobalState } from '../../app/AppProviders';
 import { Card } from '../../components/ui/Card';
@@ -79,7 +79,7 @@ export const MatchSquadsTab: React.FC<Props> = ({ match }) => {
 
       {/* Squad List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {playerList.map((member, index) => {
+          {playerList.map((member) => {
               const player = getPlayerDetails(member.playerId);
               const leadership = getPlayerLeadership(member.playerId);
               const roleBadge = player ? getPlayerRoleBadge(player.id) : null;

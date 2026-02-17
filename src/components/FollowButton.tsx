@@ -27,24 +27,12 @@ export const FollowButton: React.FC<FollowButtonProps> = ({ id, type, label = fa
   return (
     <button
       onClick={handleClick}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        padding: label ? '8px 16px' : '8px',
-        borderRadius: '20px',
-        border: `1px solid ${isFollowing ? '#d32f2f' : '#ccc'}`,
-        backgroundColor: isFollowing ? '#fff0f0' : 'white',
-        color: isFollowing ? '#d32f2f' : '#666',
-        cursor: 'pointer',
-        fontSize: '14px',
-        fontWeight: '600',
-        fontFamily: 'Inter, Roboto, sans-serif',
-        transition: 'all 0.2s ease',
-        ...style
-      }}
+      className={`flex items-center gap-1.5 ${label ? 'px-4 py-2' : 'p-2'} rounded-full border transition-all text-sm font-semibold ${
+        isFollowing ? 'border-red-600 text-red-600 bg-red-50 hover:bg-red-100' : 'border-slate-300 text-slate-600 bg-white hover:bg-slate-50'
+      }`}
+      style={style}
     >
-      <span style={{ fontSize: label ? '16px' : '18px' }}>
+      <span className={label ? 'text-base' : 'text-lg'}>
         {isFollowing ? '❤️' : '🤍'}
       </span>
       {label && (

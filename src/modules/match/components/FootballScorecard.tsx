@@ -2,7 +2,7 @@ import React from 'react';
 import { Match, ScoreEvent } from '../../../domain/match';
 import { useGlobalState } from '../../../app/AppProviders';
 import { Card } from '../../../components/ui/Card';
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom';
 
 interface Props {
   match: Match;
@@ -37,7 +37,7 @@ export const FootballScorecard: React.FC<Props> = ({ match }) => {
   };
 
   const renderEventDescription = (event: ScoreEvent) => {
-    const playerName = getPlayerName(event.scorerId || event.playerId || event.batterId); // Fallback keys
+    const playerName = getPlayerName(event.scorerId || event.batterId); // Fallback keys
     
     if (event.type === 'goal') {
       const assistName = event.assistId ? getPlayerName(event.assistId) : null;

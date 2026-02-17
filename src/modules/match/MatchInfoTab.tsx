@@ -39,7 +39,7 @@ const resultChar = (m: Match, teamId: string) => {
 };
 
 export const MatchInfoTab: React.FC<Props> = ({ match }) => {
-  const { matches, preferences, teams } = useGlobalState();
+  const { matches } = useGlobalState();
 
   const statusLine = computeStatusLine(match);
 
