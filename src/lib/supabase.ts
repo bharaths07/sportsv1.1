@@ -9,6 +9,12 @@ const isKeyInvalid = !supabaseKey || supabaseKey.includes('placeholder') || supa
 const isUrlInvalid = !supabaseUrl || supabaseUrl.includes('placeholder') || supabaseUrl === 'https://your-project.supabase.co';
 const isPlaceholder = forceMock || isUrlInvalid || isKeyInvalid;
 
+// Startup diagnostics (no secrets logged)
+{
+  const mode = isPlaceholder ? 'MOCK' : 'REAL';
+  console.log(`[Supabase] Mode: ${mode}, URL: ${supabaseUrl ?? 'undefined'}`);
+}
+
 // Mock Supabase Client for Development/Demo
 const createMockClient = () => {
   console.warn('⚠️ Supabase is in MOCK mode. No actual network requests will be made.');

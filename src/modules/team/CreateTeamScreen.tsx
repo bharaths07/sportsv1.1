@@ -12,6 +12,14 @@ import { Button } from '../../components/ui/Button';
 import { Avatar } from '../../components/ui/Avatar';
 import { supabase } from '../../lib/supabase';
 
+const DEFAULT_SPORTS = [
+  { id: 's1', name: 'Cricket' },
+  { id: 's2', name: 'Football' },
+  { id: 's3', name: 'Badminton' },
+  { id: 's4', name: 'Tennis' },
+  { id: 's5', name: 'Kabaddi' }
+];
+
 export const CreateTeamScreen: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -37,22 +45,27 @@ export const CreateTeamScreen: React.FC = () => {
             if (error) {
                 console.error('Error fetching sports:', error);
                 // Fallback for dev if table missing
-                setSports([
-                    { id: 's1', name: 'Cricket' },
-                    { id: 's2', name: 'Football' }
-                ]);
+                setSports(DEFAULT_SPORTS);
             } else if (data) {
-                setSports(data);
+                // If Supabase returns empty array (mock mode), use defaults
+                const list = Array.isArray(data) && data.length > 0 ? data : DEFAULT_SPORTS;
+                setSports(list);
                 // Auto-select if gameId matches name or id? 
                 // gameId from URL is likely 'cricket' (name) or an ID.
                 // Let's try to find a match.
                 if (gameId) {
-                    const match = data.find(s => s.name.toLowerCase() === gameId.toLowerCase() || s.id === gameId);
+                    const match = list.find(s => s.name.toLowerCase() === gameId.toLowerCase() || s.id === gameId);
                     if (match) setSelectedSportId(match.id);
                 }
             }
         } catch (e) {
             console.error('Fetch sports exception:', e);
+            // Hard fallback
+            setSports(DEFAULT_SPORTS);
+            if (gameId) {
+                const match = DEFAULT_SPORTS.find(s => s.name.toLowerCase() === gameId.toLowerCase() || s.id === gameId);
+                if (match) setSelectedSportId(match.id);
+            }
         }
     };
     fetchSports();
@@ -63,6 +76,19 @@ export const CreateTeamScreen: React.FC = () => {
   const [about, setAbout] = useState('');
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isUuid = (v: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+  const sportName = (() => {
+    const found = sports.find(s => s.id === selectedSportId);
+    if (found) return found.name;
+    if (gameId) return gameId.charAt(0).toUpperCase() + gameId.slice(1);
+    return '';
+  })();
+  const goSelectSport = () => {
+    const params = new URLSearchParams();
+    if (context) params.set('context', context);
+    if (tournamentId) params.set('tournamentId', tournamentId);
+    navigate(`/teams/create?${params.toString()}`);
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -83,6 +109,13 @@ export const CreateTeamScreen: React.FC = () => {
     if (!currentUser) {
         console.error("No current user found");
         setIsSubmitting(false);
+        return;
+    }
+    if (!isUuid(selectedSportId)) {
+        console.error("Invalid sport ID. Must be a UUID from DB:", selectedSportId);
+        alert("Please choose a sport from the list before creating your team.");
+        setIsSubmitting(false);
+        goSelectSport();
         return;
     }
 
@@ -126,33 +159,30 @@ export const CreateTeamScreen: React.FC = () => {
     }
   };
 
-  const isValid = name.trim().length > 0 && city.trim().length > 0 && selectedSportId.length > 0;
+  const isValid = name.trim().length > 0 && city.trim().length > 0 && isUuid(selectedSportId);
 
   return (
     <PageContainer>
       <PageHeader 
         title="Create Team" 
         description="Add a new team to your collection"
-        backUrl="/teams"
       />
       
       <div className="max-w-2xl mx-auto space-y-6 pb-20">
         <Card className="p-6">
             <div className="space-y-6">
-                {/* Sport Selection */}
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700">Sport</label>
-                    <select
-                        className="w-full h-11 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
-                        value={selectedSportId}
-                        onChange={(e) => setSelectedSportId(e.target.value)}
-                        disabled={isSubmitting}
-                    >
-                        <option value="" disabled>Select a sport</option>
-                        {sports.map(s => (
-                            <option key={s.id} value={s.id}>{s.name}</option>
-                        ))}
-                    </select>
+                    {sportName ? (
+                      <div className="flex items-center justify-between">
+                        <div className="h-11 flex items-center px-3 rounded-md border border-slate-300 bg-white text-sm">
+                          {sportName}
+                        </div>
+                        <Button variant="outline" onClick={goSelectSport}>Change</Button>
+                      </div>
+                    ) : (
+                      <Button className="h-11" onClick={goSelectSport}>Choose Sport</Button>
+                    )}
                 </div>
 
                 {/* Team Logo */}
@@ -163,6 +193,8 @@ export const CreateTeamScreen: React.FC = () => {
                         className="hidden" 
                         accept="image/*"
                         onChange={handleFileSelect}
+                        aria-label="Upload Team Logo"
+                        title="Upload Team Logo"
                     />
                     {logoUrl ? (
                         <div className="relative w-24 h-24">

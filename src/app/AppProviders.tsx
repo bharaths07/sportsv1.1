@@ -1396,13 +1396,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const loginWithPhone = async (phone: string) => {
     try {
-      // DEVELOPMENT ONLY: If phone starts with '999', simulate success immediately
-      if (phone.startsWith('999') || process.env.NODE_ENV === 'development') {
-          console.log('[Dev] Simulating phone login success for:', phone);
-          localStorage.setItem('otp_requested_at', Date.now().toString());
-          return { success: true };
-      }
-
+      console.log('[Auth] Sending OTP to:', phone);
       const { error } = await supabase.auth.signInWithOtp({
         phone,
       });
@@ -1411,35 +1405,12 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       return { success: true };
     } catch (error: any) {
       console.error('Phone login error:', error);
-      
-      // Fallback for "Unsupported phone provider" error in development/demo
-      if (error.message?.includes('Unsupported phone provider') || error.message?.includes('Signups not allowed')) {
-          console.warn('[Dev] Phone provider not configured. Simulating success.');
-          localStorage.setItem('otp_requested_at', Date.now().toString());
-          return { success: true };
-      }
-
       return { success: false, error: error.message };
     }
   };
 
   const verifyOtp = async (phone: string, token: string) => {
     try {
-      // DEVELOPMENT ONLY: Accept '123456' as universal OTP
-      if (token === '123456') {
-          console.log('[Dev] Simulating OTP verification success');
-          const mockUser: User = {
-              id: 'dev-user-' + Date.now(),
-              name: 'Demo User',
-              phone: phone,
-              email: '',
-              role: 'user',
-              avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${phone}`
-          };
-          setCurrentUser(mockUser);
-          return { success: true };
-      }
-
       // Supabase verification
       const { data, error } = await supabase.auth.verifyOtp({
         phone,
@@ -1478,33 +1449,12 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             };
             setCurrentUser(newUser);
         }
-      }
-      return { success: true };
-    } catch (error: any) {
-      console.error('[AppProviders] OTP verification error:', error);
-      
-      const requestedAtStr = localStorage.getItem('otp_requested_at') || '0';
-      const requestedAt = parseInt(requestedAtStr, 10) || 0;
-      const withinWindow = Date.now() - requestedAt <= 120000;
-      if (withinWindow && (error.message?.includes('Token has expired') || error.message?.includes('invalid')) && process.env.NODE_ENV === 'development') {
-        const fallbackUser: User = {
-          id: 'dev-user-' + Date.now(),
-          name: 'Demo User',
-          phone: phone,
-          email: '',
-          role: 'user',
-          avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${phone}`
-        };
-        setCurrentUser(fallbackUser);
         return { success: true };
       }
-      
-      // Enhanced Error Handling
-      let errorMessage = 'Verification failed.';
-      if (error.message?.includes('Token has expired')) errorMessage = 'OTP has expired. Please request a new one.';
-      if (error.message?.includes('invalid')) errorMessage = 'Invalid OTP. Please check the code.';
-      
-      return { success: false, error: errorMessage };
+      return { success: false, error: 'Invalid OTP' };
+    } catch (error: any) {
+      console.error('[AppProviders] OTP verification error:', error);
+      return { success: false, error: error.message };
     }
   };
 
