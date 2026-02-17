@@ -7,33 +7,48 @@ import { Input } from '../../components/ui/Input';
 import { Textarea } from '../../components/ui/Textarea';
 import { Avatar } from '../../components/ui/Avatar';
 import { ArrowLeft, Camera, Upload } from 'lucide-react';
+import type { User } from '../../domain/user';
 
 export const EditProfileScreen: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser, updateUserProfile } = useGlobalState();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Guard: If no user, redirect to login or profile
-  if (!currentUser) {
-    // In a real app, might show a loading spinner or redirect
-    return <div className="p-5 text-center text-slate-500">Please log in to edit your profile.</div>;
-  }
+  // Proceed even if no user; UI will handle the guest state
 
-  const [name, setName] = useState(currentUser.name || '');
-  const [username, setUsername] = useState(currentUser.username || '');
-  const [location, setLocation] = useState(currentUser.location || '');
-  const [bio, setBio] = useState(currentUser.bio || '');
-  const [favoriteGame, setFavoriteGame] = useState(currentUser.favoriteGame || '');
-  const [gender, setGender] = useState(currentUser.gender || '');
-  const [dateOfBirth, setDateOfBirth] = useState(currentUser.dateOfBirth || '');
-  const [displayEmail, setDisplayEmail] = useState(currentUser.displayEmail || currentUser.email || '');
-  const [displayPhone, setDisplayPhone] = useState(currentUser.displayPhone || currentUser.phone || '');
-  const [avatarUrl, setAvatarUrl] = useState(currentUser.avatarUrl || '');
+  const [name, setName] = useState(currentUser?.name || '');
+  const [username, setUsername] = useState(currentUser?.username || '');
+  const [location, setLocation] = useState(currentUser?.location || '');
+  const [bio, setBio] = useState(currentUser?.bio || '');
+  const [favoriteGame, setFavoriteGame] = useState(currentUser?.favoriteGame || '');
+  const [gender, setGender] = useState<User['gender'] | ''>(currentUser?.gender ?? '');
+  const [dateOfBirth, setDateOfBirth] = useState(currentUser?.dateOfBirth || '');
+  const [displayEmail, setDisplayEmail] = useState(currentUser?.displayEmail || currentUser?.email || '');
+  const [displayPhone, setDisplayPhone] = useState(currentUser?.displayPhone || currentUser?.phone || '');
+  const [avatarUrl, setAvatarUrl] = useState(currentUser?.avatarUrl || '');
   // Parse game roles or default to empty
-  const [gameRoles, setGameRoles] = useState<Record<string, string[]>>(currentUser.gameRoles || {});
+  const [gameRoles, setGameRoles] = useState<Record<string, string[]>>(currentUser?.gameRoles || {});
   
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const withTimeout = async <T,>(p: Promise<T>, ms = 12000, msg = 'Request timed out'): Promise<T> => {
+    let timer: number;
+    return new Promise<T>((resolve, reject) => {
+      timer = window.setTimeout(() => reject(new Error(msg)), ms);
+      p.then(
+        (v) => {
+          clearTimeout(timer);
+          resolve(v);
+        },
+        (e) => {
+          clearTimeout(timer);
+          reject(e);
+        }
+      );
+    });
+  };
 
   // Helper for game roles
   const availableGames = ['Cricket', 'Football', 'Badminton', 'Tennis'];
@@ -59,6 +74,10 @@ export const EditProfileScreen: React.FC = () => {
   };
 
   const handleSave = async () => {
+    if (!currentUser) {
+      setError('Please log in to edit your profile.');
+      return;
+    }
     if (!name.trim()) {
       setError('Name is required');
       return;
@@ -85,10 +104,11 @@ export const EditProfileScreen: React.FC = () => {
 
     setIsSaving(true);
     setError(null);
+    setSuccess(null);
     try {
       // Check username availability if changed
       if (username !== currentUser.username) {
-          const isAvailable = await profileService.checkUsernameAvailability(username);
+          const isAvailable = await withTimeout(profileService.checkUsernameAvailability(username));
           if (!isAvailable) {
               setError('Username is already taken');
               setIsSaving(false);
@@ -96,29 +116,35 @@ export const EditProfileScreen: React.FC = () => {
           }
       }
 
-      await updateUserProfile({
+      await withTimeout(updateUserProfile({
         name: name.trim(),
         username: username.trim().toLowerCase(),
         location,
         bio,
         favoriteGame,
-        gender: gender as any,
+        gender: gender || undefined,
         dateOfBirth,
         displayEmail: displayEmail.trim(),
         displayPhone: displayPhone.trim(),
         gameRoles,
         avatarUrl: avatarUrl || undefined
-      });
-      navigate(-1); // Go back
-    } catch (error: any) {
+      }));
+      setSuccess('Profile updated successfully');
+      navigate(-1);
+    } catch (error) {
       console.error("Failed to update profile", error);
-      setError(error.message || "Failed to update profile");
+      const message = error instanceof Error ? error.message : "Failed to update profile";
+      setError(message);
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!currentUser) {
+      setError('Please log in to upload an avatar.');
+      return;
+    }
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       
@@ -175,6 +201,11 @@ export const EditProfileScreen: React.FC = () => {
                 {error}
             </div>
         )}
+        {success && (
+            <div className="mb-6 p-3 bg-green-50 text-green-700 text-sm rounded-lg border border-green-100">
+                {success}
+            </div>
+        )}
 
         {/* Avatar Section */}
         <div className="flex flex-col items-center mb-8">
@@ -203,16 +234,18 @@ export const EditProfileScreen: React.FC = () => {
             className="hidden" 
             accept="image/*"
             onChange={handleFileSelect}
+            aria-label="Upload profile photo"
           />
         </div>
 
         {/* Form Fields */}
         <div className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="displayName" className="block text-sm font-medium text-slate-700 mb-1">
               Display Name
             </label>
             <Input 
+              id="displayName"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Rahul Dravid"
@@ -221,10 +254,11 @@ export const EditProfileScreen: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="username" className="block text-sm font-medium text-slate-700 mb-1">
               Username
             </label>
             <Input 
+              id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="e.g. rahul19"
@@ -234,10 +268,11 @@ export const EditProfileScreen: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="favoriteGame" className="block text-sm font-medium text-slate-700 mb-1">
               Favorite Sport
             </label>
             <select
+                id="favoriteGame"
                 value={favoriteGame}
                 onChange={(e) => setFavoriteGame(e.target.value)}
                 className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
@@ -278,12 +313,13 @@ export const EditProfileScreen: React.FC = () => {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="gender" className="block text-sm font-medium text-slate-700 mb-1">
               Gender
             </label>
             <select
+                id="gender"
                 value={gender}
-                onChange={(e) => setGender(e.target.value)}
+                onChange={(e) => setGender(e.target.value as User['gender'] | '')}
                 className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             >
                 <option value="">Select gender</option>
@@ -295,10 +331,11 @@ export const EditProfileScreen: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="dateOfBirth" className="block text-sm font-medium text-slate-700 mb-1">
               Date of Birth
             </label>
             <Input 
+              id="dateOfBirth"
               type="date"
               value={dateOfBirth}
               onChange={(e) => setDateOfBirth(e.target.value)}
@@ -308,10 +345,11 @@ export const EditProfileScreen: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="displayEmail" className="block text-sm font-medium text-slate-700 mb-1">
                 Email (Display)
                 </label>
                 <Input 
+                id="displayEmail"
                 type="email"
                 value={displayEmail}
                 onChange={(e) => setDisplayEmail(e.target.value)}
@@ -320,10 +358,11 @@ export const EditProfileScreen: React.FC = () => {
                 />
             </div>
             <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="displayPhone" className="block text-sm font-medium text-slate-700 mb-1">
                 Phone (Display)
                 </label>
                 <Input 
+                id="displayPhone"
                 type="tel"
                 value={displayPhone}
                 onChange={(e) => setDisplayPhone(e.target.value)}
@@ -334,10 +373,11 @@ export const EditProfileScreen: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="location" className="block text-sm font-medium text-slate-700 mb-1">
               Location
             </label>
             <Input 
+              id="location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="e.g. Mumbai, India"
@@ -346,10 +386,11 @@ export const EditProfileScreen: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="bio" className="block text-sm font-medium text-slate-700 mb-1">
               Bio
             </label>
             <Textarea 
+              id="bio"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Tell us about yourself..."

@@ -51,6 +51,17 @@
   --space-xl: 32px;
 }
 
+:root.dark-theme {
+  --bg-page: #0b1220;
+  --bg-card: #0f172a;
+  --bg-muted: #1f2937;
+  --text-primary: #e5e7eb;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --text-inverse: #0f172a;
+  --border: #334155;
+}
+
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;

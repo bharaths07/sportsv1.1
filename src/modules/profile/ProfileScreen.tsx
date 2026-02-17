@@ -44,17 +44,10 @@ export const ProfileScreen: React.FC = () => {
   ];
 
   return (
-    <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', paddingBottom: '80px' }}>
+    <div className="bg-slate-50 min-h-screen pb-20">
       
       {/* A. PROFILE HEADER (ACCOUNT LEVEL) */}
-      <div style={{ 
-        backgroundColor: 'white', 
-        padding: '24px 20px', 
-        borderBottom: '1px solid #e2e8f0',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '16px'
-      }}>
+      <div className="bg-white px-5 py-6 border-b border-slate-200 flex items-center gap-4">
         {/* Avatar */}
         <Avatar 
           src={userData.avatarUrl}
@@ -63,11 +56,11 @@ export const ProfileScreen: React.FC = () => {
         />
 
         {/* Center Info */}
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a' }}>
+        <div className="flex-1">
+          <div className="text-[20px] font-bold text-slate-900">
             {userData.name}
           </div>
-          <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>
+          <div className="text-[13px] text-slate-500 mt-0.5">
             {userData.subtitle}
           </div>
         </div>
@@ -77,22 +70,14 @@ export const ProfileScreen: React.FC = () => {
           {isGuest ? (
             <button 
               onClick={() => navigate('/login')}
-              style={{ 
-                padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', 
-                border: 'none', borderRadius: '20px', fontSize: '13px', fontWeight: 600,
-                cursor: 'pointer'
-              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-2xl text-[13px] font-semibold cursor-pointer"
             >
               Login
             </button>
           ) : (
             <button 
               onClick={() => console.log('Edit Profile')}
-              style={{ 
-                padding: '8px 16px', backgroundColor: '#f1f5f9', color: '#334155', 
-                border: '1px solid #cbd5e1', borderRadius: '20px', fontSize: '13px', fontWeight: 600,
-                cursor: 'pointer'
-              }}
+              className="px-4 py-2 bg-slate-100 text-slate-700 border border-slate-300 rounded-2xl text-[13px] font-semibold cursor-pointer"
             >
               Edit
             </button>
@@ -101,33 +86,27 @@ export const ProfileScreen: React.FC = () => {
       </div>
 
       {/* B. QUICK ACTIONS (CARD LIST) */}
-      <div style={{ padding: '20px' }}>
-        <div style={{ backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+      <div className="p-5">
+        <div className="bg-white rounded-xl overflow-hidden shadow-sm">
           {quickActions.map((action, index) => (
             <div 
               key={action.label}
               onClick={action.onClick}
-              style={{ 
-                padding: '16px', 
-                display: 'flex', alignItems: 'center', gap: '16px',
-                borderBottom: index !== quickActions.length - 1 ? '1px solid #f1f5f9' : 'none',
-                cursor: 'pointer',
-                backgroundColor: action.active ? '#eff6ff' : 'white'
-              }}
+              className={`p-4 flex items-center gap-4 cursor-pointer ${index !== quickActions.length - 1 ? 'border-b border-slate-100' : ''} ${action.active ? 'bg-blue-50' : 'bg-white'}`}
             >
-              <span style={{ fontSize: '18px' }}>{action.icon}</span>
-              <span style={{ flex: 1, fontSize: '15px', color: action.active ? '#2563eb' : '#334155', fontWeight: action.active ? 600 : 400 }}>
+              <span className="text-[18px]">{action.icon}</span>
+              <span className={`flex-1 text-[15px] ${action.active ? 'text-blue-600 font-semibold' : 'text-slate-700 font-normal'}`}>
                 {action.label}
               </span>
-              <span style={{ color: '#cbd5e1' }}>›</span>
+              <span className="text-slate-300">›</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* C. GAME PROFILES ENTRY */}
-      <div style={{ padding: '0 20px 20px 20px' }}>
-        <h3 style={{ fontSize: '14px', textTransform: 'uppercase', color: '#64748b', marginBottom: '12px', fontWeight: 600, letterSpacing: '0.5px' }}>
+      <div className="px-5 pb-5">
+        <h3 className="text-[14px] uppercase text-slate-500 mb-3 font-semibold tracking-[0.5px]">
           Game Profiles
         </h3>
         
@@ -140,30 +119,18 @@ export const ProfileScreen: React.FC = () => {
               navigate('/profile/game/cricket');
             }
           }}
-          style={{ 
-            backgroundColor: 'white', 
-            borderRadius: '12px', 
-            padding: '16px',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-            display: 'flex', alignItems: 'center', gap: '16px',
-            cursor: 'pointer',
-            opacity: isGuest ? 0.7 : 1,
-            borderLeft: '4px solid #ef4444' // Cricket Red branding hint
-          }}
+          className={`bg-white rounded-xl p-4 shadow-sm flex items-center gap-4 cursor-pointer ${isGuest ? 'opacity-70' : 'opacity-100'} [border-left:4px_solid_#ef4444]`}
         >
-          <div style={{ 
-            width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#fef2f2',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px'
-          }}>
+          <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center text-[20px]">
             🏏
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>Cricket</div>
-            <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>
+          <div className="flex-1">
+            <div className="text-[16px] font-semibold text-slate-900">Cricket</div>
+            <div className="text-[13px] text-slate-500 mt-0.5">
               {isGuest ? 'Login to set up profile' : 'View your game stats'}
             </div>
           </div>
-          <div style={{ color: '#ef4444', fontSize: '13px', fontWeight: 600 }}>
+          <div className="text-red-600 text-[13px] font-semibold">
             {isGuest ? 'Locked' : 'Open'}
           </div>
         </div>

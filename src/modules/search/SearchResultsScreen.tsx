@@ -62,7 +62,7 @@ export const SearchResultsScreen: React.FC = () => {
                     <div className="result-type-badge">Match</div>
                     <div className="result-card-header">
                         <div className="result-card-title">
-                            {m.homeParticipant.name} <span style={{color:'#999'}}>vs</span> {m.awayParticipant.name}
+                            {m.homeParticipant.name} <span className="text-slate-500">vs</span> {m.awayParticipant.name}
                         </div>
                     </div>
                     <div className="result-card-subtitle">

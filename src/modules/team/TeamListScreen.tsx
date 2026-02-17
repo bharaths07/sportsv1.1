@@ -138,13 +138,7 @@ export const TeamListScreen: React.FC = () => {
             onAction={() => navigate('/teams/create')}
           />
       ) : (
-          <div 
-            style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-              gap: 'var(--space-4)', 
-            }} 
-          >
+          <div className="[display:grid] [grid-template-columns:repeat(auto-fill,_minmax(280px,_1fr))] gap-4">
               {filteredAndSortedTeams.map(team => (
                   <Card key={team.id} className="p-6 flex flex-col hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => navigate(`/team/${team.id}`)}>
                       <div className="flex items-start justify-between mb-4">

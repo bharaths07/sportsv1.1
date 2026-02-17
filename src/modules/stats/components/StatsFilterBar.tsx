@@ -8,7 +8,7 @@ interface StatsFilterBarProps {
 }
 
 export const StatsFilterBar: React.FC<StatsFilterBarProps> = ({ filters, onFilterChange }) => {
-  const updateFilter = (key: keyof StatsFilters, value: any) => {
+  const updateFilter = <K extends keyof StatsFilters>(key: K, value: StatsFilters[K]) => {
     onFilterChange({ ...filters, [key]: value });
   };
 

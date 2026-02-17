@@ -8,6 +8,7 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { FootballLiveScorer } from './components/FootballLiveScorer';
+import { BasketballLiveScorer } from './components/BasketballLiveScorer';
 
 export const LiveScoringScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -123,6 +124,26 @@ export const LiveScoringScreen: React.FC = () => {
                 />
             </div>
         </PageContainer>
+    );
+  }
+
+  // Basketball Scoring Interface
+  if (match.sportId === 's5') {
+    return (
+      <PageContainer>
+        <div className="max-w-md mx-auto space-y-4">
+          <PageHeader 
+            title="Live Scoring - Basketball" 
+            backUrl={`/matches/${match.id}`}
+          />
+          <BasketballLiveScorer
+            match={match}
+            onEndMatch={handleEndMatch}
+            isEnding={isEnding}
+            onScore={(event) => scoreMatch(match.id, event)}
+          />
+        </div>
+      </PageContainer>
     );
   }
 

@@ -42,7 +42,7 @@ export const PlayerProfileScreen: React.FC = () => {
     let assists = 0;
     let yellowCards = 0;
     let redCards = 0;
-    let minutesPlayed = 0;
+    // let minutesPlayed = 0;
 
     totalMatches = playerMatches.length;
 
@@ -58,7 +58,7 @@ export const PlayerProfileScreen: React.FC = () => {
                 assists += pStats.assists || 0;
                 yellowCards += pStats.yellowCards || 0;
                 redCards += pStats.redCards || 0;
-                minutesPlayed += pStats.minutesPlayed || 0;
+                // minutesPlayed += pStats.minutesPlayed || 0;
                 // Mock clean sheets if GK and conceded 0 (logic needed, or rely on stored stat)
             } else {
                 runs += pStats.runs || 0;
@@ -112,32 +112,24 @@ export const PlayerProfileScreen: React.FC = () => {
     };
   }, [player, matches]);
 
+  React.useEffect(() => {
+    if (stats?.isFootball && activeTab === 'batting') {
+      setActiveTab('overview');
+    }
+  }, [stats?.isFootball, activeTab]);
+  
   if (!player) {
-    return <div style={{ padding: '20px', textAlign: 'center' }}>Player not found</div>;
+    return <div className="p-5 text-center">Player not found</div>;
   }
 
   const teamIds = teams.filter(t => t.members.some(m => m.playerId === player.id)).map(t => t.name);
 
-  // Set default active tab based on sport
-  React.useEffect(() => {
-    if (stats?.isFootball && activeTab === 'batting') {
-        setActiveTab('overview');
-    }
-  }, [stats?.isFootball]);
 
   return (
-    <div style={{ paddingBottom: '40px', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+    <div className="pb-10 bg-slate-50 min-h-screen">
       {/* 1. Header (Soft Sticky) */}
-      <div style={{ 
-          backgroundColor: 'white', 
-          padding: '24px 20px', 
-          position: 'sticky', 
-          top: 0, 
-          zIndex: 10,
-          borderBottom: '1px solid #e2e8f0',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
-      }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div className="bg-white px-5 py-6 sticky top-0 z-10 border-b border-slate-200 shadow">
+          <div className="flex items-center gap-4">
              {/* Avatar */}
              <Avatar
                 src={player.avatarUrl}
@@ -146,29 +138,19 @@ export const PlayerProfileScreen: React.FC = () => {
              />
              
              {/* Info */}
-             <div style={{ flex: 1 }}>
-                 <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0' }}>
+             <div className="flex-1">
+                 <h1 className="text-[20px] font-extrabold text-slate-900 mb-1">
                      {player.firstName} {player.lastName}
                  </h1>
-                 <div style={{ fontSize: '14px', color: '#64748b', marginBottom: '8px' }}>
+                 <div className="text-[14px] text-slate-500 mb-2">
                      {teamIds.join(', ') || 'Free Agent'}
                  </div>
-                 <div style={{ display: 'flex', gap: '8px' }}>
-                     <span style={{ 
-                         backgroundColor: '#eff6ff', color: '#1d4ed8', 
-                         fontSize: '11px', fontWeight: 700, 
-                         padding: '4px 8px', borderRadius: '100px',
-                         textTransform: 'uppercase'
-                     }}>
+                 <div className="flex gap-2">
+                     <span className="bg-blue-50 text-blue-700 text-[11px] font-bold px-2 py-1 rounded-full uppercase">
                          {player.role || 'Player'}
                      </span>
                      {stats?.isFootball && (
-                        <span style={{ 
-                            backgroundColor: '#ecfdf5', color: '#047857', 
-                            fontSize: '11px', fontWeight: 700, 
-                            padding: '4px 8px', borderRadius: '100px',
-                            textTransform: 'uppercase'
-                        }}>
+                        <span className="bg-emerald-50 text-emerald-700 text-[11px] font-bold px-2 py-1 rounded-full uppercase">
                             Football
                         </span>
                      )}
@@ -177,13 +159,13 @@ export const PlayerProfileScreen: React.FC = () => {
              
              {/* Jersey Number */}
              {player.jerseyNumber && (
-                 <div style={{ fontSize: '32px', fontWeight: 900, color: '#e2e8f0', lineHeight: 1 }}>
+                 <div className="text-[32px] font-black text-slate-200 leading-none">
                      {player.jerseyNumber}
                  </div>
              )}
           </div>
           
-          <div style={{ marginTop: '16px', fontSize: '13px', color: '#475569', display: 'flex', gap: '16px' }}>
+          <div className="mt-4 text-[13px] text-slate-600 flex gap-4">
               {!stats?.isFootball ? (
                 <>
                   <div>🏏 {player.battingStyle || 'Right-hand bat'}</div>
@@ -195,79 +177,59 @@ export const PlayerProfileScreen: React.FC = () => {
           </div>
       </div>
 
-      <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+      <div className="p-5 max-w-[800px] mx-auto">
           
           {/* 2. Career Summary */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
-              <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                  <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>{stats?.totalMatches}</div>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Matches</div>
+          <div className="grid grid-cols-3 gap-3 mb-6">
+              <div className="bg-white p-4 rounded-xl text-center shadow-sm">
+                  <div className="text-[24px] font-extrabold text-slate-900">{stats?.totalMatches}</div>
+                  <div className="text-[12px] font-semibold text-slate-500 uppercase">Matches</div>
               </div>
               
               {stats?.isFootball ? (
                 <>
-                  <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                      <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>{stats?.goals}</div>
-                      <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Goals</div>
+                  <div className="bg-white p-4 rounded-xl text-center shadow-sm">
+                      <div className="text-[24px] font-extrabold text-slate-900">{stats?.goals}</div>
+                      <div className="text-[12px] font-semibold text-slate-500 uppercase">Goals</div>
                   </div>
-                  <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                      <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>{stats?.assists}</div>
-                      <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Assists</div>
+                  <div className="bg-white p-4 rounded-xl text-center shadow-sm">
+                      <div className="text-[24px] font-extrabold text-slate-900">{stats?.assists}</div>
+                      <div className="text-[12px] font-semibold text-slate-500 uppercase">Assists</div>
                   </div>
                 </>
               ) : (
                 <>
-                  <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                      <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>{stats?.runs}</div>
-                      <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Runs</div>
+                  <div className="bg-white p-4 rounded-xl text-center shadow-sm">
+                      <div className="text-[24px] font-extrabold text-slate-900">{stats?.runs}</div>
+                      <div className="text-[12px] font-semibold text-slate-500 uppercase">Runs</div>
                   </div>
-                  <div style={{ backgroundColor: 'white', padding: '16px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                      <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>{stats?.wickets}</div>
-                      <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Wickets</div>
+                  <div className="bg-white p-4 rounded-xl text-center shadow-sm">
+                      <div className="text-[24px] font-extrabold text-slate-900">{stats?.wickets}</div>
+                      <div className="text-[12px] font-semibold text-slate-500 uppercase">Wickets</div>
                   </div>
                 </>
               )}
           </div>
 
           {/* 3. Detailed Stats Tabs */}
-          <div style={{ backgroundColor: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', borderBottom: '1px solid #f1f5f9' }}>
+          <div className="bg-white rounded-2xl overflow-hidden shadow-sm mb-6">
+              <div className="flex border-b border-slate-100">
                   {stats?.isFootball ? (
-                     ['overview', 'stats'].map(tab => (
+                     (['overview', 'stats'] as Array<'overview' | 'stats'>).map(tab => (
                         <button
                             key={tab}
-                            onClick={() => setActiveTab(tab as any)}
-                            style={{
-                                flex: 1,
-                                padding: '12px',
-                                background: activeTab === tab ? '#f8fafc' : 'white',
-                                border: 'none',
-                                borderBottom: activeTab === tab ? '2px solid #0f172a' : '2px solid transparent',
-                                fontWeight: activeTab === tab ? 700 : 500,
-                                color: activeTab === tab ? '#0f172a' : '#64748b',
-                                cursor: 'pointer',
-                                textTransform: 'capitalize'
-                            }}
+                            onClick={() => setActiveTab(tab)}
+                            className={`flex-1 py-3 capitalize ${activeTab === tab ? 'bg-slate-50 border-b-2 border-slate-900 font-bold text-slate-900' : 'bg-white border-b-2 border-transparent font-medium text-slate-500'}`}
                         >
                             {tab}
                         </button>
                     ))
                   ) : (
-                    ['batting', 'bowling', 'fielding'].map(tab => (
+                    (['batting', 'bowling', 'fielding'] as Array<'batting' | 'bowling' | 'fielding'>).map(tab => (
                         <button
                             key={tab}
-                            onClick={() => setActiveTab(tab as any)}
-                            style={{
-                                flex: 1,
-                                padding: '12px',
-                                background: activeTab === tab ? '#f8fafc' : 'white',
-                                border: 'none',
-                                borderBottom: activeTab === tab ? '2px solid #0f172a' : '2px solid transparent',
-                                fontWeight: activeTab === tab ? 700 : 500,
-                                color: activeTab === tab ? '#0f172a' : '#64748b',
-                                cursor: 'pointer',
-                                textTransform: 'capitalize'
-                            }}
+                            onClick={() => setActiveTab(tab)}
+                            className={`flex-1 py-3 capitalize ${activeTab === tab ? 'bg-slate-50 border-b-2 border-slate-900 font-bold text-slate-900' : 'bg-white border-b-2 border-transparent font-medium text-slate-500'}`}
                         >
                             {tab}
                         </button>
@@ -275,17 +237,17 @@ export const PlayerProfileScreen: React.FC = () => {
                   )}
               </div>
               
-              <div style={{ padding: '20px' }}>
+              <div className="p-5">
                   {/* Football Content */}
                   {stats?.isFootball && activeTab === 'overview' && (
-                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                     <div className="grid grid-cols-2 gap-5">
                           <div>
-                              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Goals/Match</div>
-                              <div style={{ fontSize: '18px', fontWeight: 700 }}>{stats?.goalsPerMatch}</div>
+                              <div className="text-[12px] text-slate-500 mb-1">Goals/Match</div>
+                              <div className="text-[18px] font-bold">{stats?.goalsPerMatch}</div>
                           </div>
                           <div>
-                              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Discipline</div>
-                              <div style={{ fontSize: '18px', fontWeight: 700 }}>
+                              <div className="text-[12px] text-slate-500 mb-1">Discipline</div>
+                              <div className="text-[18px] font-bold">
                                   <span className="text-yellow-600 mr-2">🟨 {stats?.yellowCards}</span>
                                   <span className="text-red-600">🟥 {stats?.redCards}</span>
                               </div>
@@ -293,46 +255,46 @@ export const PlayerProfileScreen: React.FC = () => {
                       </div>
                   )}
                    {stats?.isFootball && activeTab === 'stats' && (
-                     <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>
+                     <div className="text-center text-slate-400 p-5">
                          Detailed football stats coming soon.
                      </div>
                   )}
 
                   {/* Cricket Content */}
                   {!stats?.isFootball && activeTab === 'batting' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                      <div className="grid grid-cols-2 gap-5">
                           <div>
-                              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Average</div>
-                              <div style={{ fontSize: '18px', fontWeight: 700 }}>{stats?.battingAvg}</div>
+                              <div className="text-[12px] text-slate-500 mb-1">Average</div>
+                              <div className="text-[18px] font-bold">{stats?.battingAvg}</div>
                           </div>
                           <div>
-                              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Strike Rate</div>
-                              <div style={{ fontSize: '18px', fontWeight: 700 }}>{stats?.strikeRate}</div>
+                              <div className="text-[12px] text-slate-500 mb-1">Strike Rate</div>
+                              <div className="text-[18px] font-bold">{stats?.strikeRate}</div>
                           </div>
                           <div>
-                              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Highest Score</div>
-                              <div style={{ fontSize: '18px', fontWeight: 700 }}>{stats?.highestScore}</div>
+                              <div className="text-[12px] text-slate-500 mb-1">Highest Score</div>
+                              <div className="text-[18px] font-bold">{stats?.highestScore}</div>
                           </div>
                           <div>
-                              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Boundaries</div>
-                              <div style={{ fontSize: '18px', fontWeight: 700 }}>{stats?.fours} (4s) / {stats?.sixes} (6s)</div>
+                              <div className="text-[12px] text-slate-500 mb-1">Boundaries</div>
+                              <div className="text-[18px] font-bold">{stats?.fours} (4s) / {stats?.sixes} (6s)</div>
                           </div>
                       </div>
                   )}
                   {!stats?.isFootball && activeTab === 'bowling' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                      <div className="grid grid-cols-2 gap-5">
                           <div>
-                              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Wickets</div>
-                              <div style={{ fontSize: '18px', fontWeight: 700 }}>{stats?.wickets}</div>
+                              <div className="text-[12px] text-slate-500 mb-1">Wickets</div>
+                              <div className="text-[18px] font-bold">{stats?.wickets}</div>
                           </div>
                           <div>
-                              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Best Figures</div>
-                              <div style={{ fontSize: '18px', fontWeight: 700 }}>{stats?.bestBowling}</div>
+                              <div className="text-[12px] text-slate-500 mb-1">Best Figures</div>
+                              <div className="text-[18px] font-bold">{stats?.bestBowling}</div>
                           </div>
                       </div>
                   )}
                   {!stats?.isFootball && activeTab === 'fielding' && (
-                       <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>
+                       <div className="text-center text-slate-400 p-5">
                            Fielding stats not yet available
                        </div>
                   )}
@@ -340,11 +302,11 @@ export const PlayerProfileScreen: React.FC = () => {
           </div>
 
           {/* 4. Recent Form */}
-          <div style={{ marginBottom: '40px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>Recent Form</h3>
-              <div style={{ backgroundColor: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+          <div className="mb-10">
+              <h3 className="text-[16px] font-bold text-slate-900 mb-3">Recent Form</h3>
+              <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
                   {stats?.recentMatches.length === 0 ? (
-                      <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>No recent matches</div>
+                      <div className="p-5 text-center text-slate-400">No recent matches</div>
                   ) : (
                       stats?.recentMatches.map((m) => {
                           const isHome = m.homeParticipant.players?.some(p => p.playerId === player.id);
@@ -357,31 +319,24 @@ export const PlayerProfileScreen: React.FC = () => {
                               <div 
                                   key={m.id}
                                   onClick={() => navigate(`/matches/${m.id}`)}
-                                  style={{ 
-                                      padding: '16px', 
-                                      borderBottom: '1px solid #f1f5f9', 
-                                      display: 'flex', 
-                                      justifyContent: 'space-between',
-                                      alignItems: 'center',
-                                      cursor: 'pointer'
-                                  }}
+                                  className="p-4 border-b border-slate-100 flex justify-between items-center cursor-pointer"
                               >
                                   <div>
-                                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>vs {opponent}</div>
-                                      <div style={{ fontSize: '12px', color: '#94a3b8' }}>{new Date(m.date).toLocaleDateString()}</div>
+                                      <div className="text-[14px] font-semibold text-slate-700">vs {opponent}</div>
+                                      <div className="text-[12px] text-slate-400">{new Date(m.date).toLocaleDateString()}</div>
                                   </div>
-                                  <div style={{ textAlign: 'right' }}>
+                                  <div className="text-right">
                                       {stats.isFootball ? (
-                                        <div style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>
+                                        <div className="text-[16px] font-extrabold text-slate-900">
                                             {pStats?.goals || 0} G, {pStats?.assists || 0} A
                                         </div>
                                       ) : (
                                         <>
-                                            <div style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>
-                                                {pStats?.runs} <span style={{ fontSize: '12px', fontWeight: 400, color: '#64748b' }}>({pStats?.balls})</span>
+                                            <div className="text-[16px] font-extrabold text-slate-900">
+                                                {pStats?.runs} <span className="text-[12px] font-normal text-slate-500">({pStats?.balls})</span>
                                             </div>
                                             {pStats?.wickets ? (
-                                                <div style={{ fontSize: '12px', fontWeight: 600, color: '#7e22ce' }}>
+                                                <div className="text-[12px] font-semibold text-purple-700">
                                                     {pStats.wickets} Wkts
                                                 </div>
                                             ) : null}

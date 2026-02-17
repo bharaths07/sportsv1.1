@@ -51,8 +51,6 @@ export const MatchCommentaryTab: React.FC<Props> = ({ match }) => {
     // 2. Enrich and Group
   // const groups: Record<number, OverGroup> = {};
     
-    let runningScore = 0;
-    let runningWickets = 0;
     const enrichedBalls: CommentaryBall[] = [];
 
     events.forEach((e, index) => {
@@ -74,8 +72,7 @@ export const MatchCommentaryTab: React.FC<Props> = ({ match }) => {
         const isBoundary = e.points === 4 || e.points === 6;
         const isExtra = e.type === 'extra';
         
-        if (isWicket) runningWickets++;
-        runningScore += e.points;
+        /* */
 
         enrichedBalls.push({
             id: e.id,
@@ -129,7 +126,7 @@ export const MatchCommentaryTab: React.FC<Props> = ({ match }) => {
     });
 
     return finalGroups;
-  }, [match, battingTeam, activeInnings]); // Added activeInnings dependency
+  }, [match, battingTeam]);
 
   // Filter Logic
   const filteredGroups = useMemo(() => {

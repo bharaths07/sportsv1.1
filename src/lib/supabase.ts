@@ -1,9 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const forceMock = import.meta.env.VITE_SUPABASE_MOCK === 'true';
 
-const isPlaceholder = !supabaseUrl || supabaseUrl.includes('placeholder') || supabaseUrl === 'https://your-project.supabase.co';
+const isKeyInvalid = !supabaseKey || supabaseKey.includes('placeholder') || supabaseKey.includes('remove');
+const isUrlInvalid = !supabaseUrl || supabaseUrl.includes('placeholder') || supabaseUrl === 'https://your-project.supabase.co';
+const isPlaceholder = forceMock || isUrlInvalid || isKeyInvalid;
 
 // Mock Supabase Client for Development/Demo
 const createMockClient = () => {
@@ -29,7 +33,7 @@ const createMockClient = () => {
     limit: () => mockQueryBuilder,
     single: () => Promise.resolve({ data: null, error: null }),
     maybeSingle: () => Promise.resolve({ data: null, error: null }),
-    then: (resolve: any) => resolve({ data: [], error: null }),
+    then: (resolve: unknown) => (resolve as (value: { data: unknown[]; error: null }) => unknown)({ data: [], error: null }),
   };
 
   return {
@@ -41,16 +45,17 @@ const createMockClient = () => {
       getSession: () => Promise.resolve({ data: { session: null }, error: null }),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
       signInWithPassword: () => Promise.resolve({ data: { user: { id: 'mock-user' }, session: {} }, error: null }),
-      signInWithOtp: (params: any) => {
+      signInWithOtp: (params: unknown) => {
         console.log('[MockSupabase] signInWithOtp:', params);
         return Promise.resolve({ data: { user: null, session: null }, error: null });
       },
-      verifyOtp: (params: any) => {
+      verifyOtp: (params: unknown) => {
         console.log('[MockSupabase] verifyOtp:', params);
-        if (params.token === '123456') {
+        const p = params as { token?: string; phone?: string };
+        if (p.token === '123456') {
             return Promise.resolve({ 
                 data: { 
-                    user: { id: 'mock-user', phone: params.phone }, 
+                    user: { id: 'mock-user', phone: p.phone }, 
                     session: { access_token: 'mock-token' } 
                 }, 
                 error: null 
@@ -72,6 +77,6 @@ const createMockClient = () => {
 };
 
 // Export either the real client or the mock client
-export const supabase = isPlaceholder 
-  ? createMockClient() as any 
+export const supabase: SupabaseClient = isPlaceholder 
+  ? (createMockClient() as unknown as SupabaseClient)
   : createClient(supabaseUrl!, supabaseKey!);

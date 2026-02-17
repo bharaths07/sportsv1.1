@@ -8,7 +8,7 @@ import { Card } from '../../components/ui/Card';
 import { Bell, ChevronRight } from 'lucide-react';
 
 export const NotificationsScreen: React.FC = () => {
-  const { notifications } = useGlobalState();
+  const { notifications, dismissNotification, clearAllNotifications } = useGlobalState();
   const items = [...notifications].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   const getLabel = (t: string) => {
@@ -28,6 +28,18 @@ export const NotificationsScreen: React.FC = () => {
       <PageHeader 
         title="Notifications" 
         description="Stay updated with your matches and tournaments"
+        actions={
+          items.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => clearAllNotifications()}
+              className="px-3 py-1.5 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors"
+              aria-label="Clear all notifications"
+            >
+              Clear All
+            </button>
+          ) : undefined
+        }
       />
       
       {items.length === 0 ? (
@@ -73,6 +85,15 @@ export const NotificationsScreen: React.FC = () => {
                       <ChevronRight className="w-4 h-4" />
                     </Link>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => dismissNotification(n.id)}
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors"
+                    title="Dismiss"
+                    aria-label="Dismiss notification"
+                  >
+                    ×
+                  </button>
                 </div>
               </div>
             </Card>

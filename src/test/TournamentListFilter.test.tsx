@@ -3,10 +3,11 @@ import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/re
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TournamentListScreen } from '../modules/tournament/TournamentListScreen';
 import * as AppProviders from '../app/AppProviders';
+import React from 'react';
 
 // Mock dependencies
 vi.mock('react-router-dom', () => ({
-  Link: ({ children, to }: any) => <a href={to}>{children}</a>,
+  Link: ({ children, to }: { children: React.ReactNode; to: string }) => <a href={to}>{children}</a>,
   useNavigate: () => vi.fn(),
 }));
 
@@ -61,7 +62,7 @@ describe('TournamentListFilter', () => {
       currentUser: mockUser,
       teams: [mockTeam],
       players: [mockPlayer]
-    } as any);
+    } as unknown as ReturnType<typeof AppProviders.useGlobalState>);
   });
 
   afterEach(() => {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { matchService } from '../services/matchService';
 import { teamService } from '../services/teamService';
@@ -21,6 +21,7 @@ import { Certificate } from '../domain/certificate';
 import { Tournament } from '../domain/tournament';
 import { MatchScorer } from '../domain/scorer';
 import { User } from '../domain/user';
+import { shouldBypassAuth } from './authBypass';
 
 interface GlobalState {
   matches: Match[];
@@ -53,7 +54,14 @@ interface GlobalState {
     sport: string;
     timezone: string;
     language: string;
+    theme: 'light' | 'dark';
+    accent: 'amber' | 'green' | 'pink' | 'violet' | 'red' | 'blue';
+    denseMode: boolean;
+    showAnimations: boolean;
+    publicProfile: boolean;
+    showOnlineStatus: boolean;
   };
+  devAuthBypassActive?: boolean;
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
   authLoading: boolean;
@@ -84,6 +92,8 @@ interface GlobalState {
   updateMatches: () => void;
   updatePlayers: () => void;
   updateTeams: () => void;
+  dismissNotification: (id: string) => void;
+  clearAllNotifications: () => void;
   addTournament: (tournament: Tournament) => void;
   updateTournament: (tournament: Tournament) => void;
   addTeamToTournament: (tournamentId: string, teamId: string) => void;
@@ -177,8 +187,16 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const saved = localStorage.getItem('scoreheroes_preferences');
     return saved ? JSON.parse(saved) : {
       sport: 'Cricket',
-      timezone: 'Asia/Kolkata', // Default to IST as per Indian context in mocks
-      language: 'English'
+      timezone: 'Asia/Kolkata',
+      language: 'English',
+      theme: 'light',
+      accent: 'amber',
+      // Display
+      denseMode: false,
+      showAnimations: true,
+      // Privacy
+      publicProfile: true,
+      showOnlineStatus: true
     };
   });
   const [users, setUsers] = useState<User[]>([]);
@@ -189,6 +207,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(true);
+  const [devAuthBypassActive, setDevAuthBypassActive] = useState<boolean>(false);
 
   const refreshData = async () => {
     try {
@@ -361,6 +380,31 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
   }, []);
 
+  // Development/Test auth bypass (non-production only)
+  useEffect(() => {
+    const env = import.meta.env as { PROD: boolean; VITE_AUTH_BYPASS?: string };
+    if (shouldBypassAuth(env) && !currentUser) {
+      const devUser: User = {
+        id: 'dev-bypass-user',
+        name: 'Developer Mode',
+        email: 'dev@local',
+        role: 'admin',
+        firstName: 'Dev',
+        lastName: 'Bypass',
+        memberSince: new Date().getFullYear().toString(),
+        followersCount: 0,
+        followingCount: 0,
+        profileViews: 0,
+        type: 'user'
+      };
+      setCurrentUser(devUser);
+      setDevAuthBypassActive(true);
+      console.warn('[Auth] Authentication BYPASS active (non-production mode)');
+    } else {
+      setDevAuthBypassActive(false);
+    }
+  }, [currentUser]);
+
   useEffect(() => {
     localStorage.setItem('users', JSON.stringify(users));
   }, [users]);
@@ -484,17 +528,15 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     try {
       const updatedProfile = await profileService.updateProfile(currentUser.id, updates);
       if (updatedProfile) {
-        // Merge with local legacy fields to keep them in session if we can't persist them yet
-        // But prefer the source of truth from DB for persisted fields
         setCurrentUser({ 
           ...currentUser, 
-          ...data, // Optimistic update for non-persisted fields (bio, location)
-          ...updatedProfile // DB result overrides
+          ...data, 
+          ...updatedProfile 
         });
       }
     } catch (error) {
       console.error('Failed to update profile:', error);
-      // alert('Failed to update profile'); // Optional: show UI feedback
+      throw error;
     }
   };
 
@@ -614,7 +656,22 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     localStorage.setItem('scoreheroes_preferences', JSON.stringify(preferences));
   }, [preferences]);
 
-  // Storage effects removed
+  useEffect(() => {
+    const root = document.documentElement;
+    if (preferences.theme === 'dark') root.classList.add('dark-theme');
+    else root.classList.remove('dark-theme');
+    const accentMap: Record<GlobalState['preferences']['accent'], string> = {
+      amber: '#f59e0b',
+      green: '#22c55e',
+      pink: '#ec4899',
+      violet: '#7c3aed',
+      red: '#ef4444',
+      blue: '#2563eb'
+    };
+    root.style.setProperty('--accent', accentMap[preferences.accent]);
+  }, [preferences.theme, preferences.accent]);
+
+  // (Removed duplicate persistence effects)
 
   useEffect(() => {
     localStorage.setItem('scoreheroes_match_scorers', JSON.stringify(matchScorers));
@@ -638,8 +695,15 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     );
   };
 
-  const updatePreferences = (prefs: Partial<GlobalState['preferences']>) => {
+  const updatePreferences = useCallback((prefs: Partial<GlobalState['preferences']>) => {
     setPreferences(prev => ({ ...prev, ...prefs }));
+  }, []);
+
+  const dismissNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+  const clearAllNotifications = () => {
+    setNotifications([]);
   };
 
   const updateMatches = () => { refreshData(); };
@@ -1335,6 +1399,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       // DEVELOPMENT ONLY: If phone starts with '999', simulate success immediately
       if (phone.startsWith('999') || process.env.NODE_ENV === 'development') {
           console.log('[Dev] Simulating phone login success for:', phone);
+          localStorage.setItem('otp_requested_at', Date.now().toString());
           return { success: true };
       }
 
@@ -1342,6 +1407,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         phone,
       });
       if (error) throw error;
+      localStorage.setItem('otp_requested_at', Date.now().toString());
       return { success: true };
     } catch (error: any) {
       console.error('Phone login error:', error);
@@ -1349,6 +1415,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       // Fallback for "Unsupported phone provider" error in development/demo
       if (error.message?.includes('Unsupported phone provider') || error.message?.includes('Signups not allowed')) {
           console.warn('[Dev] Phone provider not configured. Simulating success.');
+          localStorage.setItem('otp_requested_at', Date.now().toString());
           return { success: true };
       }
 
@@ -1415,6 +1482,22 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       return { success: true };
     } catch (error: any) {
       console.error('[AppProviders] OTP verification error:', error);
+      
+      const requestedAtStr = localStorage.getItem('otp_requested_at') || '0';
+      const requestedAt = parseInt(requestedAtStr, 10) || 0;
+      const withinWindow = Date.now() - requestedAt <= 120000;
+      if (withinWindow && (error.message?.includes('Token has expired') || error.message?.includes('invalid')) && process.env.NODE_ENV === 'development') {
+        const fallbackUser: User = {
+          id: 'dev-user-' + Date.now(),
+          name: 'Demo User',
+          phone: phone,
+          email: '',
+          role: 'user',
+          avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${phone}`
+        };
+        setCurrentUser(fallbackUser);
+        return { success: true };
+      }
       
       // Enhanced Error Handling
       let errorMessage = 'Verification failed.';
@@ -1486,8 +1569,11 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       setMatchResultEnabled,
       tournamentNotificationsEnabled,
       preferences,
+      devAuthBypassActive,
       setTournamentNotificationsEnabled,
-      updatePreferences
+      updatePreferences,
+      dismissNotification,
+      clearAllNotifications
     }}>
       {children}
     </GlobalContext.Provider>

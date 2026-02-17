@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
 import { MatchCard } from './components/MatchCard';
 import { Match } from '../../domain/match';
+import { Tournament } from '../../domain/tournament';
 import { PageContainer } from '../../components/layout/PageContainer';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Tabs } from '../../components/ui/Tabs';
 import { Select } from '../../components/ui/Select';
 import { Button } from '../../components/ui/Button';
-import { Filter, X, Trophy, Layers, Activity } from 'lucide-react';
+import { X, Trophy, Layers, Activity } from 'lucide-react';
 import { EmptyState } from '../../components/EmptyState';
 
 // --- Components ---
@@ -19,7 +20,7 @@ interface GroupedMatchesListProps {
   followedMatches: string[];
   activeTab: string;
   groupByTournament: boolean;
-  tournaments: any[];
+  tournaments: Tournament[];
   followedTournaments: string[];
   onReset: () => void;
   hasFilters: boolean;
@@ -36,18 +37,6 @@ const GroupedMatchesList: React.FC<GroupedMatchesListProps> = ({
   hasFilters
 }) => {
   const navigate = useNavigate();
-
-  if (matches.length === 0) {
-    return (
-      <EmptyState 
-        icon={<Activity size={48} />}
-        message="No matches found"
-        description="Try changing your filters or create a new match."
-        actionLabel="Create Match"
-        actionLink="/create-match"
-      />
-    );
-  }
 
   // Tournament Grouping Logic
   const tournamentGroups = useMemo(() => {
@@ -177,6 +166,17 @@ const GroupedMatchesList: React.FC<GroupedMatchesListProps> = ({
 
   if (matches.length === 0) {
     return (
+      <EmptyState 
+        icon={<Activity size={48} />}
+        message="No matches found"
+        description="Try changing your filters or create a new match."
+        actionLabel="Create Match"
+        actionLink="/create-match"
+      />
+    );
+  }
+  if (matches.length === 0) {
+    return (
       <div className="text-center py-16 bg-white rounded-xl border border-slate-100 flex flex-col items-center gap-4">
         <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-2">
             <Trophy className="w-8 h-8 text-slate-300" />
@@ -280,11 +280,7 @@ const GroupedMatchesList: React.FC<GroupedMatchesListProps> = ({
               {section}
             </h3>
             <div 
-              style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-                gap: 'var(--space-4)', 
-              }} 
+              className="grid [grid-template-columns:repeat(auto-fill,minmax(280px,1fr))] gap-[var(--space-4)]"
             >
               {sectionMatches.map((match) => {
                 const isFollowed = followedMatches.includes(match.id);
@@ -388,7 +384,7 @@ export const MatchesScreen: React.FC = () => {
     }
 
     return result;
-  }, [matches, activeTab, activeFormat, activeLevel, activeTournamentId, showFollowedOnly, followedMatches, currentUser, getMatchScorers]);
+  }, [matches, activeTab, activeFormat, activeTournamentId, showFollowedOnly, followedMatches, currentUser, getMatchScorers]);
 
   const tabs = [
     { id: 'Top Matches', label: 'Top Matches' },

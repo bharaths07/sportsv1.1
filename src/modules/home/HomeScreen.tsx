@@ -4,18 +4,10 @@ import { useGlobalState } from '../../app/AppProviders';
 import { ActivityFeed } from '../../components/ActivityFeed';
 
 export const HomeScreen: React.FC = () => {
-  console.log("HomeScreen mounting");
-  const { currentUser, feedItems, players } = useGlobalState();
+  const { currentUser, feedItems } = useGlobalState();
   const navigate = useNavigate();
 
   // Mock Stats for Dashboard
-  const myPlayer = players.find(p => p.userId === currentUser?.id);
-  const stats = {
-    matches: myPlayer?.stats?.matchesPlayed || 0,
-    wins: myPlayer?.stats?.wins || 0,
-    score: myPlayer?.stats?.scoreAccumulated || 0,
-    rank: 12 // Mock rank
-  };
 
   return (
     <div className="space-y-8">

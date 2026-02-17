@@ -80,6 +80,7 @@ export const TournamentLeaderboard: React.FC<{ tournamentId?: string }> = ({ tou
       {/* Filters */}
       <div className="flex justify-end gap-3 mb-6">
         <select 
+          aria-label="Team Filter"
           value={teamFilter}
           onChange={(e) => setTeamFilter(e.target.value)}
           className="px-3 py-1.5 rounded-md border border-border text-sm text-text-secondary bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -91,7 +92,8 @@ export const TournamentLeaderboard: React.FC<{ tournamentId?: string }> = ({ tou
         </select>
         
         {activeCategory === 'BAT' && (
-           <select 
+           <select
+            aria-label="Minimum Innings"
             value={minInnings}
             onChange={(e) => setMinInnings(Number(e.target.value))}
             className="px-3 py-1.5 rounded-md border border-border text-sm text-text-secondary bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -103,7 +105,8 @@ export const TournamentLeaderboard: React.FC<{ tournamentId?: string }> = ({ tou
         )}
         
         {activeCategory === 'BOWL' && (
-           <select 
+           <select
+            aria-label="Minimum Overs"
             value={minOvers}
             onChange={(e) => setMinOvers(Number(e.target.value))}
             className="px-3 py-1.5 rounded-md border border-border text-sm text-text-secondary bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -116,6 +119,7 @@ export const TournamentLeaderboard: React.FC<{ tournamentId?: string }> = ({ tou
 
         {(activeCategory === 'GOALS' || activeCategory === 'ASSISTS') && (
            <select 
+            aria-label="Minimum Matches"
             value={minMatches}
             onChange={(e) => setMinMatches(Number(e.target.value))}
             className="px-3 py-1.5 rounded-md border border-border text-sm text-text-secondary bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -265,10 +269,11 @@ export const TournamentLeaderboard: React.FC<{ tournamentId?: string }> = ({ tou
           
           {/* Table Header */}
           <div 
-            className="grid px-6 pb-3 text-[11px] font-semibold text-text-muted uppercase tracking-wider"
-            style={{ 
-              gridTemplateColumns: (activeCategory === 'BAT' || activeCategory === 'BOWL' || activeCategory === 'FIELD' || activeCategory === 'MVP' || activeCategory === 'GOALS' || activeCategory === 'ASSISTS') ? '40px 3fr 1fr 1fr 1fr 1fr' : '40px 3fr 1fr'
-            }}
+            className={`grid px-6 pb-3 text-[11px] font-semibold text-text-muted uppercase tracking-wider [grid-template-columns:${
+              (activeCategory === 'BAT' || activeCategory === 'BOWL' || activeCategory === 'FIELD' || activeCategory === 'MVP' || activeCategory === 'GOALS' || activeCategory === 'ASSISTS')
+                ? '40px_3fr_1fr_1fr_1fr_1fr'
+                : '40px_3fr_1fr'
+            }]`}
           >
             <div>#</div>
             <div>Player</div>
@@ -318,10 +323,11 @@ export const TournamentLeaderboard: React.FC<{ tournamentId?: string }> = ({ tou
             <div 
               key={player.id} 
               onClick={() => console.log(`Navigate to player: ${player.name}`)}
-              className="bg-surface px-6 py-4 border-b border-border grid items-center cursor-pointer transition-colors duration-200 hover:bg-muted"
-              style={{ 
-                gridTemplateColumns: (activeCategory === 'BAT' || activeCategory === 'BOWL' || activeCategory === 'FIELD' || activeCategory === 'MVP' || activeCategory === 'GOALS' || activeCategory === 'ASSISTS') ? '40px 3fr 1fr 1fr 1fr 1fr' : '40px 3fr 1fr'
-              }}
+              className={`bg-surface px-6 py-4 border-b border-border grid items-center cursor-pointer transition-colors duration-200 hover:bg-muted [grid-template-columns:${
+                (activeCategory === 'BAT' || activeCategory === 'BOWL' || activeCategory === 'FIELD' || activeCategory === 'MVP' || activeCategory === 'GOALS' || activeCategory === 'ASSISTS')
+                  ? '40px_3fr_1fr_1fr_1fr_1fr'
+                  : '40px_3fr_1fr'
+              }]`}
             >
               <div className="text-sm font-semibold text-text-muted">{index + 2}</div>
               

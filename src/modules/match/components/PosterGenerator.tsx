@@ -24,7 +24,7 @@ export const PosterGenerator: React.FC<Props> = ({ data, match, onClose }) => {
         const player = data.player ? players.find(p => p.id === data.player?.playerId) : undefined;
         
         // Prepare config
-        const config: any = {
+        const config: Record<string, unknown> = {
             type: data.type,
             matchInfo: {
                 homeTeam: match.homeParticipant.name,

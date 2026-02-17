@@ -1,8 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   X, 
-  User, 
   PlusCircle, 
   Trophy, 
   Newspaper, 
@@ -27,21 +26,22 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
   const location = useLocation();
   const { currentUser, logout } = useGlobalState();
 
-  // Close sidebar on route change
+  const initialPath = useRef(location.pathname);
   useEffect(() => {
-    onClose();
-  }, [location.pathname]);
+    if (isOpen && location.pathname !== initialPath.current) {
+      onClose();
+    }
+  }, [location.pathname, isOpen, onClose]);
 
   // Close on ESC key
   useEffect(() => {
+    if (!isOpen) return;
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [onClose]);
-
-  if (!isOpen) return null;
+  }, [isOpen, onClose]);
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -64,15 +64,19 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] flex justify-end">
+    <div className={`fixed inset-0 z-[100] ${isOpen ? '' : 'pointer-events-none'}`}>
       {/* Dark Overlay */}
-      <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+      <div
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onClick={onClose}
       />
 
       {/* Drawer Panel */}
-      <div className="relative w-[320px] h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+      <div
+        role="dialog"
+        aria-modal="true"
+        className={`fixed top-0 left-0 h-full w-[320px] bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
         
         {/* Header / Profile Section */}
         <div className="p-6 border-b border-slate-100 bg-slate-50/50">

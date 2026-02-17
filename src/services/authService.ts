@@ -1,9 +1,10 @@
 import { supabase } from '../lib/supabase';
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 
 // Helper to format phone number to E.164 (Standardize input)
 const formatPhoneNumber = (phone: string): string => {
   // Remove spaces, dashes, parentheses
-  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
+  const cleaned = phone.replace(/[\s-()]/g, '');
   
   // Ensure it starts with '+'
   if (cleaned.startsWith('+')) {
@@ -53,11 +54,12 @@ export const authService = {
       if (error) throw error;
 
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[AuthService] Request OTP Error:', error);
       
       // 3. Error Normalization
-      let message = error.message || 'Failed to send OTP.';
+      const e = error as { message?: string };
+      let message = e.message || 'Failed to send OTP.';
       
       // Map common Supabase errors to user-friendly messages
       if (message.includes('Signups not allowed')) {
@@ -78,7 +80,7 @@ export const authService = {
    * @param phone - The phone number used for the request
    * @param token - The 6-digit OTP code
    */
-  async verifyOtp(phone: string, token: string): Promise<{ success: boolean; session?: any; user?: any; error?: string }> {
+  async verifyOtp(phone: string, token: string): Promise<{ success: boolean; session?: Session | null; user?: SupabaseUser | null; error?: string }> {
     try {
       // 1. Input Validation
       if (!token || token.trim().length !== 6) {
@@ -103,11 +105,12 @@ export const authService = {
         session: data.session, 
         user: data.user 
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[AuthService] Verify OTP Error:', error);
       
       // 3. Error Normalization
-      let message = error.message || 'Verification failed.';
+      const e = error as { message?: string };
+      let message = e.message || 'Verification failed.';
       
       if (message.includes('Token has expired')) {
           message = 'OTP has expired. Please request a new one.';
@@ -127,9 +130,10 @@ export const authService = {
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
         return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('[AuthService] SignOut Error:', error);
-        return { success: false, error: error.message };
+        const e = error as { message?: string };
+        return { success: false, error: e.message };
     }
   },
 

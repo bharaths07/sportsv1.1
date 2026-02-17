@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../../app/AppProviders';
 import { Avatar } from '../../components/ui/Avatar';
 import { Settings, MapPin, Instagram, Linkedin, Twitter, Youtube, Github, Plus, QrCode } from 'lucide-react';
-import { Button } from '../../components/ui/Button';
 
 export const MyProfileDetailsScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -182,7 +181,7 @@ export const MyProfileDetailsScreen: React.FC = () => {
                     <Linkedin size={24} />
                 </button>
                 <button className="hover:text-black transition-colors hover:scale-110 transform duration-200">
-                    <Twitter size={24} /> {/* X icon */}
+                    <Twitter size={24} />
                 </button>
                 <button className="hover:text-red-600 transition-colors hover:scale-110 transform duration-200">
                     <Youtube size={24} />

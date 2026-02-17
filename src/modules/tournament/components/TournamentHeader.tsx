@@ -8,27 +8,20 @@ interface TournamentHeaderProps {
 
 export const TournamentHeader: React.FC<TournamentHeaderProps> = ({ tournament }) => {
   return (
-    <div style={{ backgroundColor: '#0f172a', color: 'white', padding: '32px 0', borderBottom: '1px solid #1e293b' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div className="bg-slate-900 text-white py-8 border-b border-slate-800">
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         
         {/* Left Side: Navigation + Info */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+        <div className="flex items-center gap-6">
           {/* Left Arrow */}
-          <button style={{ 
-            width: '32px', height: '32px', borderRadius: '4px', border: '1px solid #334155', 
-            background: 'transparent', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' 
-          }}>
+          <button className="w-8 h-8 rounded border border-slate-600 bg-transparent text-slate-400 cursor-pointer flex items-center justify-center hover:bg-slate-800">
             ←
           </button>
 
           {/* Tournament Info */}
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+          <div className="flex gap-5 items-center">
             {/* Logo */}
-            <div style={{ 
-              width: '80px', height: '80px', borderRadius: '12px', overflow: 'hidden', 
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-              backgroundColor: '#1e293b'
-            }}>
+            <div className="w-20 h-20 rounded-xl overflow-hidden shadow-lg bg-slate-800">
               <Avatar 
                 src={tournament.bannerUrl} 
                 alt={tournament.name} 
@@ -39,10 +32,10 @@ export const TournamentHeader: React.FC<TournamentHeaderProps> = ({ tournament }
             
             {/* Text */}
             <div>
-              <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 8px 0', color: 'white' }}>
+              <h1 className="text-2xl font-bold mb-2 text-white">
                 {tournament.name}
               </h1>
-              <div style={{ fontSize: '14px', color: '#94a3b8' }}>
+              <div className="text-sm text-slate-400">
                 {tournament.dates}
               </div>
             </div>
@@ -50,17 +43,14 @@ export const TournamentHeader: React.FC<TournamentHeaderProps> = ({ tournament }
         </div>
 
         {/* Right Side: Next Tournament Preview + Arrow */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <span style={{ fontSize: '12px', color: '#64748b' }}>Up Next</span>
-              <span style={{ fontSize: '14px', color: '#e2e8f0', fontWeight: 500 }}>World Legends</span>
-              <span style={{ fontSize: '12px', color: '#94a3b8' }}>T20 2026</span>
+        <div className="flex items-center gap-4">
+          <div className="text-right flex items-center gap-3">
+            <div className="flex flex-col items-end">
+              <span className="text-xs text-slate-500">Up Next</span>
+              <span className="text-sm text-slate-200 font-medium">World Legends</span>
+              <span className="text-xs text-slate-400">T20 2026</span>
             </div>
-            <div style={{ 
-              width: '48px', height: '48px', borderRadius: '8px', overflow: 'hidden', 
-              backgroundColor: '#1e293b'
-            }}>
+            <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-800">
               <Avatar 
                 src="https://placehold.co/100x100/4f46e5/ffffff?text=WL" 
                 alt="Next" 
@@ -71,10 +61,7 @@ export const TournamentHeader: React.FC<TournamentHeaderProps> = ({ tournament }
           </div>
           
           {/* Right Arrow */}
-          <button style={{ 
-            width: '32px', height: '32px', borderRadius: '4px', border: '1px solid #334155', 
-            background: 'transparent', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' 
-          }}>
+          <button className="w-8 h-8 rounded border border-slate-600 bg-transparent text-slate-400 cursor-pointer flex items-center justify-center hover:bg-slate-800">
             →
           </button>
         </div>

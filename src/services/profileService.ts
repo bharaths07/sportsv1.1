@@ -1,6 +1,29 @@
 import { supabase } from '../lib/supabase';
 import { User } from '../domain/user';
 
+interface DbProfile {
+  id: string;
+  name?: string;
+  email?: string;
+  role?: 'user' | 'admin';
+  avatar_url?: string;
+  username?: string;
+  favorite_game?: string;
+  bio?: string;
+  location?: string;
+  created_at?: string;
+  followers_count?: number;
+  following_count?: number;
+  profile_views?: number;
+  game_roles?: string[] | null;
+  gender?: string;
+  date_of_birth?: string;
+  display_email?: string;
+  display_phone?: string;
+  phone?: string;
+  updated_at?: string;
+}
+
 export const profileService = {
   async getProfile(userId: string): Promise<User | null> {
     const { data, error } = await supabase
@@ -14,7 +37,7 @@ export const profileService = {
       return null;
     }
 
-    return this.mapProfileData(data);
+    return this.mapProfileData(data as DbProfile);
   },
 
   async getProfileByUsername(username: string): Promise<User | null> {
@@ -29,10 +52,10 @@ export const profileService = {
       return null;
     }
 
-    return this.mapProfileData(data);
+    return this.mapProfileData(data as DbProfile);
   },
 
-  mapProfileData(data: any): User {
+  mapProfileData(data: DbProfile): User {
       return {
           id: data.id,
           name: data.name || '',
@@ -76,11 +99,11 @@ export const profileService = {
       throw error;
     }
 
-    return this.mapProfileData(data);
+    return this.mapProfileData(data as DbProfile);
   },
 
   async updateProfile(userId: string, updates: Partial<User>): Promise<User | null> {
-    const dbUpdates: any = {};
+    const dbUpdates: Partial<DbProfile> = {};
     if (updates.name) dbUpdates.name = updates.name;
     if (updates.avatarUrl) dbUpdates.avatar_url = updates.avatarUrl;
     if (updates.username) dbUpdates.username = updates.username;
@@ -108,7 +131,7 @@ export const profileService = {
       throw error;
     }
 
-    return this.mapProfileData(data);
+    return this.mapProfileData(data as DbProfile);
   },
 
   async checkUsernameAvailability(username: string): Promise<boolean> {
@@ -173,12 +196,12 @@ export const profileService = {
       return [];
     }
 
-    return data.map((p: any) => ({
-      id: p.id,
-      name: p.name,
-      email: p.email,
-      role: p.role,
-      avatarUrl: p.avatar_url,
+    return (data || []).map((p) => ({
+      id: (p as DbProfile).id,
+      name: (p as DbProfile).name || '',
+      email: (p as DbProfile).email || '',
+      role: ((p as DbProfile).role as 'user' | 'admin') || 'user',
+      avatarUrl: (p as DbProfile).avatar_url,
     }));
   }
 };

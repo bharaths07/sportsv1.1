@@ -8,7 +8,7 @@ import { Share, Trophy, Activity } from 'lucide-react';
 
 interface Props {
   match: Match;
-  onTabChange: (tab: any) => void;
+  onTabChange: (tab: string) => void;
 }
 
 export const MatchSummaryTab: React.FC<Props> = ({ match, onTabChange }) => {

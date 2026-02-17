@@ -1,7 +1,8 @@
-import React from 'react';
-import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Outlet, Navigate, useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../app/AppProviders';
 import { MainLayout } from '../components/MainLayout';
+import { AuthLayout } from '../components/AuthLayout';
 import { HomeScreen } from '../modules/home/HomeScreen';
 import { LiveScreen } from '../modules/live/LiveScreen';
 import { MatchSummaryScreen } from '../modules/match/MatchSummaryScreen';
@@ -23,6 +24,7 @@ import { TeamListScreen } from '../modules/team/TeamListScreen';
 import { CreateTeamScreen } from '../modules/team/CreateTeamScreen';
 import { SelectTeamGameScreen } from '../modules/team/SelectTeamGameScreen';
 import { StatsScreen } from '../modules/stats/StatsScreen';
+import { LeaderboardsScreen } from '../modules/stats/LeaderboardsScreen';
 import { TournamentListScreen } from '../modules/tournament/TournamentListScreen';
 import { CreateTournamentScreen } from '../modules/tournament/CreateTournamentScreen';
 import { SelectTournamentGameScreen } from '../modules/tournament/SelectTournamentGameScreen';
@@ -41,6 +43,7 @@ import { MyQRCodeScreen } from '../modules/profile/MyQRCodeScreen';
 import { SocialFeedScreen } from '../modules/social/SocialFeedScreen';
 import { CertificateGeneratorScreen } from '../modules/certificates/CertificateGeneratorScreen';
 import { PosterGeneratorScreen } from '../modules/posters/PosterGeneratorScreen';
+import { CardScoringDemoScreen } from '../modules/games/CardScoringDemoScreen';
 
 import { ComingSoonScreen } from '../components/ComingSoonScreen';
 import { PlaceholderScreen } from '../components/PlaceholderScreen';
@@ -58,6 +61,8 @@ import { MyTeamsScreen } from '../modules/team/MyTeamsScreen';
 import { MyMatchesScreen } from '../modules/match/MyMatchesScreen';
 import { SavedMatchesScreen } from '../modules/match/SavedMatchesScreen';
 import { SavedTournamentsScreen } from '../modules/tournament/SavedTournamentsScreen';
+import { MediaViewerScreen } from '../modules/media/MediaViewerScreen';
+import { PricingScreen } from '../modules/system/PricingScreen';
 
 // 🔐 Auth Guard Component
 const ProtectedRoute = () => {
@@ -78,7 +83,35 @@ const PublicRoute = () => {
     return <Navigate to="/" replace />;
   }
 
-  return <Outlet />;
+  return <AuthLayout><Outlet /></AuthLayout>;
+};
+
+const DevAuthEnable: React.FC = () => {
+  const { setCurrentUser } = useGlobalState();
+  const navigate = useNavigate();
+  useEffect(() => {
+    localStorage.setItem('scoreheroes_dev_auth_bypass', 'true');
+    setCurrentUser({
+      id: 'dev-bypass-user',
+      name: 'Developer Mode',
+      email: 'dev@local',
+      role: 'admin',
+      type: 'admin'
+    });
+    navigate('/', { replace: true });
+  }, [setCurrentUser, navigate]);
+  return null;
+};
+
+const DevAuthDisable: React.FC = () => {
+  const { setCurrentUser } = useGlobalState();
+  const navigate = useNavigate();
+  useEffect(() => {
+    localStorage.removeItem('scoreheroes_dev_auth_bypass');
+    setCurrentUser(null);
+    navigate('/login', { replace: true });
+  }, [setCurrentUser, navigate]);
+  return null;
 };
 
 export const AppRoutes: React.FC = () => {
@@ -90,6 +123,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="/login-email" element={<DualPanelLoginScreen />} />
         <Route path="/auth/verify" element={<OtpVerificationScreen />} />
         <Route path="/auth/callback" element={<AuthCallbackScreen />} />
+        <Route path="/dev-auth/enable" element={<DevAuthEnable />} />
+        <Route path="/dev-auth/disable" element={<DevAuthDisable />} />
       </Route>
 
       {/* 🔐 Protected Routes */}
@@ -104,7 +139,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/tournaments" element={<TournamentListScreen />} />
         <Route path="/teams" element={<TeamListScreen />} />
         <Route path="/stats" element={<StatsScreen />} />
-        <Route path="/leaderboards" element={<StatsScreen />} />
+        <Route path="/leaderboards" element={<LeaderboardsScreen />} />
         
         {/* Search Results */}
         <Route path="/search" element={<SearchResultsScreen />} />
@@ -136,6 +171,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="/notifications" element={<NotificationsScreen />} />
         <Route path="/settings" element={<SettingsScreen />} />
         <Route path="/social" element={<SocialFeedScreen />} />
+        <Route path="/pricing" element={<PricingScreen />} />
+        <Route path="/card-scoring" element={<CardScoringDemoScreen />} />
         
         {/* Profile Routes */}
         <Route path="/u/:username" element={<PublicProfileScreen />} />
@@ -166,13 +203,13 @@ export const AppRoutes: React.FC = () => {
         <Route path="/insights" element={<ComingSoonScreen title="Insights" />} />
         <Route path="/coming-soon" element={<ComingSoonScreen title="Coming Soon" />} />
         <Route path="/messages/:id" element={<ComingSoonScreen title="Messages" />} />
-        <Route path="/media/:id" element={<ComingSoonScreen title="Media Viewer" />} />
+        <Route path="/media/:id" element={<MediaViewerScreen />} />
         <Route path="/matches/:matchId/insights" element={<ComingSoonScreen title="Match Insights" />} />
         <Route path="/matches/:matchId/table" element={<ComingSoonScreen title="Points Table" />} />
         <Route path="/matches/:matchId/leaderboard" element={<ComingSoonScreen title="Leaderboard" />} />
 
         {/* Fallback */}
-        <Route path="*" element={<PlaceholderScreen title="Page Not Found" />} />
+        <Route path="*" element={<PlaceholderScreen />} />
       </Route>
     </Routes>
   );

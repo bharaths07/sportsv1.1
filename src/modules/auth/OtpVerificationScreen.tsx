@@ -97,9 +97,8 @@ export const OtpVerificationScreen: React.FC = () => {
 
     setLoading(true);
     
-    // Safety timeout to prevent infinite loading
     const timeoutPromise = new Promise<{ success: boolean; error?: string }>((_, reject) => {
-        setTimeout(() => reject(new Error('Verification timed out. Please try again.')), 15000);
+        setTimeout(() => reject(new Error('Verification timed out. Please try again.')), 120000);
     });
 
     try {

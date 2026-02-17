@@ -91,15 +91,11 @@ export const CertificateGeneratorScreen: React.FC = () => {
         {/* The Certificate Canvas */}
         <div 
           ref={certificateRef}
-          className={`bg-white shadow-2xl relative transition-all duration-300 transform origin-center ${isGenerating ? 'scale-95 opacity-80' : 'scale-100'}`}
-          style={{ 
-            width: '800px', 
-            height: '566px', // A4 Landscape ratio approx
-            backgroundImage: selectedTemplate === 'classic' 
-              ? 'radial-gradient(circle, #fff 0%, #fdfbf7 100%)' 
-              : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-            border: selectedTemplate === 'classic' ? '20px solid #fde68a' : 'none'
-          }} 
+          className={`bg-white shadow-2xl relative transition-all duration-300 transform origin-center ${isGenerating ? 'scale-95 opacity-80' : 'scale-100'} w-[800px] h-[566px] ${
+            selectedTemplate === 'classic'
+              ? '[background-image:radial-gradient(circle,_#fff_0%,_#fdfbf7_100%)] [border:20px_solid_#fde68a]'
+              : 'bg-gradient-to-tr from-white to-slate-100'
+          }`}
         >
           {/* Borders/Decorations */}
           {selectedTemplate === 'modern' && (

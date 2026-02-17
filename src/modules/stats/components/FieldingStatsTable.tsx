@@ -30,8 +30,10 @@ export const FieldingStatsTable: React.FC<FieldingStatsTableProps> = ({ stats, m
   const sortedStats = useMemo(() => {
     let data = [...stats];
     
-    // Default: Hide if no data exists (Total dismissals = 0)
-    data = data.filter(s => s.totalDismissals > 0);
+    // Apply qualification filter when enabled
+    if (minQualification) {
+      data = data.filter(s => s.totalDismissals > 0);
+    }
 
     return data.sort((a, b) => {
       const valA = a[sortField];

@@ -4,7 +4,7 @@ import { useGlobalState } from '../../app/AppProviders';
 import { profileService } from '../../services/profileService';
 import { Avatar } from '../../components/ui/Avatar';
 import { Button } from '../../components/ui/Button';
-import { MapPin, Calendar, Users, UserPlus, UserCheck, Eye, Share2 } from 'lucide-react';
+import { MapPin, Calendar, UserPlus, UserCheck, Eye, Share2 } from 'lucide-react';
 import { User } from '../../domain/user';
 import { supabase } from '../../lib/supabase';
 

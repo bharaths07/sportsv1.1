@@ -70,13 +70,7 @@ export const MyTeamsScreen: React.FC = () => {
           onAction={handleCreateTeam}
         />
       ) : (
-        <div 
-          style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-            gap: 'var(--space-4)', 
-          }} 
-        >
+        <div className="grid [grid-template-columns:repeat(auto-fill,minmax(280px,1fr))] gap-[var(--space-4)]">
           {myTeams.map(team => (
             <Card key={team.id} className="p-6 flex flex-col hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => navigate(`/team/${team.id}`)}>
               <div className="flex items-start justify-between mb-4">

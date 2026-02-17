@@ -13,7 +13,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       
       {/* Top Navbar */}
-      <TopNavbar onMenuClick={() => setIsSidebarOpen(true)} />
+      <TopNavbar onMenuClick={() => setIsSidebarOpen(prev => !prev)} />
 
       {/* Slide-out Sidebar */}
       <SidebarDrawer 

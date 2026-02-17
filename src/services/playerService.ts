@@ -1,6 +1,44 @@
 import { supabase } from '../lib/supabase';
 import { Player } from '../domain/player';
 
+interface DbPlayer {
+  id: string;
+  user_id?: string;
+  first_name: string;
+  last_name?: string;
+  active: boolean;
+  status?: string;
+  stats?: Player['stats'];
+  history?: Player['history'];
+  avatar_url?: string;
+  photos?: Player['photos'];
+  highlights?: Player['highlights'];
+}
+
+type DbPlayerInsert = {
+  user_id?: string;
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  stats?: Player['stats'];
+  history?: Player['history'];
+  active?: boolean;
+  status?: string;
+  avatar_url?: string;
+};
+
+type DbPlayerUpdate = Partial<{
+  first_name: string;
+  last_name: string;
+  stats: Player['stats'];
+  history: Player['history'];
+  active: boolean;
+  status: string;
+  avatar_url: string;
+  photos: Player['photos'];
+  highlights: Player['highlights'];
+}>;
+
 export const playerService = {
   async getAllPlayers(): Promise<Player[]> {
     const { data, error } = await supabase
@@ -12,7 +50,7 @@ export const playerService = {
       return [];
     }
 
-    return data.map((p: any) => mapToDomain(p));
+    return (data || []).map((p) => mapToDomain(p as DbPlayer));
   },
 
   async getPlayer(id: string): Promise<Player | null> {
@@ -27,18 +65,18 @@ export const playerService = {
       return null;
     }
 
-    return mapToDomain(data);
+    return mapToDomain(data as DbPlayer);
   },
 
   async createPlayer(player: Partial<Player>): Promise<Player> {
-    const dbPlayer = {
+    const dbPlayer: DbPlayerInsert = {
       // If ID is provided and looks like a UUID, use it, otherwise let DB generate or generate one
       // If it's a temporary ID (starts with 'new-'), let DB generate
       // id: player.id?.startsWith('new-') ? undefined : player.id, 
       user_id: player.userId,
       first_name: player.firstName,
       last_name: player.lastName,
-      phone: (player as any).phone, // Assuming phone might be added to domain or passed in
+      // phone: (player as any).phone, // Optional external field
       stats: player.stats,
       history: player.history,
       active: player.active ?? true,
@@ -57,11 +95,11 @@ export const playerService = {
       throw error;
     }
 
-    return mapToDomain(data);
+    return mapToDomain(data as DbPlayer);
   },
 
   async updatePlayer(id: string, updates: Partial<Player>): Promise<Player> {
-    const dbUpdates: any = {};
+    const dbUpdates: DbPlayerUpdate = {};
     if (updates.firstName) dbUpdates.first_name = updates.firstName;
     if (updates.lastName) dbUpdates.last_name = updates.lastName;
     if (updates.stats) dbUpdates.stats = updates.stats;
@@ -84,11 +122,11 @@ export const playerService = {
       throw error;
     }
 
-    return mapToDomain(data);
+    return mapToDomain(data as DbPlayer);
   }
 };
 
-function mapToDomain(dbPlayer: any): Player {
+function mapToDomain(dbPlayer: DbPlayer): Player {
   return {
     id: dbPlayer.id,
     userId: dbPlayer.user_id,

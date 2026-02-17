@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { Calendar, Filter, Trophy, XCircle, Clock } from 'lucide-react';
+import React from 'react';
 import { Match } from '../../../domain/match';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,8 +14,6 @@ const MatchListItem: React.FC<{ match: Match }> = ({ match }) => {
     const overs = "6 Ov."; 
     const location = "Bengaluru (Bangalore)"; 
     
-    // Determine winner for styling
-    const isWinner = true; // Logic to check if user won
 
     return (
         <div 
@@ -82,8 +79,6 @@ const MatchListItem: React.FC<{ match: Match }> = ({ match }) => {
 };
 
 export const GameProfileMatches: React.FC<GameProfileMatchesProps> = ({ matches }) => {
-  const [filterType, setFilterType] = useState<'all' | 'won' | 'lost' | 'draw'>('all');
-  
   // Use mock matches if empty for visualization of the UI
   const displayMatches = matches.length > 0 ? matches : [
       {

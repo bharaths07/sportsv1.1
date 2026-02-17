@@ -118,9 +118,8 @@ export const GameProfileStats: React.FC<GameProfileStatsProps> = ({ stats }) => 
                 <div key={idx} className="flex-1 flex flex-col items-center gap-2 group">
                     <div 
                         className={`w-full rounded-t-md transition-all duration-300 group-hover:opacity-80 ${
-                            result === 'W' ? 'bg-green-500' : result === 'L' ? 'bg-red-400' : 'bg-slate-300'
+                            result === 'W' ? 'h-[80%] bg-green-500' : result === 'L' ? 'h-[30%] bg-red-400' : 'h-[50%] bg-slate-300'
                         }`}
-                        style={{ height: result === 'W' ? '80%' : result === 'L' ? '30%' : '50%' }}
                     ></div>
                     <span className="text-xs text-slate-400 font-medium">
                         {idx === chartData.length - 1 ? 'Latest' : `M${idx + 1}`}

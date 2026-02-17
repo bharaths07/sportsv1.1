@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { Share2, QrCode, SlidersHorizontal, ChevronLeft, Settings, MapPin } from 'lucide-react';
+import { Share2, QrCode, SlidersHorizontal, ChevronLeft } from 'lucide-react';
 import { useGlobalState } from '../../app/AppProviders';
 import { Avatar } from '../../components/ui/Avatar';
 import { Player } from '../../domain/player';
@@ -28,7 +28,8 @@ const getSportName = (id?: string) => id ? (SPORT_NAMES[id] || 'Sports') : 'Spor
 
 // --- Sub-Components for Clean Architecture ---
 
-const GameProfileHeader = ({ player, isOwner, navigate }: { player: Player, isOwner: boolean, navigate: any }) => {
+import type { NavigateFunction } from 'react-router-dom';
+const GameProfileHeader = ({ player, navigate }: { player: Player, navigate: NavigateFunction }) => {
   const sportName = getSportName(player.primarySportId);
   // Default text from image if role not present, or use player's role
   const roleText = player.role 
@@ -168,8 +169,6 @@ export const GameProfileScreen = () => {
     return found;
   }, [players, isMeRoute, currentUser, userId]);
   
-  const isOwner = isMeRoute || (currentUser && player && player.userId === currentUser.id);
-
   const playerMatches = useMemo(() => {
     if (!player || !matches) return [];
     try {
@@ -228,7 +227,7 @@ export const GameProfileScreen = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <GameProfileHeader player={player} isOwner={isOwner} navigate={navigate} />
+      <GameProfileHeader player={player} navigate={navigate} />
       
       <GameProfileTabs activeTab={activeTab} onTabChange={handleTabChange} />
 

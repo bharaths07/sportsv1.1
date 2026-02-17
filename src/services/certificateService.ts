@@ -1,5 +1,27 @@
 import { supabase } from '../lib/supabase';
+import type { PostgrestError } from '@supabase/supabase-js';
 import { Certificate } from '../domain/certificate';
+
+interface DbCertificate {
+  id: string;
+  template_id?: string;
+  type: Certificate['type'];
+  player_id: string;
+  recipient_name?: string;
+  match_id?: string;
+  tournament_id?: string;
+  achievement_id?: string;
+  title: string;
+  description?: string;
+  date: string;
+  created_at?: string;
+  created_by?: string;
+  verification_hash?: string;
+  status?: string;
+  metadata?: Record<string, unknown>;
+}
+
+type QueryResponse<T> = { data: T | null; error: PostgrestError | null };
 
 export const certificateService = {
   async createCertificate(certificate: Certificate): Promise<Certificate> {
@@ -14,7 +36,7 @@ export const certificateService = {
       metadata: certificate.metadata
     };
 
-    const { data, error } = await supabase
+    const { data, error }: QueryResponse<DbCertificate> = await supabase
       .from('certificates')
       .insert(dbCertificate)
       .select()
@@ -25,11 +47,11 @@ export const certificateService = {
       throw error;
     }
 
-    return mapToDomain(data);
+    return mapToDomain(data as DbCertificate);
   },
 
   async getCertificatesByPlayer(playerId: string): Promise<Certificate[]> {
-    const { data, error } = await supabase
+    const { data, error }: QueryResponse<DbCertificate[]> = await supabase
       .from('certificates')
       .select('*')
       .eq('player_id', playerId);
@@ -39,11 +61,11 @@ export const certificateService = {
       return [];
     }
 
-    return data.map(mapToDomain);
+    return (data ?? []).map(mapToDomain);
   },
   
   async getAllCertificates(): Promise<Certificate[]> {
-    const { data, error } = await supabase
+    const { data, error }: QueryResponse<DbCertificate[]> = await supabase
       .from('certificates')
       .select('*');
 
@@ -52,11 +74,11 @@ export const certificateService = {
       return [];
     }
 
-    return data.map(mapToDomain);
+    return (data ?? []).map(mapToDomain);
   }
 };
 
-function mapToDomain(db: any): Certificate {
+function mapToDomain(db: DbCertificate): Certificate {
   return {
     id: db.id,
     templateId: db.template_id || 'default', // Default fallback

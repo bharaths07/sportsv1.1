@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserPlus, UserCheck, MessageCircle, MoreVertical, Search, Check, X } from 'lucide-react';
+import { UserPlus, UserCheck, MessageCircle, MoreVertical, Search } from 'lucide-react';
 import { Avatar } from '../../../components/ui/Avatar';
 import { useNavigate } from 'react-router-dom';
 
@@ -7,7 +7,6 @@ export const GameProfileFriends: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'friends' | 'opponents' | 'requests'>('friends');
   const [following, setFollowing] = useState<string[]>([]);
-  const [requests, setRequests] = useState<string[]>(['4', '5']); // Mock request IDs
 
   // Mock Data
   const connections = [

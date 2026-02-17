@@ -6,25 +6,17 @@ export const AuthCallbackScreen: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }: { data: any }) => {
+    supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
         navigate('/home', { replace: true });
       } else {
         navigate('/login', { replace: true });
       }
     });
-  }, []);
+  }, [navigate]);
 
   return (
-    <div style={{
-      height: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#f8fafc',
-      color: '#64748b',
-      fontSize: '1.125rem'
-    }}>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-500 text-lg">
       Signing you in...
     </div>
   );

@@ -20,6 +20,9 @@ export const PosterGeneratorScreen: React.FC = () => {
     { id: 't2', type: 'text', content: 'VS', x: 180, y: 200, w: 40, h: 40, color: '#facc15', fontSize: 24 },
   ]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [snapSize, setSnapSize] = useState<number | null>(null);
+  const canvasW = 400;
+  const canvasH = 500;
 
   const addElement = (type: 'text' | 'shape') => {
     const newEl: PosterElement = {
@@ -39,6 +42,20 @@ export const PosterGeneratorScreen: React.FC = () => {
 
   const updateElement = (id: string, updates: Partial<PosterElement>) => {
     setElements(prev => prev.map(el => el.id === id ? { ...el, ...updates } : el));
+  };
+  const applySnap = (n: number) => (snapSize ? Math.round(n / snapSize) * snapSize : n);
+  const selectedElement = elements.find(e => e.id === selectedId) || null;
+  const alignX = (pos: 'left' | 'center' | 'right') => {
+    if (!selectedElement || !selectedId) return;
+    const w = selectedElement.w;
+    const x = pos === 'left' ? 0 : pos === 'center' ? Math.round((canvasW - w) / 2) : canvasW - w;
+    updateElement(selectedId, { x: applySnap(x) });
+  };
+  const alignY = (pos: 'top' | 'middle' | 'bottom') => {
+    if (!selectedElement || !selectedId) return;
+    const h = selectedElement.h;
+    const y = pos === 'top' ? 0 : pos === 'middle' ? Math.round((canvasH - h) / 2) : canvasH - h;
+    updateElement(selectedId, { y: applySnap(y) });
   };
 
   return (
@@ -64,22 +81,22 @@ export const PosterGeneratorScreen: React.FC = () => {
       <div className="flex-1 flex items-center justify-center bg-slate-950 relative overflow-hidden">
         {/* The Canvas */}
         <div 
-          className="bg-slate-800 shadow-2xl relative overflow-hidden"
-          style={{ width: '400px', height: '500px' }}
+          className="bg-slate-800 shadow-2xl relative overflow-hidden w-[400px] h-[500px]"
         >
           {elements.map(el => (
             <div
               key={el.id}
               onClick={(e) => { e.stopPropagation(); setSelectedId(el.id); }}
-              className={`absolute cursor-move ${selectedId === el.id ? 'ring-2 ring-indigo-500' : ''}`}
+              className={`absolute cursor-move flex items-center justify-center font-bold left-[var(--x)] top-[var(--y)] w-[var(--w)] h-[var(--h)] [background-color:var(--bg)] [color:var(--fg)] text-[var(--fs)] ${selectedId === el.id ? 'ring-2 ring-indigo-500' : ''}`}
               style={{
-                left: el.x, top: el.y, width: el.w, height: el.h,
-                backgroundColor: el.type === 'shape' ? el.color : 'transparent',
-                color: el.color,
-                fontSize: el.fontSize,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 'bold'
-              }}
+                ['--x']: `${el.x}px`,
+                ['--y']: `${el.y}px`,
+                ['--w']: `${el.w}px`,
+                ['--h']: `${el.h}px`,
+                ['--bg']: el.type === 'shape' ? el.color || 'transparent' : 'transparent',
+                ['--fg']: el.color || '#ffffff',
+                ['--fs']: `${el.fontSize || 16}px`,
+              } as React.CSSProperties & Record<string, string>}
             >
               {el.content}
             </div>
@@ -93,12 +110,12 @@ export const PosterGeneratorScreen: React.FC = () => {
         
         {selectedId ? (
           <div className="p-4 space-y-4">
-            {elements.find(e => e.id === selectedId)?.type === 'text' && (
+            {selectedElement?.type === 'text' && (
                <div>
                 <label className="block text-xs text-slate-400 mb-1">Text Content</label>
                 <input 
                   type="text" 
-                  value={elements.find(e => e.id === selectedId)?.content || ''}
+                  value={selectedElement?.content || ''}
                   onChange={(e) => updateElement(selectedId, { content: e.target.value })}
                   className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm"
                 />
@@ -110,8 +127,8 @@ export const PosterGeneratorScreen: React.FC = () => {
                 <label className="block text-xs text-slate-400 mb-1">X Position</label>
                 <input 
                   type="number" 
-                  value={elements.find(e => e.id === selectedId)?.x}
-                  onChange={(e) => updateElement(selectedId, { x: Number(e.target.value) })}
+                  value={selectedElement?.x ?? 0}
+                  onChange={(e) => updateElement(selectedId, { x: applySnap(Number(e.target.value)) })}
                   className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm"
                 />
               </div>
@@ -119,21 +136,125 @@ export const PosterGeneratorScreen: React.FC = () => {
                 <label className="block text-xs text-slate-400 mb-1">Y Position</label>
                 <input 
                   type="number" 
-                  value={elements.find(e => e.id === selectedId)?.y}
-                  onChange={(e) => updateElement(selectedId, { y: Number(e.target.value) })}
+                  value={selectedElement?.y ?? 0}
+                  onChange={(e) => updateElement(selectedId, { y: applySnap(Number(e.target.value)) })}
                   className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm"
                 />
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">Width</label>
+                <input
+                  type="number"
+                  value={selectedElement?.w ?? 0}
+                  onChange={(e) => updateElement(selectedId, { w: applySnap(Number(e.target.value)) })}
+                  className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">Height</label>
+                <input
+                  type="number"
+                  value={selectedElement?.h ?? 0}
+                  onChange={(e) => updateElement(selectedId, { h: applySnap(Number(e.target.value)) })}
+                  className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm"
+                />
+              </div>
+            </div>
+
+            {selectedElement?.type === 'text' && (
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">Font Size</label>
+                <input
+                  type="number"
+                  value={selectedElement?.fontSize ?? 16}
+                  onChange={(e) => updateElement(selectedId, { fontSize: applySnap(Number(e.target.value)) })}
+                  className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm"
+                />
+              </div>
+            )}
+
             <div>
               <label className="block text-xs text-slate-400 mb-1">Color</label>
               <input 
                 type="color" 
-                value={elements.find(e => e.id === selectedId)?.color}
+                value={selectedElement?.color || '#ffffff'}
                 onChange={(e) => updateElement(selectedId, { color: e.target.value })}
                 className="w-full h-10 bg-slate-900 border border-slate-600 rounded cursor-pointer"
               />
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => alignX('left')}
+                disabled={!selectedElement}
+                className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded text-xs"
+              >
+                Align Left
+              </button>
+              <button
+                type="button"
+                onClick={() => alignX('center')}
+                disabled={!selectedElement}
+                className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded text-xs"
+              >
+                Align Center
+              </button>
+              <button
+                type="button"
+                onClick={() => alignX('right')}
+                disabled={!selectedElement}
+                className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded text-xs"
+              >
+                Align Right
+              </button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => alignY('top')}
+                disabled={!selectedElement}
+                className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded text-xs"
+              >
+                Align Top
+              </button>
+              <button
+                type="button"
+                onClick={() => alignY('middle')}
+                disabled={!selectedElement}
+                className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded text-xs"
+              >
+                Align Middle
+              </button>
+              <button
+                type="button"
+                onClick={() => alignY('bottom')}
+                disabled={!selectedElement}
+                className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded text-xs"
+              >
+                Align Bottom
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Snap to Grid</label>
+              <select
+                value={snapSize ?? 'none'}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSnapSize(val === 'none' ? null : Number(val));
+                }}
+                className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm"
+              >
+                <option value="none">None</option>
+                <option value="5">5px</option>
+                <option value="10">10px</option>
+                <option value="20">20px</option>
+              </select>
             </div>
           </div>
         ) : (

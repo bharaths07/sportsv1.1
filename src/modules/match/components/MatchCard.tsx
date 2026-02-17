@@ -31,13 +31,13 @@ export const MatchCard: React.FC<Props> = ({ match, className = '', showTourname
   const tournamentName = tournament ? tournament.name : "Friendly Match";
   const isFootball = match.sportId === 's3';
 
-  const formatScore = (p: any) => {
+  const formatScore = (p: { score?: number; wickets?: number }) => {
     if (p.score === undefined) return '-';
     if (isFootball) return `${p.score}`;
     return p.wickets !== undefined ? `${p.score}/${p.wickets}` : `${p.score}/0`;
   };
 
-  const formatOvers = (p: any) => {
+  const formatOvers = (p: { overs?: number }) => {
     if (isFootball) return null;
     return p.overs !== undefined ? `${p.overs} ov` : '0.0 ov';
   };

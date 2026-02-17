@@ -61,9 +61,30 @@ export const TeamStatsTable: React.FC<TeamStatsTableProps> = ({ stats, minQualif
           valA = getGD(a);
           valB = getGD(b);
           break;
-        default:
-          valA = (a as any)[sortField];
-          valB = (b as any)[sortField];
+        case 'winPercentage':
+          valA = a.winPercentage;
+          valB = b.winPercentage;
+          break;
+        case 'wins':
+          valA = a.wins;
+          valB = b.wins;
+          break;
+        case 'matches':
+          valA = a.matches;
+          valB = b.matches;
+          break;
+        case 'avgRunsScored':
+          valA = a.avgRunsScored;
+          valB = b.avgRunsScored;
+          break;
+        case 'draws':
+          valA = a.draws;
+          valB = b.draws;
+          break;
+        case 'losses':
+          valA = a.losses;
+          valB = b.losses;
+          break;
       }
       
       if (valA < valB) return sortOrder === 'asc' ? -1 : 1;

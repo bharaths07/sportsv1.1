@@ -21,7 +21,7 @@ export const MatchStripCard: React.FC<MatchStripCardProps> = ({ match }) => {
   const getStateBlock = () => {
     if (match.status === 'live') {
       return (
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
+        <div className="flex justify-between font-semibold">
           <span>{formatScore(match.homeParticipant)}</span>
           <span>{formatScore(match.awayParticipant)}</span>
         </div>
@@ -42,37 +42,29 @@ export const MatchStripCard: React.FC<MatchStripCardProps> = ({ match }) => {
           resultText = `${winnerName} won`;
         }
       }
-      return <div style={{ color: '#444', fontWeight: 600 }}>{resultText}</div>;
+      return <div className="text-slate-700 font-semibold">{resultText}</div>;
     }
     // Upcoming / Draft
     const time = new Date(match.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const day = new Date(match.date).toLocaleDateString([], { month: 'short', day: 'numeric' });
-    return <div style={{ color: '#666', fontWeight: 600 }}>{day} · {time}</div>;
+    return <div className="text-slate-600 font-semibold">{day} · {time}</div>;
   };
 
   return (
     <div
       onClick={() => navigate(`/match/${match.id}`)}
-      style={{
-        width: 260,
-        minWidth: 260,
-        border: '1px solid #eee',
-        borderRadius: 12,
-        padding: 14,
-        backgroundColor: '#fff',
-        cursor: 'pointer'
-      }}
+      className="w-[260px] min-w-[260px] border border-slate-200 rounded-xl p-3.5 bg-white cursor-pointer"
     >
       {/* Tournament / Series (fallback to location) */}
-      <div style={{ fontSize: 11, color: '#666', fontWeight: 700, marginBottom: 8 }}>
+      <div className="text-[11px] text-slate-600 font-bold mb-2">
         {match.location || 'Fixture'}
       </div>
 
       {/* Teams */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <span style={{ fontWeight: 700, color: '#111' }}>{match.homeParticipant.name}</span>
-        <span style={{ color: '#999', fontSize: 12 }}>vs</span>
-        <span style={{ fontWeight: 700, color: '#111' }}>{match.awayParticipant.name}</span>
+      <div className="flex justify-between items-center mb-2">
+        <span className="font-bold text-slate-900">{match.homeParticipant.name}</span>
+        <span className="text-slate-400 text-[12px]">vs</span>
+        <span className="font-bold text-slate-900">{match.awayParticipant.name}</span>
       </div>
 
       {/* Single state block */}

@@ -45,7 +45,7 @@ export const StatsScreen: React.FC = () => {
     if (!tabs.find(t => t.id === activeTab)) {
       setActiveTab(tabs[0].id);
     }
-  }, [filters.sportId, tabs]);
+  }, [filters.sportId, tabs, activeTab]);
 
   return (
     <PageContainer>

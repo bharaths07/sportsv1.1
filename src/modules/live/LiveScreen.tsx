@@ -9,7 +9,7 @@ export const LiveScreen: React.FC = () => {
   const liveMatches = matches.filter(m => m.status === 'live');
 
   return (
-    <div style={{ padding: '24px 20px', maxWidth: '800px', margin: '0 auto', paddingBottom: '80px' }}>
+    <div className="px-5 py-6 max-w-[800px] mx-auto pb-20">
       <section>
         {liveMatches.length > 0 ? (
           <MatchListCard title="Live Matches" matches={liveMatches} />

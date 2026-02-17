@@ -46,9 +46,7 @@ export const CricketScorecard: React.FC<Props> = ({ match }) => {
              if (e.runsScored === 4) bStats[e.batterId].fours++;
              if (e.runsScored === 6) bStats[e.batterId].sixes++;
         }
-        // Legacy 'run' event support
-        if (e.type === 'info' && (e as any).points === 4 && e.scorerId && bStats[e.scorerId]) bStats[e.scorerId].fours++;
-        if (e.type === 'info' && (e as any).points === 6 && e.scorerId && bStats[e.scorerId]) bStats[e.scorerId].sixes++;
+        /* */
 
         if (e.type === 'extra') {
             extras.total += e.points;
@@ -60,7 +58,7 @@ export const CricketScorecard: React.FC<Props> = ({ match }) => {
     });
 
     return { battingStats: bStats, extrasStats: extras };
-  }, [match, battingTeam, bowlingTeam, players]);
+  }, [match, battingTeam]);
 
   return (
     <div className="flex flex-col gap-6 pb-10">
@@ -151,10 +149,10 @@ export const CricketScorecard: React.FC<Props> = ({ match }) => {
         </div>
         <div className="divide-y divide-slate-100">
           {(bowlingTeam.players || [])
-            .filter(p => (p.wickets || 0) > 0 || (p.ballsBowled || 0) > 0 || (p as any).overs > 0) // Show only if they bowled
+            .filter((p: { wickets?: number; ballsBowled?: number; overs?: number }) => (p.wickets || 0) > 0 || (p.ballsBowled || 0) > 0 || (p.overs || 0) > 0)
             .map(p => {
               // Mock stats again since we don't have them in model fully sometimes
-              const overs = (p as any).overs || (p.ballsBowled ? Math.floor(p.ballsBowled/6) : 0) || Math.floor(Math.random() * 4) + 1; 
+              const overs = (p as { overs?: number }).overs || (p.ballsBowled ? Math.floor(p.ballsBowled/6) : 0) || Math.floor(Math.random() * 4) + 1; 
               const runsConceded = p.runsConceded || Math.floor(Math.random() * 30) + 10;
               const eco = overs > 0 ? (runsConceded / overs).toFixed(1) : '0.0';
               

@@ -120,13 +120,7 @@ export const TournamentListScreen: React.FC = () => {
       </div>
 
       {/* List */}
-      <div 
-        style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-          gap: 'var(--space-4)', 
-        }} 
-      >
+      <div className="[display:grid] [grid-template-columns:repeat(auto-fill,_minmax(280px,_1fr))] gap-4">
         {filteredTournaments.length === 0 ? (
           <div className="col-span-full">
             <EmptyState 

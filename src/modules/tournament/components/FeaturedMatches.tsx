@@ -20,31 +20,26 @@ export const FeaturedMatches: React.FC<FeaturedMatchesProps> = ({ matches, onVie
   const displayMatches = matches.slice(0, 3);
   
   return (
-    <div style={{ marginBottom: '40px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#1e293b', margin: 0 }}>Featured Matches</h2>
+    <div className="mb-10">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold text-slate-800 m-0">Featured Matches</h2>
         <div 
           onClick={onViewAllClick}
-          style={{ fontSize: '14px', color: '#3b82f6', textDecoration: 'none', fontWeight: 500, cursor: 'pointer' }}
+          className="text-sm text-blue-500 font-medium cursor-pointer hover:underline"
         >
           All Matches {'>'}
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="flex flex-col gap-3">
         {displayMatches.map(match => (
-          <div key={match.id} style={{ 
-            backgroundColor: 'white', borderRadius: '12px', padding: '16px 24px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            cursor: 'pointer', transition: 'box-shadow 0.2s'
-          }}
+          <div
+          key={match.id}
+          className="bg-white rounded-xl px-6 py-4 shadow-sm border border-slate-200 flex items-center justify-between cursor-pointer transition-shadow hover:shadow-lg"
           onClick={() => onMatchClick?.(match.id)}
-          onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)'}
-          onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'}
           >
             {/* Team 1 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '30%' }}>
+            <div className="flex items-center gap-3 w-[30%]">
               <Avatar
                 src={match.team1.flag}
                 alt={match.team1.code}
@@ -52,28 +47,30 @@ export const FeaturedMatches: React.FC<FeaturedMatchesProps> = ({ matches, onVie
                 className="w-8 h-8 rounded-full"
               />
               <div>
-                <div style={{ fontWeight: 600, color: '#0f172a' }}>{match.team1.code}</div>
+                <div className="font-semibold text-slate-900">{match.team1.code}</div>
                 {match.team1.score && (
-                  <div style={{ fontSize: '13px', color: '#334155', marginTop: '2px' }}>
-                    {match.team1.score} <span style={{ color: '#64748b', fontSize: '12px' }}>{match.team1.overs}</span>
+                  <div className="text-sm text-slate-700 mt-0.5">
+                    {match.team1.score} <span className="text-xs text-slate-500">{match.team1.overs}</span>
                   </div>
                 )}
-                {!match.team1.score && <div style={{ fontSize: '12px', color: '#94a3b8' }}>Yet to bat</div>}
+                {!match.team1.score && <div className="text-xs text-slate-400">Yet to bat</div>}
               </div>
             </div>
 
             {/* Status / Info Center */}
-            <div style={{ textAlign: 'center', flex: 1 }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: match.status.includes('Won') ? '#ef4444' : '#f59e0b', marginBottom: '4px' }}>
+            <div className="text-center flex-1">
+              <div className={`text-sm font-semibold mb-1 ${
+                match.status.includes('Won') ? 'text-red-500' : 'text-amber-500'
+              }`}>
                 {match.status}
               </div>
               {match.resultNote && (
-                <div style={{ fontSize: '12px', color: '#64748b' }}>{match.resultNote}</div>
+                <div className="text-xs text-slate-500">{match.resultNote}</div>
               )}
             </div>
 
             {/* Team 2 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '30%', flexDirection: 'row-reverse', textAlign: 'right' }}>
+            <div className="flex items-center gap-3 w-[30%] flex-row-reverse text-right">
               <Avatar
                 src={match.team2.flag}
                 alt={match.team2.code}
@@ -81,13 +78,13 @@ export const FeaturedMatches: React.FC<FeaturedMatchesProps> = ({ matches, onVie
                 className="w-8 h-8 rounded-full"
               />
               <div>
-                <div style={{ fontWeight: 600, color: '#0f172a' }}>{match.team2.code}</div>
+                <div className="font-semibold text-slate-900">{match.team2.code}</div>
                 {match.team2.score && (
-                  <div style={{ fontSize: '13px', color: '#334155', marginTop: '2px' }}>
-                    {match.team2.score} <span style={{ color: '#64748b', fontSize: '12px' }}>{match.team2.overs}</span>
+                  <div className="text-sm text-slate-700 mt-0.5">
+                    {match.team2.score} <span className="text-xs text-slate-500">{match.team2.overs}</span>
                   </div>
                 )}
-                {!match.team2.score && <div style={{ fontSize: '12px', color: '#94a3b8' }}>Yet to bat</div>}
+                {!match.team2.score && <div className="text-xs text-slate-400">Yet to bat</div>}
               </div>
             </div>
           </div>

@@ -1,5 +1,27 @@
 import { supabase } from '../lib/supabase';
+import type { PostgrestError } from '@supabase/supabase-js';
 import { FeedItem } from '../domain/feed';
+
+interface DbFeedItem {
+  id: string;
+  type: FeedItem['type'];
+  title: string;
+  content: string;
+  published_at: string;
+  related_entity_id?: string;
+  visibility: FeedItem['visibility'];
+  metadata?: Record<string, unknown>;
+  author_id?: string;
+  author_name?: string;
+  author_type?: string;
+  media?: unknown[];
+  likes_count?: number;
+  comments_count?: number;
+  shares_count?: number;
+  hashtags?: string[];
+}
+
+type QueryResponse<T> = { data: T | null; error: PostgrestError | null };
 
 export const feedService = {
   async createFeedItem(item: FeedItem): Promise<FeedItem> {
@@ -13,7 +35,7 @@ export const feedService = {
       metadata: item.metadata
     };
 
-    const { data, error } = await supabase
+    const { data, error }: QueryResponse<DbFeedItem> = await supabase
       .from('feed_items')
       .insert(dbItem)
       .select()
@@ -24,11 +46,11 @@ export const feedService = {
       throw error;
     }
 
-    return mapToDomain(data);
+    return mapToDomain(data as DbFeedItem);
   },
 
   async getAllFeedItems(): Promise<FeedItem[]> {
-    const { data, error } = await supabase
+    const { data, error }: QueryResponse<DbFeedItem[]> = await supabase
       .from('feed_items')
       .select('*')
       .order('published_at', { ascending: false })
@@ -39,11 +61,11 @@ export const feedService = {
       return [];
     }
 
-    return data.map(mapToDomain);
+    return (data ?? []).map(mapToDomain);
   }
 };
 
-function mapToDomain(db: any): FeedItem {
+function mapToDomain(db: DbFeedItem): FeedItem {
   return {
     id: db.id,
     type: db.type,

@@ -8,31 +8,24 @@ interface TournamentStatusProps {
 
 export const TournamentStatus: React.FC<TournamentStatusProps> = ({ stage, progress, nextMatch }) => {
   return (
-    <div style={{ 
-      marginBottom: '32px', 
-      padding: '20px 24px', 
-      backgroundColor: 'white', 
-      borderRadius: '12px', 
-      border: '1px solid #e2e8f0',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+    <div className="mb-8 px-6 py-5 bg-white rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex justify-between items-start">
         <div>
-          <h2 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b', fontWeight: 600, marginBottom: '8px' }}>
+          <h2 className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-2">
             Current Stage
           </h2>
-          <div style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a' }}>
+          <div className="text-xl font-bold text-slate-900">
             {stage}
           </div>
-          <div style={{ fontSize: '14px', color: '#64748b', marginTop: '4px' }}>
+          <div className="text-sm text-slate-500 mt-1">
             {progress}
           </div>
         </div>
-        <div style={{ textAlign: 'right' }}>
-           <h2 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b', fontWeight: 600, marginBottom: '8px' }}>
+        <div className="text-right">
+           <h2 className="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-2">
             Up Next
           </h2>
-          <div style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>
+          <div className="text-base font-semibold text-slate-900">
             {nextMatch}
           </div>
         </div>

@@ -99,9 +99,21 @@ export const TeamScreen: React.FC = () => {
   const isFootball = team.sportId === 's3';
 
   // Stats Logic
-  let stats: any = {};
-  
-  if (isFootball) {
+  type FootballStats = {
+    goalsFor: number;
+    goalsAgainst: number;
+    goalDifference: number;
+    cleanSheets: number;
+    avgGoals: string;
+  };
+  type CricketStats = {
+    runs: number;
+    wickets: number;
+    avgRuns: number;
+    avgWickets: number;
+  };
+  const stats: FootballStats | CricketStats = (() => {
+    if (isFootball) {
       let goalsFor = 0;
       let goalsAgainst = 0;
       let cleanSheets = 0;
@@ -116,23 +128,22 @@ export const TeamScreen: React.FC = () => {
           if (oppScore === 0) cleanSheets++;
       });
 
-      stats = {
+      return {
           goalsFor,
           goalsAgainst,
           goalDifference: goalsFor - goalsAgainst,
           cleanSheets,
           avgGoals: matchesPlayed > 0 ? (goalsFor / matchesPlayed).toFixed(1) : '0.0'
       };
-  } else {
-      // Cricket Stats (Mocked or calculated if needed, sticking to mock for now as per original file, but let's try to calculate simple ones)
-      // Actually, original file had hardcoded stats. Let's keep them hardcoded for Cricket to avoid breaking it, or use 0.
-      stats = {
+    } else {
+      return {
         runs: 2450,
         wickets: 128,
         avgRuns: 165,
         avgWickets: 6.5
       };
-  }
+    }
+  })();
 
   const tabs = [
     { id: 'overview', label: 'Overview' },

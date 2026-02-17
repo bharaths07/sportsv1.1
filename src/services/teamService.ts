@@ -1,6 +1,35 @@
 import { supabase } from '../lib/supabase';
 import { Team, TeamMember } from '../domain/team';
 
+interface DbTeamMember {
+  player_id?: string;
+  user_id?: string;
+  role: TeamMember['role'];
+  joined_at: string;
+}
+
+interface DbTeam {
+  id: string;
+  name: string;
+  sport_id?: string;
+  type?: Team['type'];
+  captain_id?: string;
+  logo_url?: string;
+  created_at?: string;
+  active: boolean;
+  team_members?: DbTeamMember[];
+}
+
+type DbTeamInsert = {
+  name?: string;
+  type?: Team['type'];
+  captain_id?: string;
+  logo_url?: string;
+  active?: boolean;
+  created_by?: string;
+  sport_id?: string;
+};
+
 export const teamService = {
   async getAllTeams(): Promise<Team[]> {
     const { data, error } = await supabase
@@ -15,13 +44,13 @@ export const teamService = {
       return [];
     }
 
-    return data.map((t: any) => mapToDomain(t));
+    return (data || []).map((t) => mapToDomain(t as DbTeam));
   },
 
   async createTeam(team: Partial<Team>): Promise<Team | null> {
     const { data: { user } } = await supabase.auth.getUser();
 
-    const dbTeam = {
+    const dbTeam: DbTeamInsert = {
       name: team.name,
       type: team.type,
       captain_id: team.captainId,
@@ -61,7 +90,7 @@ export const teamService = {
       }
     }
 
-    return mapToDomain({ ...data, team_members: [] }); // Return basic team for now, or fetch fresh
+    return mapToDomain({ ...(data as DbTeam), team_members: [] }); // Return basic team for now, or fetch fresh
   },
   
   async addMember(teamId: string, member: TeamMember): Promise<void> {
@@ -78,13 +107,13 @@ export const teamService = {
   }
 };
 
-function mapToDomain(dbTeam: any): Team {
+function mapToDomain(dbTeam: DbTeam): Team {
   return {
     id: dbTeam.id,
     name: dbTeam.name,
     sportId: dbTeam.sport_id || 'Cricket', // Default for now
     type: dbTeam.type,
-    members: (dbTeam.team_members || []).map((m: any) => ({
+    members: (dbTeam.team_members || []).map((m: DbTeamMember) => ({
       playerId: m.player_id || m.user_id || 'unknown',
       role: m.role,
       joinedAt: m.joined_at

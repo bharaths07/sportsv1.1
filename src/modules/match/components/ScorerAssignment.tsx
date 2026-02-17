@@ -45,57 +45,33 @@ export const ScorerAssignment: React.FC<ScorerAssignmentProps> = ({ matchId }) =
   }
 
   return (
-    <div style={{ padding: '20px', backgroundColor: 'white', borderRadius: '8px' }}>
-      <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px' }}>Manage Scorers</h3>
+    <div className="p-5 bg-white rounded-lg border border-slate-200">
+      <h3 className="text-lg font-bold mb-4">Manage Scorers</h3>
       
       {/* List Assigned Scorers */}
-      <div style={{ marginBottom: '24px' }}>
-        <h4 style={{ fontSize: '14px', color: '#666', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Assigned Scorers</h4>
+      <div className="mb-6">
+        <h4 className="text-xs text-slate-600 mb-3 uppercase tracking-wide">Assigned Scorers</h4>
         {assignedScorers.length === 0 ? (
-          <p style={{ color: '#999', fontStyle: 'italic' }}>No scorers assigned yet.</p>
+          <p className="text-slate-400 italic">No scorers assigned yet.</p>
         ) : (
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          <ul className="list-none p-0 m-0">
             {assignedScorers.map(assignment => {
               const user = users.find(u => u.id === assignment.userId);
               if (!user) return null;
               return (
-                <li key={assignment.id} style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  padding: '12px',
-                  borderBottom: '1px solid #eee'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ 
-                      width: '32px', 
-                      height: '32px', 
-                      borderRadius: '50%', 
-                      backgroundColor: '#e2e8f0',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '12px',
-                      fontWeight: 'bold',
-                      color: '#475569'
-                    }}>
+                <li key={assignment.id} className="flex justify-between items-center p-3 border-b border-slate-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
                       {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
                     </div>
                     <div>
-                      <div style={{ fontWeight: '500', color: '#1e293b' }}>{user.firstName} {user.lastName}</div>
-                      <div style={{ fontSize: '12px', color: '#64748b' }}>{user.email}</div>
+                      <div className="font-medium text-slate-800">{user.firstName} {user.lastName}</div>
+                      <div className="text-xs text-slate-500">{user.email}</div>
                     </div>
                   </div>
                   <button 
                     onClick={() => handleRemove(user.id)}
-                    style={{ 
-                      color: '#ef4444', 
-                      background: 'none', 
-                      border: 'none', 
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      padding: '4px 8px'
-                    }}
+                    className="text-red-600 bg-transparent border-none cursor-pointer text-sm px-2 py-1 hover:text-red-700"
                   >
                     Remove
                   </button>
@@ -107,19 +83,13 @@ export const ScorerAssignment: React.FC<ScorerAssignmentProps> = ({ matchId }) =
       </div>
 
       {/* Assign New Scorer */}
-      <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px' }}>
-        <h4 style={{ fontSize: '14px', color: '#666', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Assign New Scorer</h4>
-        <div style={{ display: 'flex', gap: '12px' }}>
+      <div className="bg-slate-50 p-4 rounded-lg">
+        <h4 className="text-xs text-slate-600 mb-3 uppercase tracking-wide">Assign New Scorer</h4>
+        <div className="flex gap-3">
           <select 
             value={selectedUserId}
             onChange={(e) => setSelectedUserId(e.target.value)}
-            style={{ 
-              flex: 1, 
-              padding: '8px 12px', 
-              borderRadius: '6px', 
-              border: '1px solid #cbd5e1',
-              fontSize: '14px'
-            }}
+            className="flex-1 px-3 py-2 rounded-md border border-slate-300 text-sm"
           >
             <option value="">Select a user...</option>
             {availableUsers.map(user => (
@@ -131,21 +101,12 @@ export const ScorerAssignment: React.FC<ScorerAssignmentProps> = ({ matchId }) =
           <button 
             onClick={handleAssign}
             disabled={!selectedUserId}
-            style={{ 
-              backgroundColor: !selectedUserId ? '#94a3b8' : '#0f172a', 
-              color: 'white', 
-              padding: '8px 16px', 
-              borderRadius: '6px', 
-              border: 'none', 
-              cursor: !selectedUserId ? 'not-allowed' : 'pointer',
-              fontWeight: '500',
-              fontSize: '14px'
-            }}
+            className={`px-4 py-2 rounded-md text-white text-sm font-medium ${!selectedUserId ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-slate-800'}`}
           >
             Assign
           </button>
         </div>
-        <p style={{ fontSize: '12px', color: '#64748b', marginTop: '8px' }}>
+        <p className="text-xs text-slate-500 mt-2">
           Only users with 'scorer' or 'admin' role can be assigned.
         </p>
       </div>

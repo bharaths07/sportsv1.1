@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { Phone, ArrowRight, ShieldCheck, RefreshCw, AlertCircle } from 'lucide-react';
-import { authService } from '../../services/authService';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { PageContainer } from '../../components/layout/PageContainer';
-import { Card } from '../../components/ui/Card';
+ import React, { useState, useEffect } from 'react';
+ import { Phone, ArrowRight, ShieldCheck, RefreshCw, AlertCircle } from 'lucide-react';
+ import { useNavigate } from 'react-router-dom';
+ import { useGlobalState } from '../../app/AppProviders';
+ import { Button } from '../../components/ui/Button';
+ import { Input } from '../../components/ui/Input';
+ import { PageContainer } from '../../components/layout/PageContainer';
+ import { Card } from '../../components/ui/Card';
 
 type AuthStep = 'phone' | 'otp';
 
 export const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { loginWithPhone, verifyOtp } = useGlobalState();
   const [authStep, setAuthStep] = useState<AuthStep>('phone');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
@@ -72,7 +75,7 @@ export const LoginPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const result = await authService.requestOtp(formattedPhone);
+      const result = await loginWithPhone(formattedPhone);
 
       if (result.success) {
         setAuthStep('otp');
@@ -105,19 +108,11 @@ export const LoginPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const result = await authService.verifyOtp(phone, otp);
+      const result = await verifyOtp(phone, otp);
 
       if (result.success) {
-        setSuccessMessage('Login successful! Checking profile...');
-        
-        // Optimistic redirect trigger
-        // We know auth state change is async, so we can manually trigger a small wait
-        // But more importantly, we should ensure the loader doesn't turn off immediately
-        // if we are expecting a redirect.
-        
-        // Keep loading state true while waiting for AppProviders to react
-        // The App component will unmount this LoginPage once currentUser is set
-        return; 
+        setSuccessMessage('Login successful!');
+        navigate('/auth/success');
       } else {
         const mappedError = mapAuthError(result.error || 'Invalid OTP');
         setError(mappedError);
@@ -149,7 +144,7 @@ export const LoginPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const result = await authService.requestOtp(phone);
+      const result = await loginWithPhone(phone);
       if (result.success) {
         setSuccessMessage('OTP resent successfully!');
         setResendCooldown(30);

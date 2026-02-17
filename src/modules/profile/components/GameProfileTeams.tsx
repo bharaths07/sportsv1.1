@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Shield, Trophy, ChevronRight } from 'lucide-react';
+import { Users, Shield, ChevronRight } from 'lucide-react';
 import { Avatar } from '../../../components/ui/Avatar';
 import { Team } from '../../../domain/team';
 import { useNavigate } from 'react-router-dom';

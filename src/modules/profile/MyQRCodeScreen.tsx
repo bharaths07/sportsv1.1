@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import QRCode from 'react-qr-code';
 import { useGlobalState } from '../../app/AppProviders';
 import { Avatar } from '../../components/ui/Avatar';
-import { ArrowLeft, Share2, Download, Mail, MessageSquare, MoreHorizontal, Copy } from 'lucide-react';
-import { Button } from '../../components/ui/Button';
+import { ArrowLeft, Download, Mail, MessageSquare, MoreHorizontal, Copy } from 'lucide-react';
 
 const BACKGROUND_COLORS = [
   'bg-yellow-400',
@@ -19,7 +18,6 @@ export const MyQRCodeScreen: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useGlobalState();
   const [colorIndex, setColorIndex] = useState(0);
-  const [showShareSheet, setShowShareSheet] = useState(true);
 
   // Fallback if no user (should generally be protected)
   if (!currentUser) {
@@ -64,9 +62,9 @@ export const MyQRCodeScreen: React.FC = () => {
       <div className="flex-1 flex flex-col items-center justify-center p-6 -mt-20">
         
         {/* QR Card */}
-        <div 
+          <div 
           className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl relative flex flex-col items-center animate-in zoom-in-95 duration-300"
-          onClick={(e) => e.stopPropagation()} // Prevent color change when tapping card
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Avatar floating at top */}
           <div className="-mt-16 mb-4 relative">

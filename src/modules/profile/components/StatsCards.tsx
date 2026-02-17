@@ -112,28 +112,16 @@ export const FormatSelector: React.FC = () => {
   ];
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      gap: '8px', 
-      marginBottom: '20px',
-      overflowX: 'auto',
-      paddingBottom: '4px'
-    }}>
+    <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
       {formats.map(fmt => (
         <button
           key={fmt.label}
           disabled={!fmt.active}
-          style={{
-            padding: '8px 16px',
-            borderRadius: '99px',
-            border: 'none',
-            fontSize: '13px',
-            fontWeight: 600,
-            cursor: fmt.active ? 'pointer' : 'default',
-            backgroundColor: fmt.active ? '#0f172a' : '#f1f5f9',
-            color: fmt.active ? 'white' : '#94a3b8',
-            transition: 'all 0.2s'
-          }}
+          className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-all ${
+            fmt.active 
+              ? 'bg-slate-900 text-white cursor-pointer' 
+              : 'bg-slate-100 text-slate-400 cursor-default'
+          }`}
         >
           {fmt.label}
         </button>

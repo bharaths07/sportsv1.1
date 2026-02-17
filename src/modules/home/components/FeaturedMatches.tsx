@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useGlobalState } from '../../../app/AppProviders';
 import { MatchCard } from '../../match/components/MatchCard';
 import { Tabs } from '../../../components/ui/Tabs';
@@ -17,25 +17,28 @@ export const FeaturedMatches: React.FC = () => {
     { id: 'live', label: 'Live Now' },
   ];
 
-  const getMatchScore = (match: any) => {
+  const getMatchScore = useCallback((match: {
+    homeParticipant: { id: string };
+    awayParticipant: { id: string };
+  }) => {
     let score = 0;
     if (followedTeams.includes(match.homeParticipant.id) || followedTeams.includes(match.awayParticipant.id)) {
       score += 2;
     }
     return score;
-  };
+  }, [followedTeams]);
 
-  const sortMatches = (matchList: any[]) => {
+  const sortMatches = useCallback((matchList: Array<{ id: string; date: string; homeParticipant: { id: string }; awayParticipant: { id: string } }>) => {
     return [...matchList].sort((a, b) => {
       const scoreA = getMatchScore(a);
       const scoreB = getMatchScore(b);
       if (scoreA !== scoreB) return scoreB - scoreA;
       return new Date(a.date).getTime() - new Date(b.date).getTime();
     });
-  };
+  }, [getMatchScore]);
 
-  const liveMatches = useMemo(() => sortMatches(matches.filter(m => m.status === 'live')), [matches, followedTeams]);
-  const topMatches = useMemo(() => sortMatches(matches.filter(m => m.status === 'draft' || m.status === 'live')), [matches, followedTeams]);
+  const liveMatches = useMemo(() => sortMatches(matches.filter(m => m.status === 'live')), [matches, sortMatches]);
+  const topMatches = useMemo(() => sortMatches(matches.filter(m => m.status === 'draft' || m.status === 'live')), [matches, sortMatches]);
 
   const displayedMatches = activeTab === 'top' ? topMatches.slice(0, 4) : liveMatches;
 
