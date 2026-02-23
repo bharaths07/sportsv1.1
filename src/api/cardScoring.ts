@@ -1,8 +1,8 @@
-import { CARD_GAMES } from '../services/cardGames';
-import { ScoringEngine } from '../services/cardScoringEngine';
-import { ScoringConfig } from '../domain/cardScoring';
-import { cardMatchPersistence } from '../services/cardMatchPersistence';
-import { cardMatchSupabaseService } from '../services/cardMatchSupabaseService';
+import { CARD_GAMES } from '@/features/system/api/cardGames';
+import { ScoringEngine } from '@/features/system/api/cardScoringEngine';
+import { ScoringConfig } from '@/features/system/types/cardScoring';
+import { cardMatchPersistence } from '@/features/system/api/cardMatchPersistence';
+import { cardMatchSupabaseService } from '@/features/system/api/cardMatchSupabaseService';
 
 const registry = new Map<string, ScoringConfig>();
 const engines = new Map<string, ScoringEngine>();

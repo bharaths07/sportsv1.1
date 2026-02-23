@@ -7,4 +7,7 @@ export interface TeamStanding {
   tied: number;
   points: number;
   netRunRate: number;
+  goalsFor?: number;
+  goalsAgainst?: number;
+  goalDifference?: number;
 }

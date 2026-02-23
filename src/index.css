@@ -2,12 +2,12 @@
 
 @theme {
   --color-background: var(--bg-page);
-  --color-surface: var(--bg-card);
+  --color-surface: var(--bg-surface);
   --color-muted: var(--bg-muted);
   --color-primary: var(--primary);
   --color-primary-dark: var(--primary-hover);
-  --color-primary-light: #eff6ff;
-  --color-secondary: var(--accent);
+  --color-primary-light: #FEE2E2;
+  --color-secondary: var(--primary-blue);
   --color-accent: var(--accent);
   --color-live: var(--live);
   --color-text-primary: var(--text-primary);
@@ -15,85 +15,68 @@
   --color-text-muted: var(--text-muted);
   --color-text-inverse: var(--text-inverse);
   --color-border: var(--border);
-  
+
   --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Poppins', 'Inter', system-ui, sans-serif;
 }
 
 /* Validated CSS Build */
 
-:root {
-  /* Core Colors */
-  --primary: #2563eb;        /* blue-600 */
-  --primary-hover: #1d4ed8;  /* blue-700 */
-  --secondary: #64748b;      /* slate-500 */
-  --accent: #f59e0b;         /* amber-500 */
-  
-  /* Backgrounds */
-  --bg-page: #f8fafc;        /* slate-50 */
-  --bg-card: #ffffff;        /* white */
-  --bg-muted: #f1f5f9;       /* slate-100 */
-  
-  /* Typography */
-  --text-primary: #0f172a;   /* slate-900 */
-  --text-secondary: #64748b; /* slate-500 */
-  --text-muted: #94a3b8;     /* slate-400 */
-  --text-inverse: #ffffff;   /* white */
-  
-  /* UI Elements */
-  --border: #e2e8f0;         /* slate-200 */
-  --live: #ef4444;           /* red-500 */
-  
-  /* Spacing */
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 32px;
-}
-
-:root.dark-theme {
-  --bg-page: #0b1220;
-  --bg-card: #0f172a;
-  --bg-muted: #1f2937;
-  --text-primary: #e5e7eb;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
-  --text-inverse: #0f172a;
-  --border: #334155;
-}
-
 @layer base {
-  html {
-    font-family: 'Inter', system-ui, sans-serif;
-  }
-  
-  body {
-    background-color: var(--bg-page);
-    color: var(--text-primary);
-    @apply antialiased;
+
+  /* Let tokens.css handle base body/html styles to avoid conflicts */
+  :root {
+    --font-sans: var(--font-main);
   }
 }
 
 @layer components {
+
   /* Layout */
   .page-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: var(--space-xl);
+    padding: var(--space-md);
+    /* Mobile-first padding */
+  }
+
+  @media (min-width: 768px) {
+    .page-container {
+      padding: var(--space-xl);
+    }
   }
 
   /* Card */
   .card {
-    background: var(--bg-card);
-    border-radius: 12px;
-    padding: var(--space-lg);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    box-shadow: var(--shadow-sm);
     border: 1px solid var(--border);
-    transition: transform 0.2s ease;
+    transition: all 0.3s ease;
   }
 
   .card:hover {
+    box-shadow: var(--shadow-md);
     transform: translateY(-2px);
+  }
+
+  /* Buttons */
+  .btn-primary {
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease-out;
+  }
+
+  .btn-primary:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-primary:active {
+    transform: scale(0.95);
+    opacity: 0.9;
   }
 
   /* Section Header */
@@ -102,10 +85,13 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: var(--space-md);
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+    /* Prevent overflow on small screens */
   }
 
   .section-title {
-    font-size: 16px;
+    font-size: 1.125rem;
     font-weight: 600;
     color: var(--text-primary);
   }
@@ -113,18 +99,49 @@
 
 /* Custom Animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleUp {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes slideInRight {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .animate-fade-in {

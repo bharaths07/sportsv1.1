@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isNonProd, shouldBypassAuth } from '../app/authBypass';
+import { isNonProd, shouldBypassAuth } from '@/features/auth/utils/authBypass';
 
 describe('authBypass util', () => {
   it('blocks bypass in production', () => {

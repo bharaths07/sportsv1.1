@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createMatch } from '../api/cardScoring';
+import { createMatch } from '@/api/cardScoring';
 
 describe('Card Scoring Engine - Hearts', () => {
   it('applies heart penalties and queen of spades', () => {

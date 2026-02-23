@@ -114,3 +114,10 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Local build artifacts and logs
+build_output.txt
+build_errors.txt
+build_errors_*.log
+vite_output.txt
+dist/

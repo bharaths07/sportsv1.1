@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { render } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { AppProviders, useGlobalState } from '../app/AppProviders';
+import { AppProviders, useGlobalState } from '@/app/AppProviders';
 import React from 'react';
 
 const TestComponent: React.FC = () => {

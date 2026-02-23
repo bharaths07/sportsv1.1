@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { cricheroesIntegrationService } from '../services/cricheroesIntegrationService';
-import { matchService } from '../services/matchService';
-import { tournamentService } from '../services/tournamentService';
-import { CricheroesAdapter } from '../services/adapters/cricheroesAdapter';
-import { Tournament } from '../domain/tournament';
-import { Team } from '../domain/team';
-import { Match } from '../domain/match';
+import { cricheroesIntegrationService } from '@/features/matches/api/cricheroesIntegrationService';
+import { matchService } from '@/features/matches/api/matchService';
+import { tournamentService } from '@/features/tournaments/api/tournamentService';
+import { CricheroesAdapter } from '@/features/matches/api/adapters/cricheroesAdapter';
+import { Tournament } from '@/features/tournaments/types/tournament';
+import { Team } from '@/features/teams/types/team';
+import { Match } from '@/features/matches/types/match';
 
 // Mocks
-vi.mock('../services/matchService', () => ({
+vi.mock('@/features/matches/api/matchService', () => ({
     matchService: {
         getMatchById: vi.fn(),
         createMatch: vi.fn(),
@@ -16,7 +16,7 @@ vi.mock('../services/matchService', () => ({
     }
 }));
 
-vi.mock('../services/tournamentService', () => ({
+vi.mock('@/features/tournaments/api/tournamentService', () => ({
     tournamentService: {
         getAllTournaments: vi.fn(),
         updateTournament: vi.fn()
@@ -24,7 +24,7 @@ vi.mock('../services/tournamentService', () => ({
 }));
 
 describe('CricheroesIntegrationService', () => {
-    
+
     beforeEach(() => {
         vi.clearAllMocks();
     });
@@ -38,12 +38,12 @@ describe('CricheroesIntegrationService', () => {
 
         it('should successfully start a tournament and generate schedule', async () => {
             // Setup
-            const mockTournament: Tournament = { 
-                id: mockTournamentId, 
-                name: 'Test Tour', 
-                organizer: 'org_1', 
-                status: 'upcoming', 
-                teams: ['team_1', 'team_2'], 
+            const mockTournament: Tournament = {
+                id: mockTournamentId,
+                name: 'Test Tour',
+                organizer: 'org_1',
+                status: 'upcoming',
+                teams: ['team_1', 'team_2'],
                 scheduleMode: 'AUTO',
                 dates: '2025-01-01 - 2025-01-31',
                 location: '',
@@ -54,21 +54,21 @@ describe('CricheroesIntegrationService', () => {
 
             vi.mocked(tournamentService.getAllTournaments).mockResolvedValue([mockTournament]);
             vi.mocked(matchService.createMatch).mockResolvedValue({
-              id: 'm1',
-              sportId: 's1',
-              tournamentId: mockTournamentId,
-              homeParticipant: { id: 'team_1', name: 'Team 1', score: 0 },
-              awayParticipant: { id: 'team_2', name: 'Team 2', score: 0 },
-              date: '2025-01-15',
-              location: '',
-              status: 'created',
-              events: [],
-              officials: [],
-              createdByUserId: 'system'
+                id: 'm1',
+                sportId: 's1',
+                tournamentId: mockTournamentId,
+                homeParticipant: { id: 'team_1', name: 'Team 1', score: 0 },
+                awayParticipant: { id: 'team_2', name: 'Team 2', score: 0 },
+                date: '2025-01-15',
+                location: '',
+                status: 'created',
+                events: [],
+                officials: [],
+                createdByUserId: 'system'
             });
             vi.mocked(tournamentService.updateTournament).mockResolvedValue({
-              ...mockTournament,
-              status: 'ongoing'
+                ...mockTournament,
+                status: 'ongoing'
             });
 
             // Execute
@@ -81,13 +81,13 @@ describe('CricheroesIntegrationService', () => {
         });
 
         it('should fail if tournament has fewer than 2 teams', async () => {
-             // Setup
-            const mockTournament: Tournament = { 
-                id: mockTournamentId, 
-                name: 'Test Tour', 
-                organizer: 'org_1', 
-                status: 'upcoming', 
-                teams: ['team_1'], 
+            // Setup
+            const mockTournament: Tournament = {
+                id: mockTournamentId,
+                name: 'Test Tour',
+                organizer: 'org_1',
+                status: 'upcoming',
+                teams: ['team_1'],
                 scheduleMode: 'AUTO',
                 dates: '2025-01-01 - 2025-01-31',
                 location: '',
@@ -96,7 +96,7 @@ describe('CricheroesIntegrationService', () => {
                 sportId: 's1'
             };
 
-             vi.mocked(tournamentService.getAllTournaments).mockResolvedValue([mockTournament]);
+            vi.mocked(tournamentService.getAllTournaments).mockResolvedValue([mockTournament]);
 
             // Execute
             const result = await cricheroesIntegrationService.startTournament(mockTournamentId, [mockTeams[0]]);
@@ -114,8 +114,8 @@ describe('CricheroesIntegrationService', () => {
 
         it('should validate a correct match payload', async () => {
             // Setup
-            vi.mocked(matchService.getMatchById).mockResolvedValue({ 
-                id: mockMatchId, 
+            vi.mocked(matchService.getMatchById).mockResolvedValue({
+                id: mockMatchId,
                 sportId: 's1',
                 tournamentId: 'tour_1',
                 homeParticipant: { id: 'team_1', name: 'Team 1', score: 0 },
@@ -137,8 +137,8 @@ describe('CricheroesIntegrationService', () => {
 
         it('should fail validation if teams have no players', async () => {
             // Setup
-            vi.mocked(matchService.getMatchById).mockResolvedValue({ 
-                id: mockMatchId, 
+            vi.mocked(matchService.getMatchById).mockResolvedValue({
+                id: mockMatchId,
                 sportId: 's1',
                 tournamentId: 'tour_1',
                 homeParticipant: { id: 'team_1', name: 'Team 1', score: 0 },

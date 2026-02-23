@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { SettingsScreen } from '../modules/system/SettingsScreen';
-import * as AppProviders from '../app/AppProviders';
-import type React from 'react';
+import { SettingsScreen } from '@/features/system/pages/SettingsScreen';
+import * as AppProviders from '@/app/AppProviders';
+
 
 describe('SettingsScreen', () => {
   const mockUpdatePreferences = vi.fn();
